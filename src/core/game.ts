@@ -9,6 +9,7 @@ import {
   type TicketInstance,
 } from './domain/instance';
 import { TICKET_POOL } from '@/data/tickets';
+import { appForTask, windowTitle } from './domain/apps';
 import type { ActiveTicketSnapshot, SegmentView, Snapshot, SlotSnapshot } from './snapshot';
 
 /**
@@ -179,6 +180,7 @@ export class Game {
       clock: this.formatClock(),
       satisfaction: Math.round(this.satisfaction),
       delivered: this.delivered,
+      activeErrors: this.activeInstance()?.errors ?? 0,
       slots: this.slots.map((inst, i) => this.slotSnapshot(inst, i)),
       active: this.activeSnapshot(),
     };
@@ -268,6 +270,8 @@ export class Game {
       taskCount: inst.tasks.length,
       segments: inst.ready || !step ? [] : step.segments.map((s) => this.segmentView(s)),
       ready: inst.ready,
+      app: appForTask(task.id),
+      windowTitle: windowTitle(task.id, task.title),
     };
   }
 

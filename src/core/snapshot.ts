@@ -1,11 +1,16 @@
 import type { NavDirection, Priority } from './domain/types';
 
+export type { Priority } from './domain/types';
+
 /**
  * Visão imutável do estado do jogo, publicada pelo loop a cada frame e lida pela UI.
  * É a única coisa que a camada React enxerga do `core`.
  */
 
 export type GameStatus = 'playing' | 'won' | 'lost';
+
+/** Qual "app" do desktop a tarefa atual representa (UI diegética). */
+export type AppId = 'editor' | 'browser' | 'slack' | 'mail' | 'meet';
 
 /** Token de `press`: uma tecla da sequência. */
 export interface PressToken {
@@ -55,6 +60,9 @@ export interface ActiveTicketSnapshot {
   taskCount: number;
   segments: SegmentView[];
   ready: boolean;
+  /** App do desktop a abrir para a tarefa atual e o título da janela. */
+  app: AppId;
+  windowTitle: string;
 }
 
 export interface Snapshot {
@@ -62,6 +70,8 @@ export interface Snapshot {
   clock: string;
   satisfaction: number;
   delivered: number;
+  /** Erros acumulados no ticket ativo (para feedback de erro na UI). */
+  activeErrors: number;
   slots: (SlotSnapshot | null)[];
   active: ActiveTicketSnapshot | null;
 }
