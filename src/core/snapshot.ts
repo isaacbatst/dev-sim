@@ -50,7 +50,19 @@ export type SegmentView =
       chosenKey: string | null;
       wrong: boolean;
     }
-  | { type: 'wait'; remaining: number; progress: number };
+  | { type: 'wait'; remaining: number; progress: number }
+  | {
+      type: 'file';
+      files: string[];
+      cursor: number;
+      target: number;
+      chosenIndex: number | null;
+      committed: boolean;
+      wrong: boolean;
+      searching: boolean;
+      query: string;
+      matchIndex: number;
+    };
 
 export interface SlotSnapshot {
   index: number;

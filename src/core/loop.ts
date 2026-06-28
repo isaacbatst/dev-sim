@@ -64,6 +64,11 @@ export class GameLoop {
     this.listener(this.game.snapshot());
   }
 
+  quickOpen(): void {
+    this.game.quickOpen();
+    this.listener(this.game.snapshot());
+  }
+
   deliver(): void {
     this.game.deliver();
     this.listener(this.game.snapshot());

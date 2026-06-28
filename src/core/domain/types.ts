@@ -75,7 +75,13 @@ export interface WaitSegment {
   maxDuration: number;
 }
 
-export type Segment = PressSegment | HoldSegment | NavSegment | SelectionSegment | WaitSegment;
+/** `file`: abrir um arquivo no editor navegando a lista (setas) ou via Ctrl+P. */
+export interface FileSegment {
+  type: 'file';
+}
+
+export type Segment =
+  PressSegment | HoldSegment | NavSegment | SelectionSegment | WaitSegment | FileSegment;
 
 /** Passo: contém segmentos do mesmo tipo (GDD 3.1). No conteúdo atual, 1 por passo. */
 export interface StepTemplate {

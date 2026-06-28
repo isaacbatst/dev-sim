@@ -19,6 +19,7 @@ interface GameState {
   deliver: () => void;
   focusProgram: (id: ProgramId) => void;
   cycleFocus: () => void;
+  quickOpen: () => void;
 }
 
 let loop: GameLoop | null = null;
@@ -50,5 +51,6 @@ export const useGameStore = create<GameState>((set) => {
     deliver: () => loop?.deliver(),
     focusProgram: (id) => loop?.focusProgram(id),
     cycleFocus: () => loop?.cycleFocus(),
+    quickOpen: () => loop?.quickOpen(),
   };
 });

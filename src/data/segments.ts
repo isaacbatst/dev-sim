@@ -92,14 +92,8 @@ export const SEGMENTS: Record<string, Segment> = {
       { key: 'b', label: 'Negrito' },
     ],
   },
-  selection_open_file: {
-    type: 'selection',
-    options: [
-      { key: 'h', label: 'HTML' },
-      { key: 'c', label: 'CSS' },
-      { key: 'j', label: 'JS' },
-    ],
-  },
+  // Abrir arquivo: navegar a árvore (setas) ou Ctrl+P. Ver src/data/files.ts.
+  open_file: { type: 'file' },
   selection_property: {
     type: 'selection',
     options: [

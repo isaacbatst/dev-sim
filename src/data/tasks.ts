@@ -55,7 +55,7 @@ export const TASKS: Record<string, TaskTemplate> = {
     description: 'Abrir o VSCode, abrir o arquivo, navegar até a linha, corrigir, push, CR e merge',
     steps: [
       step('press_open_vscode'),
-      step('selection_open_file'),
+      step('open_file'),
       step('nav_find_line'),
       step('press_fix'),
       step('press_push'),

@@ -15,6 +15,7 @@ export function GameScreen() {
   const confirm = useGameStore((s) => s.confirm);
   const focusProgram = useGameStore((s) => s.focusProgram);
   const cycleFocus = useGameStore((s) => s.cycleFocus);
+  const quickOpen = useGameStore((s) => s.quickOpen);
 
   const [shake, setShake] = useState(false);
   const [floatScore, setFloatScore] = useState<string | null>(null);
@@ -25,7 +26,12 @@ export function GameScreen() {
   // O gate por foco vive no core (ações de trabalho exigem o programa em foco).
   useEffect(() => {
     const onDown = (e: KeyboardEvent) => {
-      if (e.key.startsWith('Arrow') || e.key === 'Tab') e.preventDefault();
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')) {
+        e.preventDefault();
+        return quickOpen();
+      }
+      if (e.ctrlKey || e.metaKey) return; // não capturar outros atalhos do SO
+      if (e.key.startsWith('Arrow') || e.key === 'Tab' || e.key === 'Backspace') e.preventDefault();
       if (e.repeat) return;
       if (e.key === 'Tab') return cycleFocus();
       if (e.key >= '1' && e.key <= '5') return selectSlot(Number(e.key) - 1);
@@ -39,7 +45,7 @@ export function GameScreen() {
       window.removeEventListener('keydown', onDown);
       window.removeEventListener('keyup', onUp);
     };
-  }, [selectSlot, keyDown, keyUp, confirm, cycleFocus]);
+  }, [selectSlot, keyDown, keyUp, confirm, cycleFocus, quickOpen]);
 
   // Juice por diff de snapshot: entrega → "+", erro → shake.
   useEffect(() => {

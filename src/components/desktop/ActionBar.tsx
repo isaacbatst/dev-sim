@@ -81,6 +81,37 @@ function Cue({ seg }: { seg: SegmentView }) {
           </span>
         </div>
       );
+    case 'file':
+      return seg.searching ? (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <span className="text-sm text-ink-dim">buscar:</span>
+          <span className="font-mono text-sm text-amber">{seg.query || '…'}</span>
+          <span className="flex items-center gap-1.5">
+            <KeyCap state="current">⏎</KeyCap>
+            <span className="text-sm text-ink-dim">abrir</span>
+          </span>
+          <span className="flex items-center gap-1.5">
+            <KeyCap state="idle">Ctrl+P</KeyCap>
+            <span className="text-sm text-ink-dim">fechar</span>
+          </span>
+        </div>
+      ) : (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <span className="flex items-center gap-1.5">
+            <KeyCap state="current">↑</KeyCap>
+            <KeyCap state="current">↓</KeyCap>
+            <span className="text-sm text-ink-dim">navegar</span>
+          </span>
+          <span className="flex items-center gap-1.5">
+            <KeyCap state="idle">⏎</KeyCap>
+            <span className="text-sm text-ink-dim">abrir</span>
+          </span>
+          <span className="flex items-center gap-1.5">
+            <KeyCap state="idle">Ctrl+P</KeyCap>
+            <span className="text-sm text-ink-dim">buscar</span>
+          </span>
+        </div>
+      );
   }
 }
 

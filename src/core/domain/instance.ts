@@ -15,6 +15,7 @@ import type {
   TicketTemplate,
 } from './types';
 import type { ProgramId } from '../snapshot';
+import { PROJECT_FILES } from '@/data/files';
 
 function randInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -73,8 +74,21 @@ export interface WaitInstance {
   elapsed: number;
 }
 
+export interface FileInstance {
+  type: 'file';
+  files: string[];
+  targetIndex: number;
+  cursor: number;
+  chosenIndex: number | null;
+  committed: boolean;
+  wrong: boolean;
+  /** Modo busca (Ctrl+P) e o texto digitado. */
+  searching: boolean;
+  query: string;
+}
+
 export type SegmentInstance =
-  PressInstance | HoldInstance | NavInstance | SelectionInstance | WaitInstance;
+  PressInstance | HoldInstance | NavInstance | SelectionInstance | WaitInstance | FileInstance;
 
 export interface StepInstance {
   segments: SegmentInstance[];
@@ -140,6 +154,18 @@ function instantiateSegment(segment: Segment): SegmentInstance {
         segment.minDuration + Math.random() * (segment.maxDuration - segment.minDuration);
       return { type: 'wait', total, elapsed: 0 };
     }
+    case 'file':
+      return {
+        type: 'file',
+        files: PROJECT_FILES,
+        targetIndex: randInt(0, PROJECT_FILES.length - 1),
+        cursor: 0,
+        chosenIndex: null,
+        committed: false,
+        wrong: false,
+        searching: false,
+        query: '',
+      };
   }
 }
 
@@ -172,6 +198,8 @@ export function segmentCompleted(seg: SegmentInstance): boolean {
       return seg.chosenIndex !== null;
     case 'wait':
       return seg.elapsed >= seg.total;
+    case 'file':
+      return seg.committed;
   }
 }
 

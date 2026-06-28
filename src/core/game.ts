@@ -4,6 +4,7 @@ import {
   instantiateTicket,
   segmentCompleted,
   stepCompleted,
+  type FileInstance,
   type SegmentInstance,
   type StepInstance,
   type TaskInstance,
@@ -46,10 +47,6 @@ const SPAWN_INTERVAL = 8;
 
 const REVERSE_DIR = { up: 'down', down: 'up', left: 'right', right: 'left' } as const;
 
-const FILE_NAME: Record<string, string> = { HTML: 'index.html', CSS: 'styles.css', JS: 'app.js' };
-function fileName(label?: string): string {
-  return (label && FILE_NAME[label]) || 'login.ts';
-}
 function joinPt(items: string[]): string {
   if (items.length === 0) return '';
   if (items.length === 1) return items[0];
@@ -169,6 +166,18 @@ export class Game {
         if (key === seg.action.key) seg.holding = true;
         break;
       }
+      case 'file': {
+        if (seg.committed) break;
+        if (seg.searching) {
+          if (key === 'backspace') seg.query = seg.query.slice(0, -1);
+          else if (key.length === 1) seg.query += key;
+        } else if (key === ARROW_KEY_BY_DIRECTION.down) {
+          seg.cursor = Math.min(seg.files.length - 1, seg.cursor + 1);
+        } else if (key === ARROW_KEY_BY_DIRECTION.up) {
+          seg.cursor = Math.max(0, seg.cursor - 1);
+        }
+        break;
+      }
       case 'wait':
         break;
     }
@@ -177,6 +186,27 @@ export class Game {
 
     // Ação de "abrir" recém-concluída → foca o programa que abriu.
     if (!launchedBefore && this.isLaunched(inst)) inst.focused = taskApp;
+  }
+
+  /** Ctrl+P: abre/fecha a busca rápida de arquivo (segmento `file`). */
+  quickOpen(): void {
+    if (this.status !== 'playing') return;
+    const inst = this.activeInstance();
+    if (!inst || inst.focused !== this.currentApp(inst)) return;
+    const seg = this.currentSegment(inst);
+    if (seg?.type === 'file' && !seg.committed) {
+      seg.searching = !seg.searching;
+      seg.query = '';
+    }
+  }
+
+  private fileMatch(seg: FileInstance): number {
+    const q = seg.query.toLowerCase();
+    if (!q) return seg.cursor;
+    const starts = seg.files.findIndex((f) => f.toLowerCase().startsWith(q));
+    if (starts >= 0) return starts;
+    const inc = seg.files.findIndex((f) => f.toLowerCase().includes(q));
+    return inc >= 0 ? inc : seg.cursor;
   }
 
   /** Foca um programa aberto (aba). */
@@ -222,6 +252,17 @@ export class Game {
     if (seg?.type === 'nav' && !seg.committed) {
       seg.committed = true;
       if (seg.cursor !== seg.target) {
+        seg.wrong = true;
+        inst.errors += 1;
+      }
+      const step = this.currentStep(inst);
+      if (step && stepCompleted(step)) this.advance(inst);
+    } else if (seg?.type === 'file' && !seg.committed) {
+      const idx = seg.searching ? this.fileMatch(seg) : seg.cursor;
+      seg.chosenIndex = idx;
+      seg.committed = true;
+      seg.searching = false;
+      if (idx !== seg.targetIndex) {
         seg.wrong = true;
         inst.errors += 1;
       }
@@ -410,6 +451,12 @@ export class Game {
       if (seg.type === 'press') return seg.actions.map((a) => a.label);
     return [];
   }
+  /** Arquivo-alvo do segmento `file` (o que a comanda manda abrir), se houver. */
+  private fileTarget(t: TaskInstance): string | null {
+    for (const step of t.steps)
+      for (const seg of step.segments) if (seg.type === 'file') return seg.files[seg.targetIndex];
+    return null;
+  }
 
   /** Descrição em prosa da subtarefa, com os detalhes mutáveis embutidos. */
   private taskProse(t: TaskInstance): string {
@@ -433,7 +480,7 @@ export class Game {
       case 'document':
         return `Documente a função no VSCode; faça push, aguarde o CR e o merge.`;
       case 'fix_typo':
-        return `No VSCode, corrija o typo na linha ${nav[0] ?? 1} de ${fileName(sel[0])}; faça push, aguarde o CR e o merge.`;
+        return `No VSCode, corrija o typo na linha ${nav[0] ?? 1} de ${this.fileTarget(t) ?? 'login.ts'}; faça push, aguarde o CR e o merge.`;
       case 'ui_color':
         return `No CSS, mude a ${sel[1]} do ${sel[0]} para ${sel[2]}; faça push, aguarde o CR e o merge.`;
       case 'ui_font':
@@ -447,8 +494,7 @@ export class Game {
   private editorFile(t: TaskInstance): string {
     for (const step of t.steps)
       for (const seg of step.segments)
-        if (seg.type === 'selection' && seg.options.some((o) => FILE_NAME[o.label]))
-          return fileName(seg.options[seg.correctIndex].label);
+        if (seg.type === 'file') return seg.files[seg.chosenIndex ?? seg.targetIndex];
     if (t.template.id === 'ui_color' || t.template.id === 'ui_font') return 'styles.css';
     return 'login.ts';
   }
@@ -499,6 +545,19 @@ export class Game {
           type: 'wait',
           remaining: Math.max(0, seg.total - seg.elapsed),
           progress: Math.min(1, seg.elapsed / seg.total),
+        };
+      case 'file':
+        return {
+          type: 'file',
+          files: seg.files,
+          cursor: seg.cursor,
+          target: seg.targetIndex,
+          chosenIndex: seg.chosenIndex,
+          committed: seg.committed,
+          wrong: seg.wrong,
+          searching: seg.searching,
+          query: seg.query,
+          matchIndex: seg.searching ? this.fileMatch(seg) : seg.cursor,
         };
     }
   }

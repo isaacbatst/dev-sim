@@ -1,24 +1,25 @@
 import type { ActiveTicketSnapshot, SegmentView } from '@/core/snapshot';
 
-/** Cores idiomáticas por tipo de arquivo e por cor selecionável. */
-const FILE_COLOR: Record<string, string> = { HTML: '#e44d26', CSS: '#2965f1', JS: '#f0db4f' };
-const FILE_NAME: Record<string, string> = { HTML: 'index.html', CSS: 'styles.css', JS: 'app.js' };
 const SWATCH: Record<string, string> = { Vermelho: '#ff5c57', Verde: '#5fd07a', Azul: '#5b9bff' };
 
-/** Conteúdo por arquivo aberto, para o editor mostrar o código certo. */
-const FILES: Record<string, string[]> = {
-  'login.ts': [
-    'export function login(user: User) {',
-    '  const token = createSession(user)',
-    '  if (!token) throw new AuthError()',
-    '  return persist(token)',
-    '}',
-    '',
-    'function createSession(user: User) {',
-    '  return signJwt({ sub: user.id })',
-    '}',
-  ],
-  'index.html': [
+/** Cor do ícone por extensão de arquivo. */
+const EXT_COLOR: Record<string, string> = {
+  html: '#e44d26',
+  css: '#2965f1',
+  js: '#f0db4f',
+  ts: '#3178c6',
+  md: '#8b90a6',
+};
+function ext(file: string): string {
+  return file.split('.').pop() ?? 'ts';
+}
+function extColor(file: string): string {
+  return EXT_COLOR[ext(file)] ?? 'var(--ink-dim)';
+}
+
+/** Conteúdo por extensão, para o editor mostrar o código certo de cada arquivo. */
+const CONTENT: Record<string, string[]> = {
+  html: [
     '<!doctype html>',
     '<html lang="pt-br">',
     '  <head>',
@@ -32,7 +33,7 @@ const FILES: Record<string, string[]> = {
     '  </body>',
     '</html>',
   ],
-  'styles.css': [
+  css: [
     ':root {',
     '  --primary: #3b82f6;',
     '}',
@@ -46,7 +47,7 @@ const FILES: Record<string, string[]> = {
     '}',
     '.input { border: 1px solid #ccc; }',
   ],
-  'app.js': [
+  js: [
     "import { api } from './api'",
     '',
     'export function login(user) {',
@@ -58,27 +59,85 @@ const FILES: Record<string, string[]> = {
     '  return signJwt({ sub: u.id })',
     '}',
   ],
+  ts: [
+    'export function login(user: User) {',
+    '  const token = createSession(user)',
+    '  if (!token) throw new AuthError()',
+    '  return persist(token)',
+    '}',
+    '',
+    'function createSession(user: User) {',
+    '  return signJwt({ sub: user.id })',
+    '}',
+  ],
+  md: [
+    '# Projeto',
+    '',
+    '## Setup',
+    '1. npm install',
+    '2. npm run dev',
+    '',
+    '## Deploy',
+    'Push para a main dispara o CI.',
+  ],
 };
+function linesFor(file: string): string[] {
+  return CONTENT[ext(file)] ?? CONTENT.ts;
+}
 
-/** Explorer com destaque do arquivo-alvo (sem keycap — a tecla mora na ActionBar). */
-function FileTree({ seg }: { seg: Extract<SegmentView, { type: 'selection' }> }) {
+/** Seletor de arquivo: navegar a árvore (setas) ou buscar (Ctrl+P). */
+function FilePicker({ seg }: { seg: Extract<SegmentView, { type: 'file' }> }) {
+  if (seg.searching) {
+    const q = seg.query.toLowerCase();
+    const matches = seg.files.filter((f) => f.toLowerCase().includes(q));
+    return (
+      <div className="flex-1 p-5">
+        <div className="mx-auto max-w-md">
+          <div className="flex items-center gap-2 rounded-md border border-amber bg-bg px-3 py-2 font-mono text-sm">
+            <span className="text-ink-dim">›</span>
+            <span className="text-ink">{seg.query}</span>
+            <span className="animate-edgepulse text-amber">▌</span>
+            <span className="ml-auto text-[10px] text-ink-dim">Ctrl+P · Quick Open</span>
+          </div>
+          <div className="mt-2 overflow-hidden rounded-md border border-line">
+            {matches.length === 0 && (
+              <p className="px-3 py-2 text-xs text-ink-dim">nenhum arquivo</p>
+            )}
+            {matches.map((f) => (
+              <div
+                key={f}
+                className={`flex items-center gap-2 px-3 py-1.5 font-mono text-sm ${
+                  seg.files[seg.matchIndex] === f ? 'bg-amber/15 text-ink' : 'text-ink-dim'
+                }`}
+              >
+                <span className="size-2.5 rounded-[2px]" style={{ background: extColor(f) }} />
+                {f}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
   return (
-    <div className="flex flex-col gap-0.5 p-3 font-mono text-sm">
+    <div className="flex-1 overflow-auto p-2 font-mono text-sm">
       <p className="px-2 pb-1 text-[11px] uppercase tracking-wider text-ink-dim">explorer</p>
-      {seg.options.map((o) => {
-        const chosen = seg.chosenKey === o.key;
+      {seg.files.map((f, i) => {
+        const onCursor = i === seg.cursor;
+        const isTarget = i === seg.target;
+        const chosenWrong = seg.committed && seg.wrong && i === seg.chosenIndex;
         return (
           <div
-            key={o.key}
-            className={`flex items-center gap-2 rounded px-2 py-1.5 ${
-              chosen ? (seg.wrong ? 'bg-fail/15' : 'bg-pass/15') : ''
+            key={f}
+            className={`flex items-center gap-2 rounded px-2 py-1 ${
+              onCursor ? (chosenWrong ? 'bg-fail/20' : 'bg-amber/15') : ''
             }`}
           >
-            <span
-              className="size-3 rounded-[3px]"
-              style={{ background: FILE_COLOR[o.label] ?? 'var(--ink-dim)' }}
-            />
-            <span className="text-ink">{FILE_NAME[o.label] ?? o.label.toLowerCase()}</span>
+            <span className="size-2.5 rounded-[2px]" style={{ background: extColor(f) }} />
+            <span className={onCursor ? 'text-ink' : 'text-ink-dim'}>{f}</span>
+            {isTarget && !seg.committed && (
+              <span className="ml-auto text-[10px] text-teal">◀ alvo</span>
+            )}
           </div>
         );
       })}
@@ -90,7 +149,7 @@ function CodeArea({ focus, file }: { focus?: SegmentView; file: string }) {
   const nav = focus?.type === 'nav' ? focus : null;
   const fixing = focus?.type === 'press' && focus.tokens.some((t) => /corrigir/i.test(t.label));
   const cursorWrong = nav?.committed && nav.wrong;
-  const lines = FILES[file] ?? FILES['login.ts'];
+  const lines = linesFor(file);
   return (
     <div className="flex-1 overflow-hidden font-mono text-sm">
       <div className="flex border-b border-line bg-surface px-3 py-1 text-xs text-ink-dim">
@@ -190,12 +249,8 @@ export function EditorScene({ active }: { active: ActiveTicketSnapshot }) {
   const focus = active.segments[0];
 
   let main: React.ReactNode;
-  if (focus?.type === 'selection')
-    main = FILE_COLOR[focus.options[0]?.label] ? (
-      <FileTree seg={focus} />
-    ) : (
-      <SelectMenu seg={focus} />
-    );
+  if (focus?.type === 'file') main = <FilePicker seg={focus} />;
+  else if (focus?.type === 'selection') main = <SelectMenu seg={focus} />;
   else if (focus?.type === 'wait') main = <PrPanel />;
   else if (focus?.type === 'press' && /push|merge/i.test(focus.tokens[0]?.label ?? ''))
     main = <GitTerminal focus={focus} />;
@@ -208,15 +263,6 @@ export function EditorScene({ active }: { active: ActiveTicketSnapshot }) {
         <span>🔍</span>
         <span className="text-teal">⑂</span>
         <span>🐞</span>
-      </div>
-      <div className="hidden w-40 shrink-0 flex-col border-r border-line bg-surface/60 p-2 font-mono text-xs text-ink-dim sm:flex">
-        <p className="pb-1 uppercase tracking-wider">projeto</p>
-        <p className="text-ink">▸ src</p>
-        {['index.html', 'styles.css', 'app.js', 'login.ts'].map((f) => (
-          <p key={f} className={`pl-3 ${f === active.editorFile ? 'text-amber' : ''}`}>
-            {f}
-          </p>
-        ))}
       </div>
       {main}
     </div>
