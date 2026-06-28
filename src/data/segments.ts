@@ -63,7 +63,6 @@ export const SEGMENTS: Record<string, Segment> = {
 
   // --- nav ---
   nav_find_line: { type: 'nav', direction: 'down', minCount: 1, maxCount: 5 },
-  nav_font_size: { type: 'nav', direction: 'up', minCount: 1, maxCount: 5 },
   nav_select_channel: { type: 'nav', direction: 'down', minCount: 1, maxCount: 5 },
 
   // --- selection ---
@@ -99,6 +98,15 @@ export const SEGMENTS: Record<string, Segment> = {
     options: [
       { key: 't', label: 'Texto' },
       { key: 'b', label: 'Fundo' },
+    ],
+  },
+  selection_font_size: {
+    type: 'selection',
+    options: [
+      { key: 'p', label: '12px' },
+      { key: 'm', label: '16px' },
+      { key: 'g', label: '20px' },
+      { key: 'x', label: '24px' },
     ],
   },
 

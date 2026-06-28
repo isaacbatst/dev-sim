@@ -497,7 +497,7 @@ export class Game {
       case 'ui_color':
         return `Em ${this.fileTarget(t) ?? 'styles.css'}, mude a ${sel[1]} do ${sel[0]} para ${sel[2]}; faça push, aguarde o CR e o merge.`;
       case 'ui_font':
-        return `Em ${this.fileTarget(t) ?? 'styles.css'}, ajuste a fonte do ${sel[0]} (${nav[0] ?? 1}×) para o estilo ${sel[1]}; faça push, aguarde o CR e o merge.`;
+        return `Em ${this.fileTarget(t) ?? 'styles.css'}, deixe a fonte do ${sel[0]} em ${sel[1]} e o estilo ${sel[2]}; faça push, aguarde o CR e o merge.`;
       default:
         return t.template.description;
     }

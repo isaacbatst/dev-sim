@@ -285,9 +285,10 @@ const COLOR_HEX: Record<string, string> = {
   Azul: '#3b82f6',
 };
 
-type SelKind = 'component' | 'property' | 'color' | 'style';
+type SelKind = 'component' | 'property' | 'color' | 'size' | 'style';
 function selKind(labels: string[]): SelKind {
   if (labels.some((l) => SWATCH[l])) return 'color';
+  if (labels.some((l) => /px$/.test(l))) return 'size';
   if (labels.some((l) => COMPONENTS.includes(l))) return 'component';
   if (labels.some((l) => PROPERTIES.includes(l))) return 'property';
   return 'style';
@@ -307,6 +308,7 @@ function CssSelect({
     component: 'componente',
     property: 'propriedade',
     color: 'cor',
+    size: 'tamanho da fonte',
     style: 'estilo',
   }[kind];
   return (
@@ -342,6 +344,23 @@ function CssSelect({
                     <span className="size-4 rounded" style={{ background: COLOR_HEX[o.label] }} />
                     <span className="text-ink">{o.label}</span>
                     <span className="text-ink-dim">{COLOR_HEX[o.label]}</span>
+                  </span>
+                )}
+                {kind === 'size' && (
+                  <span className="flex items-baseline gap-2">
+                    <span>
+                      <span className="text-sky-400">font-size</span>
+                      <span className="text-ink-dim">: </span>
+                      <span className="text-ink">{o.label}</span>
+                      <span className="text-ink-dim">;</span>
+                    </span>
+                    <span
+                      className="leading-none text-ink-dim"
+                      style={{ fontSize: o.label }}
+                      aria-hidden
+                    >
+                      Aa
+                    </span>
                   </span>
                 )}
                 {kind === 'style' && (

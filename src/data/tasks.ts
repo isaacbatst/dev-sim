@@ -87,7 +87,7 @@ export const TASKS: Record<string, TaskTemplate> = {
       step('press_open_vscode'),
       step('open_css_file'),
       step('selection_element'),
-      step('nav_font_size'),
+      step('selection_font_size'),
       step('selection_font_style'),
       step('press_push'),
       step('wait_cr'),
