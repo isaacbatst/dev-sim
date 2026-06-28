@@ -126,13 +126,13 @@ function ExplorerSidebar({ pick, currentFile }: { pick: FileView | null; current
 /** Prévia (somente leitura) do arquivo sob o cursor, na área principal. */
 function Preview({ file }: { file: string }) {
   return (
-    <div className="flex-1 overflow-hidden font-mono text-sm">
-      <div className="flex items-center gap-2 border-b border-line bg-surface px-3 py-1 text-xs text-ink-dim">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden font-mono text-sm">
+      <div className="flex shrink-0 items-center gap-2 border-b border-line bg-surface px-3 py-1 text-xs text-ink-dim">
         <span className="size-2.5 rounded-[2px]" style={{ background: extColor(file) }} />
         {file}
         <span className="text-ink-dim/70">— prévia</span>
       </div>
-      <pre className="m-0 p-3 leading-6 text-ink-dim opacity-70">
+      <pre className="m-0 flex-1 overflow-y-auto p-3 leading-6 text-ink-dim opacity-70">
         {linesFor(file).map((line, i) => (
           <div key={i} className="flex gap-3">
             <span className="w-6 select-none text-right">{i + 1}</span>
@@ -191,11 +191,11 @@ function CodeArea({
   const cursorWrong = nav?.committed && nav.wrong;
   const lines = linesFor(file);
   return (
-    <div className="flex-1 overflow-hidden font-mono text-sm">
-      <div className="flex border-b border-line bg-surface px-3 py-1 text-xs text-ink-dim">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden font-mono text-sm">
+      <div className="flex shrink-0 border-b border-line bg-surface px-3 py-1 text-xs text-ink-dim">
         <span className="border-b-2 border-amber px-2 py-1 text-ink">{file}</span>
       </div>
-      <pre className="m-0 p-3 leading-6">
+      <pre className="m-0 flex-1 overflow-y-auto p-3 leading-6">
         {lines.map((line, i) => {
           const isCursor = nav && i === nav.cursor;
           const isTarget = nav && i === nav.target;
@@ -244,12 +244,12 @@ function GitView({
 }) {
   const merge = /merge/i.test(focus.tokens[0]?.label ?? '');
   return (
-    <div className="flex flex-1 flex-col">
-      <div className="flex-1 overflow-hidden font-mono text-sm">
-        <div className="flex border-b border-line bg-surface px-3 py-1 text-xs text-ink-dim">
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden font-mono text-sm">
+        <div className="flex shrink-0 border-b border-line bg-surface px-3 py-1 text-xs text-ink-dim">
           <span className="border-b-2 border-amber px-2 py-1 text-ink">{file}</span>
         </div>
-        <pre className="m-0 p-3 leading-6">
+        <pre className="m-0 flex-1 overflow-y-auto p-3 leading-6">
           {linesFor(file).map((line, i) => {
             const fixed = targetLine > 0 && i === targetLine - 1;
             return (
@@ -262,7 +262,7 @@ function GitView({
           })}
         </pre>
       </div>
-      <div className="border-t border-line bg-black/60 p-2.5 font-mono text-xs">
+      <div className="shrink-0 border-t border-line bg-black/60 p-2.5 font-mono text-xs">
         <p className="text-[10px] uppercase tracking-wider text-ink-dim">terminal</p>
         <p className="mt-1 text-ink-dim">desenvolvedor@devOS:~/projeto$</p>
         <p className="text-pass">
@@ -405,7 +405,7 @@ export function EditorScene({ active }: { active: ActiveTicketSnapshot }) {
   else main = <CodeArea focus={focus} file={active.editorFile} targetLine={active.editorLine} />;
 
   return (
-    <div className="flex min-h-[22rem] flex-1">
+    <div className="flex h-[24rem] flex-1 overflow-hidden">
       <div className="flex w-10 shrink-0 flex-col items-center gap-4 border-r border-line bg-surface-2 py-3 text-ink-dim">
         <span>📄</span>
         <span>🔍</span>
@@ -413,7 +413,7 @@ export function EditorScene({ active }: { active: ActiveTicketSnapshot }) {
         <span>🐞</span>
       </div>
       <ExplorerSidebar pick={pick} currentFile={active.editorFile} />
-      <div className="relative flex flex-1 flex-col">
+      <div className="relative flex min-h-0 flex-1 flex-col">
         {main}
         {pick?.searching && <QuickOpen seg={pick} />}
       </div>

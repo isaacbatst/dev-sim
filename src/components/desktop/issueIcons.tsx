@@ -27,17 +27,11 @@ export function StatusIcon({ status }: { status: IssueStatus }) {
         </svg>
       );
     case 'review':
+      // anel + 3/4 preenchido (review em andamento, quase lá)
       return (
         <svg viewBox="0 0 14 14" className="size-3.5 shrink-0">
-          <circle
-            cx="7"
-            cy="7"
-            r="5.5"
-            fill="none"
-            stroke="#5b9bff"
-            strokeWidth="1.5"
-            strokeDasharray="2.3 2.3"
-          />
+          <circle cx="7" cy="7" r="5.5" fill="none" stroke="#5b9bff" strokeWidth="1.5" />
+          <path d="M7 7 L7 1.5 A5.5 5.5 0 1 1 1.5 7 Z" fill="#5b9bff" />
         </svg>
       );
     case 'active':
