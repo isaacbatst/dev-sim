@@ -177,7 +177,15 @@ function QuickOpen({ seg }: { seg: FileView }) {
   );
 }
 
-function CodeArea({ focus, file }: { focus?: SegmentView; file: string }) {
+function CodeArea({
+  focus,
+  file,
+  targetLine,
+}: {
+  focus?: SegmentView;
+  file: string;
+  targetLine: number;
+}) {
   const nav = focus?.type === 'nav' ? focus : null;
   const fixing = focus?.type === 'press' && focus.tokens.some((t) => /corrigir/i.test(t.label));
   const cursorWrong = nav?.committed && nav.wrong;
@@ -191,7 +199,7 @@ function CodeArea({ focus, file }: { focus?: SegmentView; file: string }) {
         {lines.map((line, i) => {
           const isCursor = nav && i === nav.cursor;
           const isTarget = nav && i === nav.target;
-          const isBug = fixing && i === 2;
+          const isBug = fixing && targetLine > 0 && i === targetLine - 1;
           return (
             <div
               key={i}
@@ -287,7 +295,7 @@ export function EditorScene({ active }: { active: ActiveTicketSnapshot }) {
   else if (focus?.type === 'wait') main = <PrPanel />;
   else if (focus?.type === 'press' && /push|merge/i.test(focus.tokens[0]?.label ?? ''))
     main = <GitTerminal focus={focus} />;
-  else main = <CodeArea focus={focus} file={active.editorFile} />;
+  else main = <CodeArea focus={focus} file={active.editorFile} targetLine={active.editorLine} />;
 
   return (
     <div className="flex min-h-[22rem] flex-1">

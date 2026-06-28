@@ -98,6 +98,8 @@ export interface ActiveTicketSnapshot {
   plan: { title: string; status: PlanStatus; prose: string }[];
   /** Arquivo aberto no editor (para a cena do VSCode). */
   editorFile: string;
+  /** Linha-alvo (1-based) do typo no editor; 0 se não se aplica. */
+  editorLine: number;
 }
 
 export type PlanStatus = 'done' | 'current' | 'pending';

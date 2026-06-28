@@ -396,6 +396,7 @@ export class Game {
     return {
       id: inst.id,
       editorFile: this.editorFile(taskInst),
+      editorLine: this.editorLine(taskInst),
       // 1º passo de cada tarefa é "Abrir X"; antes disso, o app ainda não abriu.
       appLaunched: this.isLaunched(inst),
       focused: inst.focused,
@@ -457,6 +458,12 @@ export class Game {
       for (const seg of step.segments) if (seg.type === 'file') return seg.files[seg.targetIndex];
     return null;
   }
+  /** Linha-alvo (1-based) onde está o typo: parte da linha 1 e desce `target`. */
+  private editorLine(t: TaskInstance): number {
+    for (const step of t.steps)
+      for (const seg of step.segments) if (seg.type === 'nav') return seg.target + 1;
+    return 0;
+  }
 
   /** Descrição em prosa da subtarefa, com os detalhes mutáveis embutidos. */
   private taskProse(t: TaskInstance): string {
@@ -480,7 +487,7 @@ export class Game {
       case 'document':
         return `Documente a função no VSCode; faça push, aguarde o CR e o merge.`;
       case 'fix_typo':
-        return `No VSCode, corrija o typo na linha ${nav[0] ?? 1} de ${this.fileTarget(t) ?? 'login.ts'}; faça push, aguarde o CR e o merge.`;
+        return `No VSCode, corrija o typo na linha ${(nav[0] ?? 0) + 1} de ${this.fileTarget(t) ?? 'login.ts'}; faça push, aguarde o CR e o merge.`;
       case 'ui_color':
         return `No CSS, mude a ${sel[1]} do ${sel[0]} para ${sel[2]}; faça push, aguarde o CR e o merge.`;
       case 'ui_font':
