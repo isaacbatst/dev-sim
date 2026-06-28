@@ -33,7 +33,7 @@ Duas vozes, papéis fixos. Não misture.
 | Voz                  | Fonte          | Quem fala                                                                                                        |
 | -------------------- | -------------- | ---------------------------------------------------------------------------------------------------------------- |
 | **Máquina** (`mono`) | JetBrains Mono | Tudo que o "computador" renderiza: código, terminal, relógio, IDs (`DEV-12`), URLs, keycaps, números/contadores. |
-| **Humana** (`ui`)    | Space Grotesk  | Tudo que a interface "diz" ao usuário: títulos, prosa do ticket, labels, botões, nomes de app.                   |
+| **Humana** (`ui`)    | Geist          | Tudo que a interface "diz" ao usuário: títulos, prosa do ticket, labels, botões, nomes de app.                   |
 
 **Regra de ouro:** se é dado cru/diegético → mono. Se é UI falando com você →
 grotesk. Quando estiver na dúvida, é grotesk.
@@ -225,11 +225,10 @@ _Referências_); já foram removidos do produto.
   centralizado com badge acima do H1. Não somos nada disso.
 - ❌ **Cantos quadrados (radius 0)** em cartões/janelas. Nossa linguagem é macia.
 
-> **Ponto aberto — fonte.** Space Grotesk é ótima, mas é um **default de LLM**
-> (aparece em quase toda UI gerada). Vale considerar trocar a fonte de UI por
-> algo com mais ponto de vista (Geist, Söhne, Untitled Sans, Haas Grotesk…),
-> mantendo JetBrains Mono pra voz "máquina". É uma decisão de identidade — não
-> mexi sem alinhar.
+> **Fonte (decidido).** Trocamos Space Grotesk (default de LLM) por **Geist** na
+> voz UI — engineered, feita pra produto dev, casa com JetBrains Mono (voz
+> máquina). Var continua `--font-grotesk` por compat. Se um dia quiser ainda
+> mais ponto de vista: Söhne, Untitled Sans, Haas Grotesk (comerciais).
 
 ---
 
@@ -269,6 +268,8 @@ pra hierarquia e pro grão.
 
 ## Changelog
 
+- **2026-06-28:** Fonte de UI: **Space Grotesk → Geist** (saindo do default de
+  LLM). JetBrains Mono mantida na voz máquina.
 - **2026-06-28:** **Passada anti-AI** (baseada em análise de UIs vibe-coded).
   Removidos os "tells": borda colorida na janela → diferenciação por _material_
   (gradiente neutro: topo mais claro) + elevação + valor; listra colorida da

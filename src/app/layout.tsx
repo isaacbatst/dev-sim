@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { JetBrains_Mono, Space_Grotesk } from 'next/font/google';
+import { JetBrains_Mono, Geist } from 'next/font/google';
 import './globals.css';
 
 const mono = JetBrains_Mono({
@@ -7,7 +7,9 @@ const mono = JetBrains_Mono({
   subsets: ['latin'],
 });
 
-const grotesk = Space_Grotesk({
+// Voz "UI/humana": Geist (engineered, feito p/ produto dev) no lugar de Space
+// Grotesk (default de LLM). Mantém o nome --font-grotesk por compatibilidade.
+const ui = Geist({
   variable: '--font-grotesk',
   subsets: ['latin'],
 });
@@ -23,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className={`${mono.variable} ${grotesk.variable} h-full antialiased`}>
+    <html lang="pt-BR" className={`${mono.variable} ${ui.variable} h-full antialiased`}>
       <body className="min-h-full">{children}</body>
     </html>
   );
