@@ -1,4 +1,4 @@
-import type { Priority, SlotSnapshot } from '@/core/snapshot';
+import type { ActiveTicketSnapshot, Priority, SlotSnapshot } from '@/core/snapshot';
 import { KeyCap } from './primitives';
 
 const PRIORITY_DOT: Record<Priority, string> = {
@@ -8,15 +8,19 @@ const PRIORITY_DOT: Record<Priority, string> = {
   baixa: 'bg-ink-dim',
 };
 
-/** A fila de demandas, apresentada como uma janela de issue tracker ("Backlog"). */
+/** A fila de demandas, apresentada como uma janela de issue tracker ("Backlog").
+ *  Abaixo dos slots, mostra a instrução atual do ticket selecionado. */
 export function InboxPanel({
   slots,
+  active,
   onSelect,
 }: {
   slots: (SlotSnapshot | null)[];
+  active: ActiveTicketSnapshot | null;
   onSelect: (index: number) => void;
 }) {
   const open = slots.filter(Boolean).length;
+  const sub = active?.plan.find((p) => p.status === 'current') ?? active?.plan[0];
   return (
     <aside className="flex w-60 shrink-0 flex-col overflow-hidden rounded-lg border border-line bg-surface shadow-xl shadow-black/40">
       <div className="flex items-center gap-2 border-b border-line bg-surface-2 px-3 py-2">
@@ -83,6 +87,25 @@ export function InboxPanel({
           </button>
         ))}
       </div>
+
+      {/* Instrução do ticket selecionado — abaixo dos slots, sempre visível */}
+      {active && sub && (
+        <div className="mx-2 mt-1 rounded-md border border-amber/40 bg-amber/5 p-2.5">
+          <div className="mb-1 flex items-center gap-1.5">
+            <span className="text-[11px]">📌</span>
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-ink-dim">
+              em andamento
+            </span>
+          </div>
+          <p className="line-clamp-1 text-xs font-semibold text-ink">{active.name}</p>
+          {active.taskCount > 1 && (
+            <p className="text-[11px] text-amber">
+              {sub.title} · {active.taskIndex + 1}/{active.taskCount}
+            </p>
+          )}
+          <p className="mt-1 text-[11px] leading-relaxed text-ink-dim">{sub.prose}</p>
+        </div>
+      )}
     </aside>
   );
 }
