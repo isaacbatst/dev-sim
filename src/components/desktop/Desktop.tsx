@@ -4,6 +4,7 @@ import { MenuBar } from './MenuBar';
 import { InboxPanel } from './InboxPanel';
 import { AppWindow } from './AppWindow';
 import { Dock } from './Dock';
+import { TicketWidget } from './TicketWidget';
 
 /** A área de trabalho inteira. Apresentação pura — sem lógica de jogo. */
 export function Desktop({
@@ -82,6 +83,9 @@ export function Desktop({
             transition: 'box-shadow 0.4s ease',
           }}
         />
+
+        {/* Nota do ticket: visível enquanto se trabalha num app (não na aba Ticket) */}
+        {active && active.focused !== 'details' && <TicketWidget active={active} />}
 
         <Dock activeApp={active?.app ?? null} />
       </main>
