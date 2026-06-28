@@ -154,11 +154,17 @@ function instantiateSegment(segment: Segment): SegmentInstance {
         segment.minDuration + Math.random() * (segment.maxDuration - segment.minDuration);
       return { type: 'wait', total, elapsed: 0 };
     }
-    case 'file':
+    case 'file': {
+      const allowed = segment.ext
+        ? PROJECT_FILES.map((f, i) => (f.endsWith(`.${segment.ext}`) ? i : -1)).filter(
+            (i) => i >= 0,
+          )
+        : PROJECT_FILES.map((_, i) => i);
+      const targetIndex = allowed[randInt(0, allowed.length - 1)];
       return {
         type: 'file',
         files: PROJECT_FILES,
-        targetIndex: randInt(0, PROJECT_FILES.length - 1),
+        targetIndex,
         cursor: 0,
         chosenIndex: null,
         committed: false,
@@ -166,6 +172,7 @@ function instantiateSegment(segment: Segment): SegmentInstance {
         searching: false,
         query: '',
       };
+    }
   }
 }
 

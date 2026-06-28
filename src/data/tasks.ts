@@ -69,7 +69,7 @@ export const TASKS: Record<string, TaskTemplate> = {
     description: 'Abrir o VSCode, abrir CSS, selecionar elemento/propriedade/cor, push, CR e merge',
     steps: [
       step('press_open_vscode'),
-      step('press_open_css'),
+      step('open_css_file'),
       step('selection_element'),
       step('selection_property'),
       step('selection_color'),
@@ -85,7 +85,7 @@ export const TASKS: Record<string, TaskTemplate> = {
       'Abrir o VSCode, abrir CSS, selecionar elemento, ajustar fonte e estilo, push, CR e merge',
     steps: [
       step('press_open_vscode'),
-      step('press_open_css'),
+      step('open_css_file'),
       step('selection_element'),
       step('nav_font_size'),
       step('selection_font_style'),

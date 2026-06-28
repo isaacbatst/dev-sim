@@ -243,30 +243,85 @@ function GitTerminal({ focus }: { focus: Extract<SegmentView, { type: 'press' }>
   );
 }
 
-function SelectMenu({ seg }: { seg: Extract<SegmentView, { type: 'selection' }> }) {
-  const isColor = seg.options.some((o) => SWATCH[o.label]);
+const COMPONENTS = ['Button', 'Title', 'Input'];
+const PROPERTIES = ['Texto', 'Fundo'];
+const PROP_CSS: Record<string, string> = { Texto: 'color', Fundo: 'background' };
+const COLOR_HEX: Record<string, string> = {
+  Vermelho: '#ef4444',
+  Verde: '#22c55e',
+  Azul: '#3b82f6',
+};
+
+type SelKind = 'component' | 'property' | 'color' | 'style';
+function selKind(labels: string[]): SelKind {
+  if (labels.some((l) => SWATCH[l])) return 'color';
+  if (labels.some((l) => COMPONENTS.includes(l))) return 'component';
+  if (labels.some((l) => PROPERTIES.includes(l))) return 'property';
+  return 'style';
+}
+
+/** Seleção renderizada como edição do CSS (componente → propriedade → valor),
+ *  em vez de menu genérico. Sem keycap (tecla na ActionBar) nem destaque do alvo. */
+function CssSelect({
+  seg,
+  file,
+}: {
+  seg: Extract<SegmentView, { type: 'selection' }>;
+  file: string;
+}) {
+  const kind = selKind(seg.options.map((o) => o.label));
+  const header = {
+    component: 'componente',
+    property: 'propriedade',
+    color: 'cor',
+    style: 'estilo',
+  }[kind];
   return (
-    <div className="flex-1 p-4">
-      <p className="mb-3 text-xs uppercase tracking-wider text-ink-dim">
-        {isColor ? 'paleta' : 'propriedades'}
-      </p>
-      <div className={`flex flex-wrap gap-2 ${isColor ? '' : 'flex-col'}`}>
-        {seg.options.map((o) => {
-          const chosen = seg.chosenKey === o.key;
-          return (
-            <div
-              key={o.key}
-              className={`flex items-center gap-2 rounded-md border px-3 py-2 ${
-                chosen ? (seg.wrong ? 'border-fail' : 'border-pass') : 'border-line'
-              }`}
-            >
-              {isColor && (
-                <span className="size-4 rounded" style={{ background: SWATCH[o.label] }} />
-              )}
-              <span className="text-sm text-ink">{o.label}</span>
-            </div>
-          );
-        })}
+    <div className="flex flex-1 flex-col font-mono text-sm">
+      <div className="flex border-b border-line bg-surface px-3 py-1 text-xs text-ink-dim">
+        <span className="border-b-2 border-amber px-2 py-1 text-ink">{file}</span>
+      </div>
+      <div className="p-4">
+        <p className="mb-3 text-[11px] uppercase tracking-wider text-ink-dim">
+          selecionar {header}
+        </p>
+        <div className="flex flex-col gap-1.5">
+          {seg.options.map((o) => {
+            const chosen = seg.chosenKey === o.key;
+            const border = chosen ? (seg.wrong ? 'border-fail' : 'border-pass') : 'border-line/60';
+            return (
+              <div key={o.key} className={`rounded-md border ${border} bg-bg/40 px-3 py-2`}>
+                {kind === 'component' && (
+                  <span>
+                    <span className="text-teal">.{o.label.toLowerCase()}</span>
+                    <span className="text-ink-dim"> {'{ … }'}</span>
+                  </span>
+                )}
+                {kind === 'property' && (
+                  <span>
+                    <span className="text-sky-400">{PROP_CSS[o.label]}</span>
+                    <span className="text-ink-dim">: …;</span>
+                    <span className="ml-2 text-[10px] text-ink-dim">({o.label.toLowerCase()})</span>
+                  </span>
+                )}
+                {kind === 'color' && (
+                  <span className="flex items-center gap-2">
+                    <span className="size-4 rounded" style={{ background: COLOR_HEX[o.label] }} />
+                    <span className="text-ink">{o.label}</span>
+                    <span className="text-ink-dim">{COLOR_HEX[o.label]}</span>
+                  </span>
+                )}
+                {kind === 'style' && (
+                  <span>
+                    <span className="text-sky-400">font-style</span>
+                    <span className="text-ink-dim">: </span>
+                    <span className="text-ink">{o.label.toLowerCase()}</span>
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
@@ -291,7 +346,7 @@ export function EditorScene({ active }: { active: ActiveTicketSnapshot }) {
 
   let main: React.ReactNode;
   if (pick) main = <Preview file={pick.files[pick.cursor]} />;
-  else if (focus?.type === 'selection') main = <SelectMenu seg={focus} />;
+  else if (focus?.type === 'selection') main = <CssSelect seg={focus} file={active.editorFile} />;
   else if (focus?.type === 'wait') main = <PrPanel />;
   else if (focus?.type === 'press' && /push|merge/i.test(focus.tokens[0]?.label ?? ''))
     main = <GitTerminal focus={focus} />;

@@ -46,7 +46,6 @@ export const SEGMENTS: Record<string, Segment> = {
   press_push: { type: 'press', maxItems: 1, actions: [{ key: 'p', label: 'Push' }] },
   press_merge: { type: 'press', maxItems: 1, actions: [{ key: 'm', label: 'Merge' }] },
   press_fix: { type: 'press', maxItems: 1, actions: [{ key: 'f', label: 'Corrigir' }] },
-  press_open_css: { type: 'press', maxItems: 1, actions: [{ key: 'c', label: 'Abrir CSS' }] },
 
   // --- hold (AUDITORIA: tempo morto) ---
   hold_speak: {
@@ -94,6 +93,7 @@ export const SEGMENTS: Record<string, Segment> = {
   },
   // Abrir arquivo: navegar a árvore (setas) ou Ctrl+P. Ver src/data/files.ts.
   open_file: { type: 'file' },
+  open_css_file: { type: 'file', ext: 'css' },
   selection_property: {
     type: 'selection',
     options: [

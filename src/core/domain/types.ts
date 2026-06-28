@@ -78,6 +78,8 @@ export interface WaitSegment {
 /** `file`: abrir um arquivo no editor navegando a lista (setas) ou via Ctrl+P. */
 export interface FileSegment {
   type: 'file';
+  /** Restringe o arquivo-alvo a uma extensão (ex.: 'css'). Cursor navega todos. */
+  ext?: string;
 }
 
 export type Segment =

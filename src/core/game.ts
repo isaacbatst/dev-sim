@@ -489,9 +489,9 @@ export class Game {
       case 'fix_typo':
         return `No VSCode, corrija o typo na linha ${(nav[0] ?? 0) + 1} de ${this.fileTarget(t) ?? 'login.ts'}; faça push, aguarde o CR e o merge.`;
       case 'ui_color':
-        return `No CSS, mude a ${sel[1]} do ${sel[0]} para ${sel[2]}; faça push, aguarde o CR e o merge.`;
+        return `Em ${this.fileTarget(t) ?? 'styles.css'}, mude a ${sel[1]} do ${sel[0]} para ${sel[2]}; faça push, aguarde o CR e o merge.`;
       case 'ui_font':
-        return `No CSS, ajuste a fonte do ${sel[0]} (${nav[0] ?? 1}×) para o estilo ${sel[1]}; faça push, aguarde o CR e o merge.`;
+        return `Em ${this.fileTarget(t) ?? 'styles.css'}, ajuste a fonte do ${sel[0]} (${nav[0] ?? 1}×) para o estilo ${sel[1]}; faça push, aguarde o CR e o merge.`;
       default:
         return t.template.description;
     }
@@ -502,7 +502,6 @@ export class Game {
     for (const step of t.steps)
       for (const seg of step.segments)
         if (seg.type === 'file') return seg.files[seg.chosenIndex ?? seg.targetIndex];
-    if (t.template.id === 'ui_color' || t.template.id === 'ui_font') return 'styles.css';
     return 'login.ts';
   }
 
