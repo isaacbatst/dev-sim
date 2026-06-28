@@ -7,7 +7,7 @@ export function MeetScene({ active }: { active: ActiveTicketSnapshot }) {
   const speaking = focus?.type === 'hold' && focus.holding;
 
   return (
-    <div className="flex min-h-72 flex-1 flex-col bg-[#0c0e15]">
+    <div className="flex min-h-[22rem] flex-1 flex-col bg-[#0c0e15]">
       <div className="grid flex-1 grid-cols-4 gap-2 p-3">
         {PEERS.map((p) => (
           <div

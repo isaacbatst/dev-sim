@@ -35,7 +35,7 @@ const DRAIN_BASE = 0.5;
 const GRACE_SECONDS = 12;
 const SPAWN_INTERVAL = 8;
 
-const ARROW_KEYS = new Set(Object.values(ARROW_KEY_BY_DIRECTION));
+const REVERSE_DIR = { up: 'down', down: 'up', left: 'right', right: 'left' } as const;
 
 export class Game {
   private satisfaction = 100;
@@ -120,10 +120,11 @@ export class Game {
         break;
       }
       case 'nav': {
+        // Move o cursor; pode passar do alvo (e voltar). Não conclui — isso é o confirm().
         if (key === ARROW_KEY_BY_DIRECTION[seg.direction]) {
-          if (!segmentCompleted(seg)) seg.count += 1;
-        } else if (ARROW_KEYS.has(key)) {
-          inst.errors += 1;
+          seg.cursor = Math.min(seg.max, seg.cursor + 1);
+        } else if (key === ARROW_KEY_BY_DIRECTION[REVERSE_DIR[seg.direction]]) {
+          seg.cursor = Math.max(0, seg.cursor - 1);
         }
         break;
       }
@@ -159,6 +160,27 @@ export class Game {
     if (seg?.type === 'hold' && raw.toLowerCase() === seg.action.key) {
       seg.holding = false;
       if (seg.held < seg.target) seg.held = 0; // soltou cedo: reinicia (paridade com o PoC)
+    }
+  }
+
+  /** Enter: confirma o passo posicional (nav) ou entrega quando pronto. */
+  confirm(): void {
+    if (this.status !== 'playing') return;
+    const inst = this.activeInstance();
+    if (!inst) return;
+    if (inst.ready) {
+      this.deliver();
+      return;
+    }
+    const seg = this.currentSegment(inst);
+    if (seg?.type === 'nav' && !seg.committed) {
+      seg.committed = true;
+      if (seg.cursor !== seg.target) {
+        seg.wrong = true;
+        inst.errors += 1;
+      }
+      const step = this.currentStep(inst);
+      if (step && stepCompleted(step)) this.advance(inst);
     }
   }
 
@@ -272,6 +294,10 @@ export class Game {
       ready: inst.ready,
       app: appForTask(task.id),
       windowTitle: windowTitle(task.id, task.title),
+      subtasks: inst.tasks.map((t, i) => ({
+        title: t.template.title,
+        status: i < inst.taskIndex ? 'done' : i === inst.taskIndex ? 'current' : 'pending',
+      })),
     };
   }
 
@@ -303,8 +329,10 @@ export class Game {
           type: 'nav',
           symbol: SYMBOL_BY_DIRECTION[seg.direction],
           direction: seg.direction,
-          count: seg.count,
+          cursor: seg.cursor,
           target: seg.target,
+          committed: seg.committed,
+          wrong: seg.wrong,
         };
       case 'selection':
         return {

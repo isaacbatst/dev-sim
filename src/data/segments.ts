@@ -63,9 +63,9 @@ export const SEGMENTS: Record<string, Segment> = {
   },
 
   // --- nav ---
-  nav_find_line: { type: 'nav', direction: 'down', minCount: 1, maxCount: 10 },
-  nav_font_size: { type: 'nav', direction: 'up', minCount: 1, maxCount: 10 },
-  nav_select_channel: { type: 'nav', direction: 'down', minCount: 1, maxCount: 10 },
+  nav_find_line: { type: 'nav', direction: 'down', minCount: 1, maxCount: 5 },
+  nav_font_size: { type: 'nav', direction: 'up', minCount: 1, maxCount: 5 },
+  nav_select_channel: { type: 'nav', direction: 'down', minCount: 1, maxCount: 5 },
 
   // --- selection ---
   selection_color: {

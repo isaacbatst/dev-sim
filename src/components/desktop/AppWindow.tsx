@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { ActiveTicketSnapshot, Priority } from '@/core/snapshot';
 import { APPS } from './apps';
 import { Scene } from './scenes';
@@ -17,9 +18,80 @@ const PRIORITY_CLASS: Record<Priority, string> = {
   baixa: 'text-ink-dim border-line',
 };
 
-/** Janela do app aberto pela demanda ativa. Cena (ambiente) + ActionBar (hint padronizada). */
+/** "Comanda" da demanda: o que foi pedido + checklist de subtarefas (estilo CSD). */
+function DetailsPanel({ active }: { active: ActiveTicketSnapshot }) {
+  return (
+    <div className="flex min-h-[22rem] flex-1 flex-col gap-4 p-6">
+      <div>
+        <div className="mb-1 flex items-center gap-2">
+          <span
+            className={`rounded border px-1.5 py-0.5 text-[10px] font-semibold ${PRIORITY_CLASS[active.priority]}`}
+          >
+            {PRIORITY_LABEL[active.priority]}
+          </span>
+          <h2 className="font-grotesk text-lg font-semibold text-ink">{active.name}</h2>
+        </div>
+        <p className="text-sm text-ink-dim">{active.description}</p>
+      </div>
+
+      <div>
+        <p className="mb-2 text-[11px] uppercase tracking-wider text-ink-dim">subtarefas</p>
+        <ol className="flex flex-col gap-1.5">
+          {active.subtasks.map((s, i) => (
+            <li
+              key={i}
+              className={`flex items-center gap-2 rounded-md border px-3 py-2 text-sm ${
+                s.status === 'current'
+                  ? 'border-amber bg-amber/5 text-ink'
+                  : s.status === 'done'
+                    ? 'border-line text-ink-dim'
+                    : 'border-line/60 text-ink-dim'
+              }`}
+            >
+              <span
+                className={
+                  s.status === 'done'
+                    ? 'text-pass'
+                    : s.status === 'current'
+                      ? 'text-amber'
+                      : 'text-ink-dim'
+                }
+              >
+                {s.status === 'done' ? '✓' : s.status === 'current' ? '▸' : '○'}
+              </span>
+              <span className={s.status === 'done' ? 'line-through' : ''}>{s.title}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </div>
+  );
+}
+
+function Tab({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+        active ? 'bg-surface-2 text-ink' : 'text-ink-dim hover:text-ink'
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
 export function AppWindow({ active, shake }: { active: ActiveTicketSnapshot; shake: boolean }) {
   const app = APPS[active.app];
+  const [view, setView] = useState<'work' | 'details'>('work');
 
   return (
     <div
@@ -46,19 +118,24 @@ export function AppWindow({ active, shake }: { active: ActiveTicketSnapshot; sha
         </span>
       </div>
 
-      {/* faixa de contexto da demanda */}
-      <div className="flex items-baseline gap-2 border-b border-line bg-bg/40 px-4 py-2">
-        <span className="truncate font-grotesk text-sm font-semibold text-ink">{active.name}</span>
-        {active.taskCount > 1 && (
-          <span className="ml-auto shrink-0 text-[11px] text-ink-dim">
-            {active.taskTitle} · {active.taskIndex + 1}/{active.taskCount}
-          </span>
-        )}
+      {/* Abas: comanda (detalhes) ↔ trabalho (execução) */}
+      <div className="flex items-center gap-1 border-b border-line bg-bg/40 px-2 py-1.5">
+        <Tab active={view === 'work'} onClick={() => setView('work')}>
+          Trabalho
+        </Tab>
+        <Tab active={view === 'details'} onClick={() => setView('details')}>
+          Detalhes
+        </Tab>
+        <span className="ml-auto truncate pr-2 text-[11px] text-ink-dim">
+          {active.taskCount > 1
+            ? `${active.taskTitle} · ${active.taskIndex + 1}/${active.taskCount}`
+            : active.name}
+        </span>
       </div>
 
-      {/* cena do app (ambiente) */}
+      {/* corpo */}
       <div className="flex flex-1 flex-col">
-        <Scene active={active} />
+        {view === 'details' ? <DetailsPanel active={active} /> : <Scene active={active} />}
       </div>
 
       {/* hint padronizada */}

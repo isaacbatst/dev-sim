@@ -12,7 +12,7 @@ export function GameScreen() {
   const selectSlot = useGameStore((s) => s.selectSlot);
   const keyDown = useGameStore((s) => s.keyDown);
   const keyUp = useGameStore((s) => s.keyUp);
-  const deliver = useGameStore((s) => s.deliver);
+  const confirm = useGameStore((s) => s.confirm);
 
   const [shake, setShake] = useState(false);
   const [floatScore, setFloatScore] = useState<string | null>(null);
@@ -25,7 +25,7 @@ export function GameScreen() {
       if (e.key.startsWith('Arrow')) e.preventDefault();
       if (e.repeat) return;
       if (e.key >= '1' && e.key <= '5') return selectSlot(Number(e.key) - 1);
-      if (e.key === 'Enter') return deliver();
+      if (e.key === 'Enter') return confirm();
       keyDown(e.key);
     };
     const onUp = (e: KeyboardEvent) => keyUp(e.key);
@@ -35,7 +35,7 @@ export function GameScreen() {
       window.removeEventListener('keydown', onDown);
       window.removeEventListener('keyup', onUp);
     };
-  }, [selectSlot, keyDown, keyUp, deliver]);
+  }, [selectSlot, keyDown, keyUp, confirm]);
 
   // Juice por diff de snapshot: entrega → "+", erro → shake.
   useEffect(() => {

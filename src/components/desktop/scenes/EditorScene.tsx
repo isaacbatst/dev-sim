@@ -53,8 +53,9 @@ function FileTree({ seg }: { seg: Extract<SegmentView, { type: 'selection' }> })
 }
 
 function CodeArea({ focus }: { focus?: SegmentView }) {
-  const navLine = focus?.type === 'nav' ? focus.count : -1;
+  const nav = focus?.type === 'nav' ? focus : null;
   const fixing = focus?.type === 'press' && focus.tokens.some((t) => /corrigir/i.test(t.label));
+  const cursorWrong = nav?.committed && nav.wrong;
   return (
     <div className="flex-1 overflow-hidden font-mono text-sm">
       <div className="flex border-b border-line bg-surface px-3 py-1 text-xs text-ink-dim">
@@ -62,18 +63,28 @@ function CodeArea({ focus }: { focus?: SegmentView }) {
       </div>
       <pre className="m-0 p-3 leading-6">
         {FAUX_CODE.map((line, i) => {
-          const isCursor = i === navLine;
+          const isCursor = nav && i === nav.cursor;
+          const isTarget = nav && i === nav.target;
           const isBug = fixing && i === 2;
           return (
             <div
               key={i}
-              className={`flex gap-3 ${isCursor ? 'bg-amber/15' : ''} ${isBug ? 'bg-fail/10' : ''}`}
+              className={`flex items-center gap-3 ${
+                isCursor ? (cursorWrong ? 'bg-fail/20' : 'bg-amber/15') : ''
+              } ${isBug ? 'bg-fail/10' : ''}`}
             >
               <span className="w-6 select-none text-right text-ink-dim">{i + 1}</span>
               <span className={isBug ? 'text-fail underline decoration-wavy' : 'text-ink'}>
                 {line || ' '}
               </span>
-              {isCursor && <span className="animate-edgepulse text-amber">▎</span>}
+              {isCursor && (
+                <span className={`animate-edgepulse ${cursorWrong ? 'text-fail' : 'text-amber'}`}>
+                  ▎
+                </span>
+              )}
+              {isTarget && !nav?.committed && (
+                <span className="ml-auto pr-2 text-[10px] text-teal">◀ alvo</span>
+              )}
             </div>
           );
         })}
@@ -163,7 +174,7 @@ export function EditorScene({ active }: { active: ActiveTicketSnapshot }) {
   else main = <CodeArea focus={focus} />;
 
   return (
-    <div className="flex min-h-72 flex-1">
+    <div className="flex min-h-[22rem] flex-1">
       <div className="flex w-10 flex-col items-center gap-4 border-r border-line bg-surface-2 py-3 text-ink-dim">
         <span>📄</span>
         <span>🔍</span>

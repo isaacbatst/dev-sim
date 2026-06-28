@@ -49,6 +49,11 @@ export class GameLoop {
     this.listener(this.game.snapshot());
   }
 
+  confirm(): void {
+    this.game.confirm();
+    this.listener(this.game.snapshot());
+  }
+
   deliver(): void {
     this.game.deliver();
     this.listener(this.game.snapshot());

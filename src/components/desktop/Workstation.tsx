@@ -85,9 +85,9 @@ export function Workstation({ clock, children }: { clock: string; children: Reac
         style={{ height: `${HORIZON}%` }}
       >
         <div className="relative flex flex-col items-center">
-          {/* moldura */}
+          {/* moldura (queixo inferior maior, como monitor real) */}
           <div
-            className="relative rounded-[20px] p-3"
+            className="relative rounded-[20px] px-3 pb-6 pt-3"
             style={{
               background: 'linear-gradient(155deg, #3c4049 0%, #1d2028 45%, #0e1014 100%)',
               boxShadow: [
@@ -115,8 +115,8 @@ export function Workstation({ clock, children }: { clock: string; children: Reac
                 }}
               />
             </div>
-            <div className="absolute bottom-[5px] right-3 size-1 rounded-full bg-emerald-400 shadow-[0_0_6px_1px] shadow-emerald-400/70" />
-            <span className="absolute bottom-[3px] left-1/2 -translate-x-1/2 text-[9px] font-bold tracking-[0.35em] text-white/20">
+            <div className="absolute bottom-2 right-3 size-1 rounded-full bg-emerald-400 shadow-[0_0_6px_1px] shadow-emerald-400/70" />
+            <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 text-[9px] font-bold tracking-[0.35em] text-white/25">
               devOS
             </span>
           </div>

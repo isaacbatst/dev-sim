@@ -33,16 +33,28 @@ function Cue({ seg }: { seg: SegmentView }) {
           </span>
         </div>
       );
-    case 'nav':
+    case 'nav': {
+      const onTarget = seg.cursor === seg.target;
       return (
-        <div className="flex items-center gap-3">
-          <KeyCap state="current">{ARROW_GLYPH[seg.direction] ?? seg.symbol}</KeyCap>
-          <span className="text-sm text-ink">
-            {seg.symbol} <span className="font-mono text-amber">{seg.count}</span>
-            <span className="font-mono text-ink-dim">/{seg.target}</span>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <span className="flex items-center gap-1.5">
+            <KeyCap state="current">{ARROW_GLYPH[seg.direction] ?? seg.symbol}</KeyCap>
+            <KeyCap state="idle">
+              {seg.direction === 'up' ? '↓' : seg.direction === 'down' ? '↑' : '↔'}
+            </KeyCap>
+            <span className="text-sm text-ink-dim">mover</span>
+          </span>
+          <span className="flex items-center gap-1.5">
+            <KeyCap state={onTarget ? 'current' : 'idle'}>⏎</KeyCap>
+            <span className="text-sm text-ink-dim">confirmar</span>
+          </span>
+          <span className="font-mono text-sm">
+            <span className={onTarget ? 'text-pass' : 'text-amber'}>{seg.cursor}</span>
+            <span className="text-ink-dim"> / alvo {seg.target}</span>
           </span>
         </div>
       );
+    }
     case 'selection':
       return (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">

@@ -50,7 +50,7 @@ export function Desktop({
 
         <section className="flex min-w-0 flex-1 items-center justify-center pb-16">
           {active ? (
-            <div className="relative w-full max-w-[34rem]">
+            <div className="relative w-full max-w-[44rem]">
               <AppWindow active={active} shake={shake} />
               {floatScore && (
                 <span className="animate-floatup pointer-events-none absolute -top-3 left-1/2 -translate-x-1/2 font-mono text-lg font-bold text-pass">

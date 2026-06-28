@@ -31,7 +31,15 @@ export type SegmentView =
       progress: number;
       holding: boolean;
     }
-  | { type: 'nav'; symbol: string; direction: NavDirection; count: number; target: number }
+  | {
+      type: 'nav';
+      symbol: string;
+      direction: NavDirection;
+      cursor: number;
+      target: number;
+      committed: boolean;
+      wrong: boolean;
+    }
   | {
       type: 'selection';
       prompt: string;
@@ -63,6 +71,8 @@ export interface ActiveTicketSnapshot {
   /** App do desktop a abrir para a tarefa atual e o título da janela. */
   app: AppId;
   windowTitle: string;
+  /** Lista de subtarefas da demanda (para o painel de Detalhes). */
+  subtasks: { title: string; status: 'done' | 'current' | 'pending' }[];
 }
 
 export interface Snapshot {

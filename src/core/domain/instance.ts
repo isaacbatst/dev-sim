@@ -49,7 +49,13 @@ export interface NavInstance {
   type: 'nav';
   direction: NavDirection;
   target: number;
-  count: number;
+  /** Posição atual do cursor (pode passar do alvo). */
+  cursor: number;
+  /** Limite de movimento (alvo + folga para passar direto). */
+  max: number;
+  /** Confirmado pelo jogador (commit). Conclui o segmento mesmo na posição errada. */
+  committed: boolean;
+  wrong: boolean;
 }
 
 export interface SelectionInstance {
@@ -103,13 +109,18 @@ function instantiateSegment(segment: Segment): SegmentInstance {
         held: 0,
         holding: false,
       };
-    case 'nav':
+    case 'nav': {
+      const target = randInt(segment.minCount, segment.maxCount);
       return {
         type: 'nav',
         direction: segment.direction,
-        target: randInt(segment.minCount, segment.maxCount),
-        count: 0,
+        target,
+        cursor: 0,
+        max: target + 3, // folga para passar direto e voltar
+        committed: false,
+        wrong: false,
       };
+    }
     case 'selection':
       return {
         type: 'selection',
@@ -148,7 +159,7 @@ export function segmentCompleted(seg: SegmentInstance): boolean {
     case 'hold':
       return seg.held >= seg.target;
     case 'nav':
-      return seg.count >= seg.target;
+      return seg.committed;
     case 'selection':
       return seg.chosenIndex !== null;
     case 'wait':

@@ -17,7 +17,7 @@ export function BrowserScene({ active }: { active: ActiveTicketSnapshot }) {
   const url = reading ? urlFor(reading.label) : 'https://devdocs.io';
 
   return (
-    <div className="flex min-h-72 flex-1 flex-col bg-[#fbfbfd] text-zinc-800">
+    <div className="flex min-h-[22rem] flex-1 flex-col bg-[#fbfbfd] text-zinc-800">
       <div className="flex items-center gap-1 bg-zinc-200 px-2 pt-2">
         <div className="flex items-center gap-2 rounded-t-md bg-[#fbfbfd] px-3 py-1.5 text-xs">
           <span className="size-3 rounded-full bg-orange-400" /> Stack Overflow

@@ -10,7 +10,7 @@ export function MailScene({ active }: { active: ActiveTicketSnapshot }) {
   // active é mantido para futura ambientação por passo (arquivar, etc.)
   void active;
   return (
-    <div className="flex min-h-72 flex-1 bg-[#fbfbfd] text-zinc-800">
+    <div className="flex min-h-[22rem] flex-1 bg-[#fbfbfd] text-zinc-800">
       <div className="w-52 shrink-0 border-r border-zinc-200">
         {INBOX.map((m, i) => (
           <div
