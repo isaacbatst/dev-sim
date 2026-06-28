@@ -66,6 +66,8 @@ export type SegmentView =
 
 export interface SlotSnapshot {
   index: number;
+  /** Id da instância (para o identificador DEV-###). */
+  id: number;
   name: string;
   priority: Priority;
   ready: boolean;

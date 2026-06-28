@@ -382,6 +382,7 @@ export class Game {
       !inst.ready && seg?.type === 'press' && seg.actions.some((a) => /merge/i.test(a.label));
     return {
       index,
+      id: inst.id,
       name: inst.template.name,
       priority: inst.template.priority,
       ready: inst.ready,
