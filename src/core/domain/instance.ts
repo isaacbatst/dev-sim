@@ -14,6 +14,7 @@ import type {
   TaskTemplate,
   TicketTemplate,
 } from './types';
+import type { ProgramId } from '../snapshot';
 
 function randInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -92,6 +93,8 @@ export interface TicketInstance {
   stepIndex: number;
   errors: number;
   ready: boolean;
+  /** Programa em foco (aba ativa): a "Comanda" (details) ou um app aberto. */
+  focused: ProgramId;
 }
 
 let nextTicketId = 1;
@@ -153,6 +156,7 @@ export function instantiateTicket(template: TicketTemplate): TicketInstance {
     stepIndex: 0,
     errors: 0,
     ready: false,
+    focused: 'details',
   };
 }
 

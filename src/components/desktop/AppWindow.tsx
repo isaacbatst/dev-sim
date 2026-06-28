@@ -1,5 +1,5 @@
-import type { ActiveTicketSnapshot, PlanStatus, Priority } from '@/core/snapshot';
-import { APPS, DOCK_APPS } from './apps';
+import type { ActiveTicketSnapshot, PlanStatus, Priority, ProgramId } from '@/core/snapshot';
+import { APPS } from './apps';
 import { Scene } from './scenes';
 import { ActionBar } from './ActionBar';
 
@@ -55,23 +55,24 @@ function DetailsPanel({ active }: { active: ActiveTicketSnapshot }) {
                 </p>
               )}
               <ol
-                className={`flex flex-col gap-1 ${multi ? 'border-l border-line pl-3 ml-1.5' : ''}`}
+                className={`flex flex-col gap-1 ${multi ? 'ml-1.5 border-l border-line pl-3' : ''}`}
               >
                 {sub.steps.map((st, j) => (
-                  <li
-                    key={j}
-                    className={`flex items-center gap-2 text-sm ${
-                      st.status === 'current'
-                        ? 'text-ink'
-                        : st.status === 'done'
-                          ? 'text-ink-dim'
-                          : 'text-ink-dim'
-                    }`}
-                  >
+                  <li key={j} className="flex items-center gap-2 text-sm text-ink-dim">
                     <span className={`text-xs ${statusColor(st.status)}`}>
                       {statusMark(st.status)}
                     </span>
-                    <span className={st.status === 'done' ? 'line-through' : ''}>{st.label}</span>
+                    <span
+                      className={
+                        st.status === 'done'
+                          ? 'line-through'
+                          : st.status === 'current'
+                            ? 'text-ink'
+                            : ''
+                      }
+                    >
+                      {st.label}
+                    </span>
                   </li>
                 ))}
               </ol>
@@ -83,69 +84,43 @@ function DetailsPanel({ active }: { active: ActiveTicketSnapshot }) {
   );
 }
 
-/** Programa fechado: mostra a área de trabalho; o app abre com a ação (rodapé). */
-function DesktopBackground({ active }: { active: ActiveTicketSnapshot }) {
+/** App aberto, mas não é onde está a ação agora. */
+function IdleApp({ appId, target }: { appId: ProgramId; target: string }) {
+  const app = appId === 'details' ? null : APPS[appId];
   return (
-    <div
-      className="relative flex min-h-[22rem] flex-1 items-center justify-center"
-      style={{
-        background:
-          'radial-gradient(120% 80% at 50% 0%, color-mix(in srgb, var(--amber) 8%, transparent), transparent 55%), linear-gradient(180deg, #11131b, #0c0e14)',
-      }}
-    >
-      <div
-        aria-hidden
-        className="absolute inset-0 opacity-[0.05]"
-        style={{
-          backgroundImage:
-            'linear-gradient(var(--ink) 1px, transparent 1px), linear-gradient(90deg, var(--ink) 1px, transparent 1px)',
-          backgroundSize: '30px 30px',
-        }}
-      />
-      <div className="relative grid grid-cols-3 gap-x-8 gap-y-6">
-        {DOCK_APPS.map((id) => {
-          const app = APPS[id];
-          const isTarget = id === active.app;
-          return (
-            <div key={id} className="flex w-16 flex-col items-center gap-1.5 text-center">
-              <span
-                className={`flex size-12 items-center justify-center rounded-2xl border text-2xl transition ${
-                  isTarget
-                    ? 'animate-edgepulse border-amber bg-amber/10'
-                    : 'border-white/10 bg-surface-2 opacity-50'
-                }`}
-                style={isTarget ? { boxShadow: `0 0 20px -4px ${app.accent}` } : undefined}
-              >
-                {app.icon}
-              </span>
-              <span className={`text-[11px] ${isTarget ? 'text-ink' : 'text-ink-dim opacity-60'}`}>
-                {app.name}
-              </span>
-            </div>
-          );
-        })}
-      </div>
+    <div className="flex min-h-[22rem] flex-1 flex-col items-center justify-center gap-2 text-center">
+      <span className="text-4xl opacity-30" aria-hidden>
+        {app?.icon}
+      </span>
+      <p className="text-sm text-ink-dim">{app?.name} aberto — sem ação aqui agora</p>
+      <p className="text-xs text-ink-dim">
+        a tarefa atual está em <span className="text-amber">{target}</span> ·{' '}
+        <kbd className="keycap !h-5 !min-w-7 !text-[10px]">Tab</kbd>
+      </p>
     </div>
   );
 }
 
-function Tab({
+function ProgramTab({
+  label,
+  icon,
   active,
   onClick,
-  children,
 }: {
+  label: string;
+  icon?: string;
   active: boolean;
   onClick: () => void;
-  children: React.ReactNode;
 }) {
   return (
     <button
       onClick={onClick}
-      className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+      className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
         active ? 'bg-surface-2 text-ink' : 'text-ink-dim hover:text-ink'
       }`}
     >
-      {children}
+      {icon && <span aria-hidden>{icon}</span>}
+      {label}
     </button>
   );
 }
@@ -153,19 +128,25 @@ function Tab({
 export function AppWindow({
   active,
   shake,
-  view,
-  onView,
+  onFocusProgram,
 }: {
   active: ActiveTicketSnapshot;
   shake: boolean;
-  view: 'work' | 'details';
-  onView: (v: 'work' | 'details') => void;
+  onFocusProgram: (id: ProgramId) => void;
 }) {
-  const app = APPS[active.app];
+  const focusedApp = active.focused !== 'details' ? APPS[active.focused] : null;
+
+  // Título da janela conforme o programa em foco.
+  const title =
+    active.focused === 'details'
+      ? `Comanda — ${active.name}`
+      : active.focused === active.app
+        ? active.windowTitle
+        : `${focusedApp?.name}`;
 
   return (
     <div
-      key={active.app}
+      key={active.id}
       className={`animate-windowin flex w-full flex-col overflow-hidden rounded-lg border border-line bg-surface shadow-2xl shadow-black/60 ${
         shake ? 'animate-shake' : ''
       }`}
@@ -178,9 +159,9 @@ export function AppWindow({
           <span className="size-3 rounded-full bg-[#28c840]" />
         </div>
         <span className="text-sm" aria-hidden>
-          {app.icon}
+          {focusedApp?.icon ?? '📋'}
         </span>
-        <span className="truncate font-mono text-xs text-ink-dim">{active.windowTitle}</span>
+        <span className="truncate font-mono text-xs text-ink-dim">{title}</span>
         <span
           className={`ml-auto rounded border px-1.5 py-0.5 text-[10px] font-semibold ${PRIORITY_CLASS[active.priority]}`}
         >
@@ -188,32 +169,36 @@ export function AppWindow({
         </span>
       </div>
 
-      {/* Abas: comanda (detalhes) ↔ trabalho (execução) — alterna com Tab */}
+      {/* Abas = Comanda + programas abertos (alterna com Tab) */}
       <div className="flex items-center gap-1 border-b border-line bg-bg/40 px-2 py-1.5">
-        <Tab active={view === 'work'} onClick={() => onView('work')}>
-          Trabalho
-        </Tab>
-        <Tab active={view === 'details'} onClick={() => onView('details')}>
-          Detalhes
-        </Tab>
-        <span className="ml-1 hidden items-center gap-1 text-[10px] text-ink-dim sm:flex">
+        <ProgramTab
+          label="Comanda"
+          icon="📋"
+          active={active.focused === 'details'}
+          onClick={() => onFocusProgram('details')}
+        />
+        {active.openPrograms.map((id) => (
+          <ProgramTab
+            key={id}
+            label={APPS[id].name}
+            icon={APPS[id].icon}
+            active={active.focused === id}
+            onClick={() => onFocusProgram(id)}
+          />
+        ))}
+        <span className="ml-auto hidden items-center gap-1 pr-1 text-[10px] text-ink-dim sm:flex">
           <kbd className="keycap !h-5 !min-w-7 !text-[10px]">Tab</kbd> alterna
-        </span>
-        <span className="ml-auto truncate pr-2 text-[11px] text-ink-dim">
-          {active.taskCount > 1
-            ? `${active.taskTitle} · ${active.taskIndex + 1}/${active.taskCount}`
-            : ''}
         </span>
       </div>
 
-      {/* corpo */}
+      {/* corpo: conteúdo do programa em foco */}
       <div className="flex flex-1 flex-col">
-        {view === 'details' ? (
+        {active.focused === 'details' ? (
           <DetailsPanel active={active} />
-        ) : active.appLaunched ? (
+        ) : active.focused === active.app && active.appLaunched ? (
           <Scene active={active} />
         ) : (
-          <DesktopBackground active={active} />
+          <IdleApp appId={active.focused} target={APPS[active.app].name} />
         )}
       </div>
 

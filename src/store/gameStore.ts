@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { GameLoop } from '@/core/loop';
-import type { Snapshot } from '@/core/snapshot';
+import type { ProgramId, Snapshot } from '@/core/snapshot';
 
 /**
  * Bridge entre o `core` (loop em RAF) e a UI React. Substitui o EventBus do Godot.
@@ -17,6 +17,8 @@ interface GameState {
   keyUp: (key: string) => void;
   confirm: () => void;
   deliver: () => void;
+  focusProgram: (id: ProgramId) => void;
+  cycleFocus: () => void;
 }
 
 let loop: GameLoop | null = null;
@@ -46,5 +48,7 @@ export const useGameStore = create<GameState>((set) => {
     keyUp: (key) => loop?.keyUp(key),
     confirm: () => loop?.confirm(),
     deliver: () => loop?.deliver(),
+    focusProgram: (id) => loop?.focusProgram(id),
+    cycleFocus: () => loop?.cycleFocus(),
   };
 });

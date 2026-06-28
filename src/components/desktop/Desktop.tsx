@@ -10,16 +10,14 @@ export function Desktop({
   snapshot,
   shake,
   floatScore,
-  view,
-  onView,
+  onFocusProgram,
   onSelect,
   onRestart,
 }: {
   snapshot: Snapshot;
   shake: boolean;
   floatScore: string | null;
-  view: 'work' | 'details';
-  onView: (v: 'work' | 'details') => void;
+  onFocusProgram: (id: import('@/core/snapshot').ProgramId) => void;
   onSelect: (index: number) => void;
   onRestart: () => void;
 }) {
@@ -55,7 +53,7 @@ export function Desktop({
         <section className="flex min-w-0 flex-1 items-center justify-center pb-16">
           {active ? (
             <div className="relative w-full max-w-[44rem]">
-              <AppWindow active={active} shake={shake} view={view} onView={onView} />
+              <AppWindow active={active} shake={shake} onFocusProgram={onFocusProgram} />
               {floatScore && (
                 <span className="animate-floatup pointer-events-none absolute -top-3 left-1/2 -translate-x-1/2 font-mono text-lg font-bold text-pass">
                   {floatScore}

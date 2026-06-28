@@ -87,11 +87,13 @@ function Cue({ seg }: { seg: SegmentView }) {
 }
 
 export function ActionBar({ active }: { active: ActiveTicketSnapshot }) {
-  const accent = APPS[active.app].accent;
+  const app = APPS[active.app];
+  // Ação de trabalho exige o programa aberto E em foco; "abrir" funciona de qualquer aba.
+  const needFocus = !active.ready && active.appLaunched && active.focused !== active.app;
   return (
     <div
       className="flex min-h-14 items-center gap-3 border-t border-line bg-bg/70 px-4 py-2.5"
-      style={{ boxShadow: `inset 3px 0 0 ${accent}` }}
+      style={{ boxShadow: `inset 3px 0 0 ${app.accent}` }}
     >
       <span className="shrink-0 text-[10px] font-semibold uppercase tracking-widest text-ink-dim">
         ação
@@ -100,6 +102,10 @@ export function ActionBar({ active }: { active: ActiveTicketSnapshot }) {
         {active.ready ? (
           <span className="flex items-center gap-2 text-pass">
             <KeyCap state="current">⏎</KeyCap> entregar a demanda
+          </span>
+        ) : needFocus ? (
+          <span className="flex items-center gap-2 text-amber">
+            <KeyCap state="current">Tab</KeyCap> foque o {app.name} para continuar
           </span>
         ) : (
           active.segments.map((seg, i) => <Cue key={i} seg={seg} />)

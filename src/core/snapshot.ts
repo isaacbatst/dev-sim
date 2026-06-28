@@ -12,6 +12,9 @@ export type GameStatus = 'playing' | 'won' | 'lost';
 /** Qual "app" do desktop a tarefa atual representa (UI diegética). */
 export type AppId = 'editor' | 'browser' | 'slack' | 'mail' | 'meet';
 
+/** Programa em foco: a "Comanda" (details) ou um app aberto. */
+export type ProgramId = 'details' | AppId;
+
 /** Token de `press`: uma tecla da sequência. */
 export interface PressToken {
   key: string;
@@ -62,8 +65,12 @@ export interface SlotSnapshot {
 export interface ActiveTicketSnapshot {
   /** Id da instância — muda a cada seleção (a UI reseta a aba por ele). */
   id: number;
-  /** O "programa" já foi aberto? (1º passo, "Abrir X", concluído.) */
+  /** O "programa" da tarefa atual já foi aberto? (1º passo, "Abrir X", concluído.) */
   appLaunched: boolean;
+  /** Programa em foco (aba ativa). */
+  focused: ProgramId;
+  /** Apps abertos desta demanda (abas, além da Comanda). */
+  openPrograms: AppId[];
   name: string;
   description: string;
   priority: Priority;

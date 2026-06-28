@@ -10,7 +10,14 @@ import {
 } from './domain/instance';
 import { TICKET_POOL } from '@/data/tickets';
 import { appForTask, windowTitle } from './domain/apps';
-import type { ActiveTicketSnapshot, SegmentView, Snapshot, SlotSnapshot } from './snapshot';
+import type {
+  ActiveTicketSnapshot,
+  AppId,
+  ProgramId,
+  SegmentView,
+  Snapshot,
+  SlotSnapshot,
+} from './snapshot';
 
 /**
  * Motor do jogo — lógica pura em TS, sem React e sem timers próprios.
@@ -105,6 +112,12 @@ export class Game {
     if (this.status !== 'playing') return;
     const inst = this.activeInstance();
     if (!inst || inst.ready) return;
+
+    const taskApp = this.currentApp(inst);
+    const launchedBefore = this.isLaunched(inst);
+    // Ações de trabalho exigem o programa aberto E em foco; "abrir" não exige nada.
+    if (launchedBefore && inst.focused !== taskApp) return;
+
     const seg = this.currentSegment(inst);
     if (!seg) return;
     const key = raw.toLowerCase();
@@ -149,6 +162,25 @@ export class Game {
     }
 
     if (stepCompleted(this.currentStep(inst)!)) this.advance(inst);
+
+    // Ação de "abrir" recém-concluída → foca o programa que abriu.
+    if (!launchedBefore && this.isLaunched(inst)) inst.focused = taskApp;
+  }
+
+  /** Foca um programa aberto (aba). */
+  focusProgram(id: ProgramId): void {
+    const inst = this.activeInstance();
+    if (!inst) return;
+    if (id === 'details' || this.openPrograms(inst).includes(id)) inst.focused = id;
+  }
+
+  /** Alterna o foco para a próxima aba (Tab). */
+  cycleFocus(): void {
+    const inst = this.activeInstance();
+    if (!inst) return;
+    const tabs: ProgramId[] = ['details', ...this.openPrograms(inst)];
+    const i = tabs.indexOf(inst.focused);
+    inst.focused = tabs[(i + 1) % tabs.length];
   }
 
   /** Tecla solta (keyup) — relevante só para `hold`. */
@@ -172,6 +204,8 @@ export class Game {
       this.deliver();
       return;
     }
+    // Confirmar o nav é ação de trabalho — exige o programa em foco.
+    if (inst.focused !== this.currentApp(inst)) return;
     const seg = this.currentSegment(inst);
     if (seg?.type === 'nav' && !seg.committed) {
       seg.committed = true;
@@ -232,6 +266,28 @@ export class Game {
     return inst.tasks[inst.taskIndex]?.steps[inst.stepIndex];
   }
 
+  /** O app já abriu? (1º passo "Abrir X" concluído.) */
+  private isLaunched(inst: TicketInstance): boolean {
+    return inst.ready || inst.stepIndex > 0;
+  }
+
+  /** App da tarefa atual. */
+  private currentApp(inst: TicketInstance): AppId {
+    return appForTask(inst.tasks[Math.min(inst.taskIndex, inst.tasks.length - 1)].template.id);
+  }
+
+  /** Apps abertos desta demanda (tarefas cujo 1º passo "Abrir" já foi feito). */
+  private openPrograms(inst: TicketInstance): AppId[] {
+    const out: AppId[] = [];
+    for (let ti = 0; ti <= inst.taskIndex && ti < inst.tasks.length; ti++) {
+      const opened = ti < inst.taskIndex || inst.ready || inst.stepIndex > 0;
+      if (!opened) continue;
+      const app = appForTask(inst.tasks[ti].template.id);
+      if (!out.includes(app)) out.push(app);
+    }
+    return out;
+  }
+
   private currentSegment(inst: TicketInstance): SegmentInstance | undefined {
     // Conteúdo atual tem 1 segmento por passo; pega o primeiro não concluído.
     return this.currentStep(inst)?.segments.find((s) => !segmentCompleted(s));
@@ -286,7 +342,9 @@ export class Game {
     return {
       id: inst.id,
       // 1º passo de cada tarefa é "Abrir X"; antes disso, o app ainda não abriu.
-      appLaunched: inst.ready || inst.stepIndex > 0,
+      appLaunched: this.isLaunched(inst),
+      focused: inst.focused,
+      openPrograms: this.openPrograms(inst),
       name: inst.template.name,
       description: inst.template.description,
       priority: inst.template.priority,

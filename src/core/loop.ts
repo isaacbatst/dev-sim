@@ -54,6 +54,16 @@ export class GameLoop {
     this.listener(this.game.snapshot());
   }
 
+  focusProgram(id: import('./snapshot').ProgramId): void {
+    this.game.focusProgram(id);
+    this.listener(this.game.snapshot());
+  }
+
+  cycleFocus(): void {
+    this.game.cycleFocus();
+    this.listener(this.game.snapshot());
+  }
+
   deliver(): void {
     this.game.deliver();
     this.listener(this.game.snapshot());
