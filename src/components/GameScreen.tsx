@@ -26,8 +26,10 @@ export function GameScreen() {
   // O gate por foco vive no core (ações de trabalho exigem o programa em foco).
   useEffect(() => {
     const onDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')) {
+      // Ctrl/Cmd+P: aborta o print do navegador e abre o Quick Open.
+      if ((e.ctrlKey || e.metaKey) && e.code === 'KeyP') {
         e.preventDefault();
+        e.stopPropagation();
         return quickOpen();
       }
       if (e.ctrlKey || e.metaKey) return; // não capturar outros atalhos do SO
@@ -39,10 +41,11 @@ export function GameScreen() {
       keyDown(e.key);
     };
     const onUp = (e: KeyboardEvent) => keyUp(e.key);
-    window.addEventListener('keydown', onDown);
+    // Fase de captura para interceptar o atalho de print antes do navegador.
+    window.addEventListener('keydown', onDown, { capture: true });
     window.addEventListener('keyup', onUp);
     return () => {
-      window.removeEventListener('keydown', onDown);
+      window.removeEventListener('keydown', onDown, { capture: true });
       window.removeEventListener('keyup', onUp);
     };
   }, [selectSlot, keyDown, keyUp, confirm, cycleFocus, quickOpen]);
