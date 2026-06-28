@@ -117,7 +117,7 @@ function instantiateSegment(segment: Segment): SegmentInstance {
   switch (segment.type) {
     case 'press': {
       const count = randInt(1, Math.max(1, segment.maxItems));
-      const chosen = segment.maxItems > 1 ? shuffleTake(segment.actions, count) : segment.actions;
+      const chosen = shuffleTake(segment.actions, count);
       const distractors = segment.actions.filter((a) => !chosen.includes(a));
       return { type: 'press', actions: chosen, distractors, pressed: chosen.map(() => false) };
     }

@@ -10,8 +10,8 @@ export const TASKS: Record<string, TaskTemplate> = {
   study: {
     id: 'study',
     title: 'Estudar',
-    description: 'Abrir o navegador e estudar',
-    steps: [step('press_open_browser'), step('press_read_on_browser')],
+    description: 'Abrir o navegador, acessar a página e ler',
+    steps: [step('press_open_browser'), step('press_open_source'), step('press_read')],
   },
   meeting: {
     id: 'meeting',

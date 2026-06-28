@@ -72,6 +72,8 @@ export interface SlotSnapshot {
   active: boolean;
   /** Segundos restantes se o passo atual for um `wait` em andamento; senão null. */
   waitRemaining: number | null;
+  /** Review (CR) voltou e falta o merge — pronto pro merge. */
+  readyToMerge: boolean;
 }
 
 export interface ActiveTicketSnapshot {
@@ -100,6 +102,8 @@ export interface ActiveTicketSnapshot {
   editorFile: string;
   /** Linha-alvo (1-based) do typo no editor; 0 se não se aplica. */
   editorLine: number;
+  /** Site/página aberta no navegador (para a cena do browser). */
+  browserSite: string;
 }
 
 export type PlanStatus = 'done' | 'current' | 'pending';

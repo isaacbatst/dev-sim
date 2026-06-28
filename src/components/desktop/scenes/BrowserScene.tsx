@@ -28,17 +28,14 @@ const SITES: Record<string, Site> = {
   home: { tab: 'Nova aba', dot: 'bg-zinc-400', url: '', kind: 'home' },
 };
 
-function siteKey(focus?: SegmentView): string {
+function siteKey(focus: SegmentView | undefined, browserSite: string): string {
+  // "Abrir o navegador / a página" → tela inicial; só ao LER (ou testar) carrega a página.
   if (focus?.type === 'hold') return 'staging';
   if (focus?.type === 'press') {
     const t = focus.tokens.find((x) => !x.done) ?? focus.tokens[0];
     const l = (t?.label ?? '').toLowerCase();
-    if (/staging/.test(l)) return 'staging';
-    if (/stack/.test(l)) return 'so';
-    if (/playbook/.test(l)) return 'wiki';
-    if (/tutorial/.test(l)) return 'tutorial';
-    if (/documenta|doc/.test(l)) return 'docs';
-    return 'home'; // "Abrir Web Browser"
+    if (/ler/.test(l)) return browserSite; // passo "Ler a página" → a página aberta
+    return 'home'; // qualquer "Abrir ..." → nova aba / tela inicial
   }
   return 'home';
 }
@@ -151,7 +148,7 @@ function Page({ site, holding, progress }: { site: Site; holding: boolean; progr
 
 export function BrowserScene({ active }: { active: ActiveTicketSnapshot }) {
   const focus = active.segments[0];
-  const site = SITES[siteKey(focus)];
+  const site = SITES[siteKey(focus, active.browserSite)];
   const holding = focus?.type === 'hold' ? focus.holding : false;
   const progress = focus?.type === 'hold' ? focus.progress : 0;
 

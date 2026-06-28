@@ -123,7 +123,7 @@ export function AppWindow({
   // Título da janela conforme o programa em foco.
   const title =
     active.focused === 'details'
-      ? `Comanda — ${active.name}`
+      ? `Ticket — ${active.name}`
       : active.focused === active.app
         ? active.windowTitle
         : `${focusedApp?.name}`;
@@ -156,7 +156,7 @@ export function AppWindow({
       {/* Abas = Comanda + programas abertos (alterna com Tab) */}
       <div className="flex items-center gap-1 border-b border-line bg-bg/40 px-2 py-1.5">
         <ProgramTab
-          label="Comanda"
+          label="Ticket"
           icon="📋"
           active={active.focused === 'details'}
           onClick={() => onFocusProgram('details')}

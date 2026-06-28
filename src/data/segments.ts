@@ -13,16 +13,18 @@ export const SEGMENTS: Record<string, Segment> = {
     maxItems: 1,
     actions: [{ key: 'w', label: 'Abrir Web Browser' }],
   },
-  press_read_on_browser: {
+  // Estudar: 1) abrir a página da fonte, 2) ler a página (duas ações).
+  press_open_source: {
     type: 'press',
-    maxItems: 2,
+    maxItems: 1,
     actions: [
-      { key: 'd', label: 'Ler Documentação' },
-      { key: 'p', label: 'Ler Playbook' },
-      { key: 's', label: 'Ler Stack Overflow' },
-      { key: 't', label: 'Ler Tutorial' },
+      { key: 'd', label: 'Abrir Documentação' },
+      { key: 'p', label: 'Abrir Playbook' },
+      { key: 's', label: 'Abrir Stack Overflow' },
+      { key: 't', label: 'Abrir Tutorial' },
     ],
   },
+  press_read: { type: 'press', maxItems: 1, actions: [{ key: 'l', label: 'Ler a página' }] },
   press_enter_meeting: {
     type: 'press',
     maxItems: 1,

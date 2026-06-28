@@ -54,9 +54,11 @@ export function InboxPanel({
                     className={`mt-1 size-2 shrink-0 rounded-full ${
                       slot.ready
                         ? 'bg-pass shadow-[0_0_6px] shadow-pass/70'
-                        : slot.waitRemaining !== null
-                          ? 'bg-sky-400 shadow-[0_0_6px] shadow-sky-400/70'
-                          : PRIORITY_DOT[slot.priority]
+                        : slot.readyToMerge
+                          ? 'animate-edgepulse bg-teal shadow-[0_0_6px] shadow-teal/70'
+                          : slot.waitRemaining !== null
+                            ? 'bg-sky-400 shadow-[0_0_6px] shadow-sky-400/70'
+                            : PRIORITY_DOT[slot.priority]
                     }`}
                   />
                   <span className="line-clamp-2 text-sm leading-snug text-ink">{slot.name}</span>
@@ -64,6 +66,8 @@ export function InboxPanel({
                 <span className="pl-4 text-[11px]">
                   {slot.ready ? (
                     <span className="text-pass">✓ pronto p/ concluir</span>
+                  ) : slot.readyToMerge ? (
+                    <span className="text-teal">✓ review aprovado · merge</span>
                   ) : slot.waitRemaining !== null ? (
                     <span className="text-sky-400">⏳ em review · {slot.waitRemaining}s</span>
                   ) : slot.active ? (

@@ -377,6 +377,9 @@ export class Game {
     if (!inst) return null;
     const seg = this.currentSegment(inst);
     const waiting = seg?.type === 'wait' && !segmentCompleted(seg);
+    // Review voltou e o passo atual é o merge → pronto pro merge.
+    const readyToMerge =
+      !inst.ready && seg?.type === 'press' && seg.actions.some((a) => /merge/i.test(a.label));
     return {
       index,
       name: inst.template.name,
@@ -384,6 +387,7 @@ export class Game {
       ready: inst.ready,
       active: index === this.activeSlot,
       waitRemaining: waiting ? Math.ceil(seg.total - seg.elapsed) : null,
+      readyToMerge,
     };
   }
 
@@ -397,6 +401,7 @@ export class Game {
       id: inst.id,
       editorFile: this.editorFile(taskInst),
       editorLine: this.editorLine(taskInst),
+      browserSite: this.browserSite(taskInst),
       // 1º passo de cada tarefa é "Abrir X"; antes disso, o app ainda não abriu.
       appLaunched: this.isLaunched(inst),
       focused: inst.focused,
@@ -458,6 +463,21 @@ export class Game {
       for (const seg of step.segments) if (seg.type === 'file') return seg.files[seg.targetIndex];
     return null;
   }
+  /** Site aberto no navegador (deriva das ações "Abrir {fonte}" / staging da tarefa). */
+  private browserSite(t: TaskInstance): string {
+    for (const step of t.steps)
+      for (const seg of step.segments)
+        if (seg.type === 'press')
+          for (const a of seg.actions) {
+            const l = a.label.toLowerCase();
+            if (/stack/.test(l)) return 'so';
+            if (/playbook/.test(l)) return 'wiki';
+            if (/tutorial/.test(l)) return 'tutorial';
+            if (/document/.test(l)) return 'docs';
+            if (/staging/.test(l)) return 'staging';
+          }
+    return 'home';
+  }
   /** Linha-alvo (1-based) do typo — só p/ tarefas que têm um passo "Corrigir". */
   private editorLine(t: TaskInstance): number {
     const hasFix = t.steps.some((s) =>
@@ -479,9 +499,9 @@ export class Game {
     const channel = SLACK_CHANNELS[nav[0] ?? 0] ?? 'o canal certo';
     switch (t.template.id) {
       case 'study':
-        return `Pesquise no navegador: leia ${joinPt(
-          this.pressLabelsAt(t, 1).map((s) => s.replace(/^Ler /, '')),
-        )}.`;
+        return `Abra o navegador, acesse ${joinPt(
+          this.pressLabelsAt(t, 1).map((s) => s.replace(/^Abrir /, '')),
+        )} e leia a página.`;
       case 'meeting':
         return `Entre na reunião pelo navegador e fale por ${hold[0] ?? 3}s.`;
       case 'test_feature':
