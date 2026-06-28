@@ -85,6 +85,7 @@ export interface TaskInstance {
 }
 
 export interface TicketInstance {
+  id: number;
   template: TicketTemplate;
   tasks: TaskInstance[];
   taskIndex: number;
@@ -92,6 +93,8 @@ export interface TicketInstance {
   errors: number;
   ready: boolean;
 }
+
+let nextTicketId = 1;
 
 function instantiateSegment(segment: Segment): SegmentInstance {
   switch (segment.type) {
@@ -143,6 +146,7 @@ function instantiateStep(step: StepTemplate): StepInstance {
 
 export function instantiateTicket(template: TicketTemplate): TicketInstance {
   return {
+    id: nextTicketId++,
     template,
     tasks: template.tasks.map((t) => ({ template: t, steps: t.steps.map(instantiateStep) })),
     taskIndex: 0,

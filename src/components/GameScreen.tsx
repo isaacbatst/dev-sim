@@ -16,15 +16,29 @@ export function GameScreen() {
 
   const [shake, setShake] = useState(false);
   const [floatScore, setFloatScore] = useState<string | null>(null);
+  // Aba da janela: começa em "details" (a comanda) e alterna com Tab.
+  const [view, setView] = useState<'work' | 'details'>('details');
   const prev = useRef<{ delivered: number; errors: number }>({ delivered: 0, errors: 0 });
 
   useEffect(() => start(), [start]);
 
+  // Ao pegar uma nova demanda, abre nos Detalhes (#1) — reset por mudança de id,
+  // padrão do React de ajustar estado durante o render (sem effect).
+  const activeId = snapshot?.active?.id ?? null;
+  const [seenId, setSeenId] = useState<number | null>(activeId);
+  if (activeId !== seenId) {
+    setSeenId(activeId);
+    if (activeId !== null) setView('details');
+  }
+
   useEffect(() => {
     const onDown = (e: KeyboardEvent) => {
-      if (e.key.startsWith('Arrow')) e.preventDefault();
+      if (e.key.startsWith('Arrow') || e.key === 'Tab') e.preventDefault();
       if (e.repeat) return;
+      if (e.key === 'Tab') return setView((v) => (v === 'work' ? 'details' : 'work'));
       if (e.key >= '1' && e.key <= '5') return selectSlot(Number(e.key) - 1);
+      // Na aba Detalhes as ações ficam desativadas — só leitura da comanda.
+      if (view === 'details') return;
       if (e.key === 'Enter') return confirm();
       keyDown(e.key);
     };
@@ -35,7 +49,7 @@ export function GameScreen() {
       window.removeEventListener('keydown', onDown);
       window.removeEventListener('keyup', onUp);
     };
-  }, [selectSlot, keyDown, keyUp, confirm]);
+  }, [selectSlot, keyDown, keyUp, confirm, view]);
 
   // Juice por diff de snapshot: entrega → "+", erro → shake.
   useEffect(() => {
@@ -70,6 +84,8 @@ export function GameScreen() {
         snapshot={snapshot}
         shake={shake}
         floatScore={floatScore}
+        view={view}
+        onView={setView}
         onSelect={selectSlot}
         onRestart={restart}
       />

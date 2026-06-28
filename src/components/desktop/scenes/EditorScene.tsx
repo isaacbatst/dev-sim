@@ -24,27 +24,18 @@ function FileTree({ seg }: { seg: Extract<SegmentView, { type: 'selection' }> })
       <p className="px-2 pb-1 text-[11px] uppercase tracking-wider text-ink-dim">explorer</p>
       {seg.options.map((o) => {
         const chosen = seg.chosenKey === o.key;
-        const target = o.label === seg.prompt;
         return (
           <div
             key={o.key}
             className={`flex items-center gap-2 rounded px-2 py-1.5 ${
-              chosen
-                ? seg.wrong
-                  ? 'bg-fail/15'
-                  : 'bg-pass/15'
-                : target
-                  ? 'bg-amber/10 ring-1 ring-amber/40'
-                  : ''
+              chosen ? (seg.wrong ? 'bg-fail/15' : 'bg-pass/15') : ''
             }`}
           >
             <span
               className="size-3 rounded-[3px]"
               style={{ background: FILE_COLOR[o.label] ?? 'var(--ink-dim)' }}
             />
-            <span className={target ? 'text-ink' : 'text-ink-dim'}>
-              {FILE_NAME[o.label] ?? o.label.toLowerCase()}
-            </span>
+            <span className="text-ink">{FILE_NAME[o.label] ?? o.label.toLowerCase()}</span>
           </div>
         );
       })}
@@ -119,24 +110,17 @@ function SelectMenu({ seg }: { seg: Extract<SegmentView, { type: 'selection' }> 
       <div className={`flex flex-wrap gap-2 ${isColor ? '' : 'flex-col'}`}>
         {seg.options.map((o) => {
           const chosen = seg.chosenKey === o.key;
-          const target = o.label === seg.prompt;
           return (
             <div
               key={o.key}
               className={`flex items-center gap-2 rounded-md border px-3 py-2 ${
-                chosen
-                  ? seg.wrong
-                    ? 'border-fail'
-                    : 'border-pass'
-                  : target
-                    ? 'border-amber bg-amber/5'
-                    : 'border-line'
+                chosen ? (seg.wrong ? 'border-fail' : 'border-pass') : 'border-line'
               }`}
             >
               {isColor && (
                 <span className="size-4 rounded" style={{ background: SWATCH[o.label] }} />
               )}
-              <span className={`text-sm ${target ? 'text-ink' : 'text-ink-dim'}`}>{o.label}</span>
+              <span className="text-sm text-ink">{o.label}</span>
             </div>
           );
         })}

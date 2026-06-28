@@ -284,6 +284,9 @@ export class Game {
     const task = inst.tasks[Math.min(inst.taskIndex, inst.tasks.length - 1)].template;
     const step = this.currentStep(inst);
     return {
+      id: inst.id,
+      // 1º passo de cada tarefa é "Abrir X"; antes disso, o app ainda não abriu.
+      appLaunched: inst.ready || inst.stepIndex > 0,
       name: inst.template.name,
       description: inst.template.description,
       priority: inst.template.priority,
@@ -294,11 +297,42 @@ export class Game {
       ready: inst.ready,
       app: appForTask(task.id),
       windowTitle: windowTitle(task.id, task.title),
-      subtasks: inst.tasks.map((t, i) => ({
-        title: t.template.title,
-        status: i < inst.taskIndex ? 'done' : i === inst.taskIndex ? 'current' : 'pending',
-      })),
+      plan: this.buildPlan(inst),
     };
+  }
+
+  /** Plano passo a passo da demanda, com status por subtarefa e por passo. */
+  private buildPlan(inst: TicketInstance): ActiveTicketSnapshot['plan'] {
+    const status = (ti: number, si: number): 'done' | 'current' | 'pending' => {
+      if (inst.ready || ti < inst.taskIndex) return 'done';
+      if (ti > inst.taskIndex) return 'pending';
+      if (si < inst.stepIndex) return 'done';
+      return si === inst.stepIndex ? 'current' : 'pending';
+    };
+    return inst.tasks.map((task, ti) => ({
+      title: task.template.title,
+      status:
+        inst.ready || ti < inst.taskIndex ? 'done' : ti === inst.taskIndex ? 'current' : 'pending',
+      steps: task.steps.map((step, si) => ({
+        label: step.segments.map((s) => this.segmentLabel(s)).join(' + '),
+        status: status(ti, si),
+      })),
+    }));
+  }
+
+  private segmentLabel(seg: SegmentInstance): string {
+    switch (seg.type) {
+      case 'press':
+        return seg.actions.map((a) => a.label).join(' + ');
+      case 'hold':
+        return `${seg.action.label} (segurar ${seg.target}s)`;
+      case 'nav':
+        return `${SYMBOL_BY_DIRECTION[seg.direction]} ${seg.target}×`;
+      case 'selection':
+        return `Selecionar ${seg.options[seg.correctIndex].label}`;
+      case 'wait':
+        return `Aguardar code review (~${Math.round(seg.total)}s)`;
+    }
   }
 
   private segmentView(seg: SegmentInstance): SegmentView {

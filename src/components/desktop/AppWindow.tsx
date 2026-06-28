@@ -1,6 +1,5 @@
-import { useState } from 'react';
-import type { ActiveTicketSnapshot, Priority } from '@/core/snapshot';
-import { APPS } from './apps';
+import type { ActiveTicketSnapshot, PlanStatus, Priority } from '@/core/snapshot';
+import { APPS, DOCK_APPS } from './apps';
 import { Scene } from './scenes';
 import { ActionBar } from './ActionBar';
 
@@ -18,10 +17,18 @@ const PRIORITY_CLASS: Record<Priority, string> = {
   baixa: 'text-ink-dim border-line',
 };
 
-/** "Comanda" da demanda: o que foi pedido + checklist de subtarefas (estilo CSD). */
+function statusMark(s: PlanStatus) {
+  return s === 'done' ? '✓' : s === 'current' ? '▸' : '○';
+}
+function statusColor(s: PlanStatus) {
+  return s === 'done' ? 'text-pass' : s === 'current' ? 'text-amber' : 'text-ink-dim';
+}
+
+/** "Comanda" da demanda: o pedido + plano passo a passo (estilo CSD). */
 function DetailsPanel({ active }: { active: ActiveTicketSnapshot }) {
+  const multi = active.plan.length > 1;
   return (
-    <div className="flex min-h-[22rem] flex-1 flex-col gap-4 p-6">
+    <div className="flex min-h-[22rem] flex-1 flex-col gap-4 overflow-auto p-6">
       <div>
         <div className="mb-1 flex items-center gap-2">
           <span
@@ -35,34 +42,88 @@ function DetailsPanel({ active }: { active: ActiveTicketSnapshot }) {
       </div>
 
       <div>
-        <p className="mb-2 text-[11px] uppercase tracking-wider text-ink-dim">subtarefas</p>
-        <ol className="flex flex-col gap-1.5">
-          {active.subtasks.map((s, i) => (
-            <li
-              key={i}
-              className={`flex items-center gap-2 rounded-md border px-3 py-2 text-sm ${
-                s.status === 'current'
-                  ? 'border-amber bg-amber/5 text-ink'
-                  : s.status === 'done'
-                    ? 'border-line text-ink-dim'
-                    : 'border-line/60 text-ink-dim'
-              }`}
-            >
-              <span
-                className={
-                  s.status === 'done'
-                    ? 'text-pass'
-                    : s.status === 'current'
-                      ? 'text-amber'
-                      : 'text-ink-dim'
-                }
+        <p className="mb-2 text-[11px] uppercase tracking-wider text-ink-dim">passo a passo</p>
+        <div className="flex flex-col gap-3">
+          {active.plan.map((sub, i) => (
+            <div key={i}>
+              {multi && (
+                <p
+                  className={`mb-1 flex items-center gap-2 text-sm font-semibold ${statusColor(sub.status)}`}
+                >
+                  <span>{statusMark(sub.status)}</span>
+                  {sub.title}
+                </p>
+              )}
+              <ol
+                className={`flex flex-col gap-1 ${multi ? 'border-l border-line pl-3 ml-1.5' : ''}`}
               >
-                {s.status === 'done' ? '✓' : s.status === 'current' ? '▸' : '○'}
-              </span>
-              <span className={s.status === 'done' ? 'line-through' : ''}>{s.title}</span>
-            </li>
+                {sub.steps.map((st, j) => (
+                  <li
+                    key={j}
+                    className={`flex items-center gap-2 text-sm ${
+                      st.status === 'current'
+                        ? 'text-ink'
+                        : st.status === 'done'
+                          ? 'text-ink-dim'
+                          : 'text-ink-dim'
+                    }`}
+                  >
+                    <span className={`text-xs ${statusColor(st.status)}`}>
+                      {statusMark(st.status)}
+                    </span>
+                    <span className={st.status === 'done' ? 'line-through' : ''}>{st.label}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
           ))}
-        </ol>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Programa fechado: mostra a área de trabalho; o app abre com a ação (rodapé). */
+function DesktopBackground({ active }: { active: ActiveTicketSnapshot }) {
+  return (
+    <div
+      className="relative flex min-h-[22rem] flex-1 items-center justify-center"
+      style={{
+        background:
+          'radial-gradient(120% 80% at 50% 0%, color-mix(in srgb, var(--amber) 8%, transparent), transparent 55%), linear-gradient(180deg, #11131b, #0c0e14)',
+      }}
+    >
+      <div
+        aria-hidden
+        className="absolute inset-0 opacity-[0.05]"
+        style={{
+          backgroundImage:
+            'linear-gradient(var(--ink) 1px, transparent 1px), linear-gradient(90deg, var(--ink) 1px, transparent 1px)',
+          backgroundSize: '30px 30px',
+        }}
+      />
+      <div className="relative grid grid-cols-3 gap-x-8 gap-y-6">
+        {DOCK_APPS.map((id) => {
+          const app = APPS[id];
+          const isTarget = id === active.app;
+          return (
+            <div key={id} className="flex w-16 flex-col items-center gap-1.5 text-center">
+              <span
+                className={`flex size-12 items-center justify-center rounded-2xl border text-2xl transition ${
+                  isTarget
+                    ? 'animate-edgepulse border-amber bg-amber/10'
+                    : 'border-white/10 bg-surface-2 opacity-50'
+                }`}
+                style={isTarget ? { boxShadow: `0 0 20px -4px ${app.accent}` } : undefined}
+              >
+                {app.icon}
+              </span>
+              <span className={`text-[11px] ${isTarget ? 'text-ink' : 'text-ink-dim opacity-60'}`}>
+                {app.name}
+              </span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -89,9 +150,18 @@ function Tab({
   );
 }
 
-export function AppWindow({ active, shake }: { active: ActiveTicketSnapshot; shake: boolean }) {
+export function AppWindow({
+  active,
+  shake,
+  view,
+  onView,
+}: {
+  active: ActiveTicketSnapshot;
+  shake: boolean;
+  view: 'work' | 'details';
+  onView: (v: 'work' | 'details') => void;
+}) {
   const app = APPS[active.app];
-  const [view, setView] = useState<'work' | 'details'>('work');
 
   return (
     <div
@@ -118,24 +188,33 @@ export function AppWindow({ active, shake }: { active: ActiveTicketSnapshot; sha
         </span>
       </div>
 
-      {/* Abas: comanda (detalhes) ↔ trabalho (execução) */}
+      {/* Abas: comanda (detalhes) ↔ trabalho (execução) — alterna com Tab */}
       <div className="flex items-center gap-1 border-b border-line bg-bg/40 px-2 py-1.5">
-        <Tab active={view === 'work'} onClick={() => setView('work')}>
+        <Tab active={view === 'work'} onClick={() => onView('work')}>
           Trabalho
         </Tab>
-        <Tab active={view === 'details'} onClick={() => setView('details')}>
+        <Tab active={view === 'details'} onClick={() => onView('details')}>
           Detalhes
         </Tab>
+        <span className="ml-1 hidden items-center gap-1 text-[10px] text-ink-dim sm:flex">
+          <kbd className="keycap !h-5 !min-w-7 !text-[10px]">Tab</kbd> alterna
+        </span>
         <span className="ml-auto truncate pr-2 text-[11px] text-ink-dim">
           {active.taskCount > 1
             ? `${active.taskTitle} · ${active.taskIndex + 1}/${active.taskCount}`
-            : active.name}
+            : ''}
         </span>
       </div>
 
       {/* corpo */}
       <div className="flex flex-1 flex-col">
-        {view === 'details' ? <DetailsPanel active={active} /> : <Scene active={active} />}
+        {view === 'details' ? (
+          <DetailsPanel active={active} />
+        ) : active.appLaunched ? (
+          <Scene active={active} />
+        ) : (
+          <DesktopBackground active={active} />
+        )}
       </div>
 
       {/* hint padronizada */}

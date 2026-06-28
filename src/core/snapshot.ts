@@ -60,6 +60,10 @@ export interface SlotSnapshot {
 }
 
 export interface ActiveTicketSnapshot {
+  /** Id da instância — muda a cada seleção (a UI reseta a aba por ele). */
+  id: number;
+  /** O "programa" já foi aberto? (1º passo, "Abrir X", concluído.) */
+  appLaunched: boolean;
   name: string;
   description: string;
   priority: Priority;
@@ -71,9 +75,15 @@ export interface ActiveTicketSnapshot {
   /** App do desktop a abrir para a tarefa atual e o título da janela. */
   app: AppId;
   windowTitle: string;
-  /** Lista de subtarefas da demanda (para o painel de Detalhes). */
-  subtasks: { title: string; status: 'done' | 'current' | 'pending' }[];
+  /** Plano detalhado da demanda (comanda): subtarefas e seus passos. */
+  plan: {
+    title: string;
+    status: PlanStatus;
+    steps: { label: string; status: PlanStatus }[];
+  }[];
 }
+
+export type PlanStatus = 'done' | 'current' | 'pending';
 
 export interface Snapshot {
   status: GameStatus;

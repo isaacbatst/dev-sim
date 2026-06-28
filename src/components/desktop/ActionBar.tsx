@@ -63,17 +63,7 @@ function Cue({ seg }: { seg: SegmentView }) {
           </span>
           {seg.options.map((o) => (
             <span key={o.key} className="flex items-center gap-1.5">
-              <KeyCap
-                state={
-                  seg.chosenKey === o.key
-                    ? seg.wrong
-                      ? 'wrong'
-                      : 'done'
-                    : o.label === seg.prompt
-                      ? 'current'
-                      : 'idle'
-                }
-              >
+              <KeyCap state={seg.chosenKey === o.key ? (seg.wrong ? 'wrong' : 'done') : 'idle'}>
                 {o.key}
               </KeyCap>
               <span className="text-xs text-ink-dim">{o.label}</span>
