@@ -23,7 +23,7 @@ export function InboxPanel({
   const sub = active?.plan.find((p) => p.status === 'current') ?? active?.plan[0];
 
   return (
-    <aside className="flex w-64 shrink-0 flex-col overflow-hidden rounded-xl border border-line bg-surface shadow-xl shadow-black/40">
+    <aside className="flex w-72 shrink-0 flex-col overflow-hidden rounded-xl border border-line bg-surface shadow-xl shadow-black/40">
       {/* Header */}
       <div className="flex items-center gap-2 px-3 py-2.5">
         <span className="size-2 rounded-[3px] bg-amber" />
@@ -40,30 +40,38 @@ export function InboxPanel({
               key={i}
               onClick={() => onSelect(i)}
               aria-label={`Selecionar ${slot.name}`}
-              className={`group flex items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors ${
+              className={`group flex items-start gap-2 rounded-md px-2 py-1.5 text-left transition-colors ${
                 slot.active ? 'bg-amber/[0.07]' : 'hover:bg-white/[0.03]'
               }`}
             >
-              <StatusIcon status={statusOf(slot)} />
-              <span className="shrink-0 font-mono text-[10px] text-ink-dim">DEV-{slot.id}</span>
-              <span className="flex-1 truncate text-[13px] leading-tight text-ink">
-                {slot.name}
+              <span className="mt-0.5">
+                <StatusIcon status={statusOf(slot)} />
               </span>
-              {slot.waitRemaining !== null && (
-                <span className="shrink-0 font-mono text-[10px] text-sky-400">
-                  {slot.waitRemaining}s
+              <span className="min-w-0 flex-1">
+                <span className="line-clamp-2 text-[13px] font-medium leading-snug text-ink">
+                  {slot.name}
                 </span>
-              )}
-              <PriorityIcon priority={slot.priority} />
-              <kbd
-                className={`shrink-0 rounded border px-1 font-mono text-[10px] transition-colors ${
-                  slot.active
-                    ? 'border-amber/50 text-amber'
-                    : 'border-line text-ink-dim group-hover:text-ink'
-                }`}
-              >
-                {i + 1}
-              </kbd>
+                <span className="mt-0.5 flex items-center gap-1.5 font-mono text-[10px] text-ink-dim">
+                  <span>DEV-{slot.id}</span>
+                  {slot.waitRemaining !== null && (
+                    <span className="text-sky-400">· em review {slot.waitRemaining}s</span>
+                  )}
+                  {slot.readyToMerge && <span className="text-teal">· merge</span>}
+                  {slot.ready && <span className="text-pass">· pronto</span>}
+                </span>
+              </span>
+              <span className="mt-0.5 flex shrink-0 items-center gap-1.5">
+                <PriorityIcon priority={slot.priority} />
+                <kbd
+                  className={`rounded border px-1 font-mono text-[10px] transition-colors ${
+                    slot.active
+                      ? 'border-amber/50 text-amber'
+                      : 'border-line text-ink-dim group-hover:text-ink'
+                  }`}
+                >
+                  {i + 1}
+                </kbd>
+              </span>
             </button>
           ) : (
             <div
