@@ -1,5 +1,4 @@
 import type { Snapshot } from '@/core/snapshot';
-import { moodFor } from './mood';
 import { MenuBar } from './MenuBar';
 import { InboxPanel } from './InboxPanel';
 import { AppWindow } from './AppWindow';
@@ -21,12 +20,11 @@ export function Desktop({
   onSelect: (index: number) => void;
   onRestart: () => void;
 }) {
-  const { status, clock, satisfaction, delivered, slots, active } = snapshot;
-  const mood = moodFor(satisfaction);
+  const { status, clock, delivered, slots, active } = snapshot;
 
   return (
     <div className="relative flex h-full flex-col overflow-hidden">
-      <MenuBar mood={mood} satisfaction={satisfaction} clock={clock} delivered={delivered} />
+      <MenuBar clock={clock} delivered={delivered} />
 
       {/* Wallpaper: gradiente + grade técnica sutil + brilho do humor */}
       <main className="relative flex flex-1 gap-5 overflow-hidden p-5">
@@ -53,7 +51,12 @@ export function Desktop({
         <section className="flex min-w-0 flex-1 items-center justify-center pb-16">
           {active ? (
             <div className="relative w-full max-w-[44rem]">
-              <AppWindow active={active} shake={shake} onFocusProgram={onFocusProgram} />
+              <AppWindow
+                active={active}
+                slots={slots}
+                shake={shake}
+                onFocusProgram={onFocusProgram}
+              />
               {floatScore && (
                 <span className="animate-floatup pointer-events-none absolute -top-3 left-1/2 -translate-x-1/2 font-mono text-lg font-bold text-pass">
                   {floatScore}
@@ -65,23 +68,11 @@ export function Desktop({
               <p className="font-grotesk text-lg font-semibold text-ink">09:00 — bom dia ☕</p>
               <p className="mt-2 text-sm text-ink-dim">
                 As demandas do dia estão no backlog à esquerda. Abra uma com as teclas{' '}
-                <KeyHintInline /> e sobreviva até as 17:00.
+                <KeyHintInline /> e entregue o máximo até as 17:00.
               </p>
             </div>
           )}
         </section>
-
-        {/* Vinheta de humor (assinatura) */}
-        <div
-          aria-hidden
-          className={`pointer-events-none absolute inset-0 ${mood.vignette.pulse ? 'animate-edgepulse' : ''}`}
-          style={{
-            boxShadow: `inset 0 0 160px 30px color-mix(in srgb, ${mood.vignette.color} ${Math.round(
-              mood.vignette.opacity * 100,
-            )}%, transparent)`,
-            transition: 'box-shadow 0.4s ease',
-          }}
-        />
 
         <Dock activeApp={active?.app ?? null} />
       </main>
@@ -90,9 +81,7 @@ export function Desktop({
         <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-black/85 backdrop-blur-sm">
           <span className="text-5xl">{status === 'won' ? '🎉' : '💀'}</span>
           <h2 className="px-6 text-center font-grotesk text-2xl font-bold">
-            {status === 'won'
-              ? '17:00 — você sobreviveu ao expediente'
-              : 'Game over — o chefe desistiu de você'}
+            {status === 'won' ? '17:00 — fim do expediente' : 'Game over'}
           </h2>
           <p className="font-mono text-ink-dim">demandas entregues: {delivered}</p>
           <button

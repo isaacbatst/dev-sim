@@ -9,6 +9,25 @@ export type { Priority } from './domain/types';
 
 export type GameStatus = 'playing' | 'won' | 'lost';
 
+/**
+ * Eventos de áudio emitidos pelo motor a cada ação relevante. O `core` só os
+ * enfileira (strings puras, sem Web Audio); a camada de UI sintetiza o som.
+ */
+export type SoundEvent =
+  | 'key' // tecla certa numa sequência (press)
+  | 'nav' // cursor moveu (nav/file)
+  | 'type' // digitação na busca rápida
+  | 'select' // opção correta escolhida
+  | 'error' // tecla errada / escolha errada
+  | 'open' // app/programa aberto
+  | 'step' // subtarefa concluída
+  | 'ready' // ticket ficou pronto pra entrega
+  | 'deliver' // ticket entregue
+  | 'win' // 17:00 — fim do expediente
+  | 'tab' // troca de foco / seleção de slot
+  | 'holdStart' // começou a segurar (hold)
+  | 'holdEnd'; // soltou / hold concluído
+
 /** Qual "app" do desktop a tarefa atual representa (UI diegética). */
 export type AppId = 'editor' | 'browser' | 'slack' | 'mail' | 'meet';
 
@@ -25,7 +44,7 @@ export interface PressToken {
 
 /** Visão de um segmento do passo atual, por tipo. */
 export type SegmentView =
-  | { type: 'press'; tokens: PressToken[] }
+  | { type: 'press'; tokens: PressToken[]; distractors: { key: string; label: string }[] }
   | {
       type: 'hold';
       key: string;
@@ -95,6 +114,12 @@ export interface ActiveTicketSnapshot {
   taskCount: number;
   segments: SegmentView[];
   ready: boolean;
+  /** CR foi rejeitado (escolha errada) e a tarefa voltou para refazer. */
+  reviewRejected: boolean;
+  /** Comentário do reviewer sobre o que rejeitou (null se passou). */
+  reviewComment: string | null;
+  /** Programa aberto por engano (no passo de abrir); feche com X para voltar. */
+  wrongApp: AppId | null;
   /** App do desktop a abrir para a tarefa atual e o título da janela. */
   app: AppId;
   windowTitle: string;
@@ -113,7 +138,6 @@ export type PlanStatus = 'done' | 'current' | 'pending';
 export interface Snapshot {
   status: GameStatus;
   clock: string;
-  satisfaction: number;
   delivered: number;
   /** Erros acumulados no ticket ativo (para feedback de erro na UI). */
   activeErrors: number;

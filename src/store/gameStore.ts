@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { GameLoop } from '@/core/loop';
 import type { ProgramId, Snapshot } from '@/core/snapshot';
+import { playSound } from './sound';
 
 /**
  * Bridge entre o `core` (loop em RAF) e a UI React. Substitui o EventBus do Godot.
@@ -27,7 +28,7 @@ let loop: GameLoop | null = null;
 export const useGameStore = create<GameState>((set) => {
   const spawn = () => {
     loop?.stop();
-    loop = new GameLoop((snapshot) => set({ snapshot }));
+    loop = new GameLoop((snapshot) => set({ snapshot }), playSound);
     loop.start();
   };
 

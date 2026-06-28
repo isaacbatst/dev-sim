@@ -6,10 +6,10 @@ import type { AppId } from '../snapshot';
  */
 const APP_BY_TASK: Record<string, AppId> = {
   study: 'browser',
-  meeting: 'meet',
+  meeting: 'browser',
   test_feature: 'browser',
   slack: 'slack',
-  email: 'mail',
+  email: 'browser',
   document: 'editor',
   fix_typo: 'editor',
   ui_color: 'editor',
@@ -22,6 +22,22 @@ const APP_NAME: Record<AppId, string> = {
   slack: 'Slack',
   mail: 'Mail',
   meet: 'Meet',
+};
+
+/** Tecla que abre cada app de desktop (coincide com a ação "Abrir X"). */
+export const LAUNCH_KEY: Record<AppId, string> = {
+  editor: 'v',
+  browser: 'c',
+  slack: 's',
+  mail: 'm', // mail/meet viram sites do navegador; não abrem standalone
+  meet: 'o',
+};
+
+/** Mapa inverso (só apps de desktop reais) p/ detectar "abriu o programa errado". */
+export const APP_BY_LAUNCH_KEY: Record<string, AppId> = {
+  v: 'editor',
+  c: 'browser',
+  s: 'slack',
 };
 
 export function appForTask(taskId: string): AppId {

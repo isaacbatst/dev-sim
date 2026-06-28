@@ -15,5 +15,5 @@ export const APPS: Record<AppId, AppMeta> = {
   meet: { name: 'Meet', icon: '🎥', accent: '#5fd07a' },
 };
 
-/** Ordem fixa dos apps no dock. */
-export const DOCK_APPS: AppId[] = ['editor', 'browser', 'slack', 'mail', 'meet'];
+/** Ordem fixa dos apps de desktop no dock (mail/meet são sites do navegador). */
+export const DOCK_APPS: AppId[] = ['editor', 'browser', 'slack'];

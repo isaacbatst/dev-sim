@@ -1,5 +1,5 @@
 import { Game } from './game';
-import type { Snapshot } from './snapshot';
+import type { Snapshot, SoundEvent } from './snapshot';
 
 /**
  * Game loop em requestAnimationFrame, desacoplado do ciclo de render do React
@@ -7,22 +7,35 @@ import type { Snapshot } from './snapshot';
  * um snapshot para quem estiver inscrito (a store).
  */
 export type SnapshotListener = (snapshot: Snapshot) => void;
+export type SoundListener = (event: SoundEvent) => void;
 
 export class GameLoop {
   private game: Game;
   private rafId: number | null = null;
   private lastTs = 0;
   private listener: SnapshotListener;
+  private onSound: SoundListener | null;
 
-  constructor(listener: SnapshotListener, game: Game = new Game()) {
+  constructor(
+    listener: SnapshotListener,
+    onSound: SoundListener | null = null,
+    game: Game = new Game(),
+  ) {
     this.game = game;
     this.listener = listener;
+    this.onSound = onSound;
+  }
+
+  /** Publica o snapshot atual e escoa os eventos sonoros pendentes. */
+  private sync(): void {
+    this.listener(this.game.snapshot());
+    if (this.onSound) for (const s of this.game.drainSounds()) this.onSound(s);
   }
 
   start(): void {
     if (this.rafId !== null) return;
     this.lastTs = performance.now();
-    this.listener(this.game.snapshot());
+    this.sync();
     this.rafId = requestAnimationFrame(this.frame);
   }
 
@@ -36,42 +49,42 @@ export class GameLoop {
   // Intenções de input vindas da UI são repassadas ao motor.
   selectSlot(index: number): void {
     this.game.selectSlot(index);
-    this.listener(this.game.snapshot());
+    this.sync();
   }
 
   keyDown(key: string): void {
     this.game.keyDown(key);
-    this.listener(this.game.snapshot());
+    this.sync();
   }
 
   keyUp(key: string): void {
     this.game.keyUp(key);
-    this.listener(this.game.snapshot());
+    this.sync();
   }
 
   confirm(): void {
     this.game.confirm();
-    this.listener(this.game.snapshot());
+    this.sync();
   }
 
   focusProgram(id: import('./snapshot').ProgramId): void {
     this.game.focusProgram(id);
-    this.listener(this.game.snapshot());
+    this.sync();
   }
 
   cycleFocus(dir: 1 | -1 = 1): void {
     this.game.cycleFocus(dir);
-    this.listener(this.game.snapshot());
+    this.sync();
   }
 
   quickOpen(): void {
     this.game.quickOpen();
-    this.listener(this.game.snapshot());
+    this.sync();
   }
 
   deliver(): void {
     this.game.deliver();
-    this.listener(this.game.snapshot());
+    this.sync();
   }
 
   private frame = (ts: number): void => {
@@ -79,7 +92,7 @@ export class GameLoop {
     const dtMs = Math.min(100, ts - this.lastTs);
     this.lastTs = ts;
     this.game.tick(dtMs);
-    this.listener(this.game.snapshot());
+    this.sync();
     this.rafId = requestAnimationFrame(this.frame);
   };
 }

@@ -1,6 +1,26 @@
 import type { ActiveTicketSnapshot, SegmentView } from '@/core/snapshot';
-import { APPS } from './apps';
+import { LAUNCH_KEY } from '@/core/domain/apps';
+import { APPS, DOCK_APPS } from './apps';
 import { KeyCap, Meter, ARROW_GLYPH } from './primitives';
+
+/**
+ * Passo de abrir: mostra TODOS os programas que dá pra abrir (com a tecla de
+ * cada um), não só o certo — assim o jogador vê que pode abrir o errado (e que
+ * teria de fechar com X). Qual abrir vem do ticket, não daqui.
+ */
+function OpenPicker() {
+  return (
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+      <span className="text-sm text-ink-dim">abrir o programa da tarefa:</span>
+      {DOCK_APPS.map((id) => (
+        <span key={id} className="flex items-center gap-1.5">
+          <KeyCap state="idle">{LAUNCH_KEY[id]}</KeyCap>
+          <span className="text-xs text-ink-dim">{APPS[id].name}</span>
+        </span>
+      ))}
+    </div>
+  );
+}
 
 /**
  * Lugar ÚNICO e consistente da hint de input, no rodapé de toda janela.
@@ -8,7 +28,28 @@ import { KeyCap, Meter, ARROW_GLYPH } from './primitives';
  */
 function Cue({ seg }: { seg: SegmentView }) {
   switch (seg.type) {
-    case 'press':
+    case 'press': {
+      // Passo com alternativas (ex.: escolher o site): mostra TODAS as opções,
+      // neutras — qual abrir vem do ticket (igual ao seletor de programas).
+      if (seg.distractors.length > 0) {
+        const opts = [
+          ...seg.tokens.map((t) => ({ key: t.key, label: t.label, done: t.done })),
+          ...seg.distractors.map((d) => ({ key: d.key, label: d.label, done: false })),
+        ].sort((a, b) => a.key.localeCompare(b.key));
+        return (
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <span className="text-sm text-ink-dim">acessar:</span>
+            {opts.map((o) => (
+              <span key={o.key} className="flex items-center gap-1.5">
+                <KeyCap state={o.done ? 'done' : 'idle'}>{o.key}</KeyCap>
+                <span className={`text-xs text-ink-dim ${o.done ? 'line-through' : ''}`}>
+                  {o.label.replace(/^Abrir /, '')}
+                </span>
+              </span>
+            ))}
+          </div>
+        );
+      }
       return (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
           {seg.tokens.map((t, i) => (
@@ -21,6 +62,7 @@ function Cue({ seg }: { seg: SegmentView }) {
           ))}
         </div>
       );
+    }
     case 'hold':
       return (
         <div className="flex items-center gap-3">
@@ -119,16 +161,21 @@ export function ActionBar({ active }: { active: ActiveTicketSnapshot }) {
   const app = APPS[active.app];
   // Ação de trabalho exige o programa aberto E em foco; "abrir" funciona de qualquer aba.
   const needFocus = !active.ready && active.appLaunched && active.focused !== active.app;
+  const wrong = active.wrongApp ? APPS[active.wrongApp] : null;
+  const opening = !active.ready && !active.appLaunched && !wrong;
   return (
     <div
       className="flex min-h-14 items-center gap-3 border-t border-line bg-bg/70 px-4 py-2.5"
       style={{ boxShadow: `inset 3px 0 0 ${app.accent}` }}
     >
-      <span className="shrink-0 text-[10px] font-semibold uppercase tracking-widest text-ink-dim">
-        ação
-      </span>
       <div className="flex-1">
-        {active.ready ? (
+        {wrong ? (
+          <span className="flex items-center gap-2 text-ink-dim">
+            <KeyCap state="current">x</KeyCap> nada a fazer aqui — feche o {wrong.name}
+          </span>
+        ) : opening ? (
+          <OpenPicker />
+        ) : active.ready ? (
           <span className="flex items-center gap-2 text-pass">
             <KeyCap state="current">⏎</KeyCap> concluir a demanda
           </span>

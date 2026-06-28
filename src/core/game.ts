@@ -1,8 +1,10 @@
-import { ARROW_KEY_BY_DIRECTION, PRIORITY_DRAIN, SYMBOL_BY_DIRECTION } from './domain/types';
+import { ARROW_KEY_BY_DIRECTION, SYMBOL_BY_DIRECTION } from './domain/types';
 import type { TicketTemplate } from './domain/types';
 import {
   instantiateTicket,
+  resetSegment,
   segmentCompleted,
+  segmentWrong,
   stepCompleted,
   type FileInstance,
   type SegmentInstance,
@@ -12,7 +14,7 @@ import {
 } from './domain/instance';
 import { TICKET_POOL } from '@/data/tickets';
 import { SLACK_CHANNELS } from '@/data/channels';
-import { appForTask, windowTitle } from './domain/apps';
+import { APP_BY_LAUNCH_KEY, LAUNCH_KEY, appForTask, windowTitle } from './domain/apps';
 import type {
   ActiveTicketSnapshot,
   AppId,
@@ -20,6 +22,7 @@ import type {
   SegmentView,
   Snapshot,
   SlotSnapshot,
+  SoundEvent,
 } from './snapshot';
 
 /**
@@ -41,9 +44,8 @@ const DAY_END_MIN = 17 * 60;
 const DAY_REAL_SECONDS = 180;
 const GAME_MIN_PER_SEC = (DAY_END_MIN - DAY_START_MIN) / DAY_REAL_SECONDS;
 
-const DRAIN_BASE = 0.5;
-const GRACE_SECONDS = 12;
 const SPAWN_INTERVAL = 8;
+const CLOSE_KEY = 'x'; // fecha um programa aberto por engano (subjogo de abrir)
 
 const REVERSE_DIR = { up: 'down', down: 'up', left: 'right', right: 'left' } as const;
 
@@ -54,7 +56,6 @@ function joinPt(items: string[]): string {
 }
 
 export class Game {
-  private satisfaction = 100;
   private elapsed = 0;
   private status: Snapshot['status'] = 'playing';
   private delivered = 0;
@@ -62,6 +63,8 @@ export class Game {
   private activeSlot: number | null = null;
   private spawnTimer = 0;
   private pool: TicketTemplate[];
+  /** Fila de eventos sonoros desde o último `drainSounds()` (a UI sintetiza). */
+  private sounds: SoundEvent[] = [];
 
   constructor(pool: TicketTemplate[] = TICKET_POOL) {
     this.pool = pool;
@@ -76,16 +79,8 @@ export class Game {
 
     if (this.gameMinutes() >= DAY_END_MIN) {
       this.status = 'won';
+      this.emit('win');
       return;
-    }
-
-    if (this.elapsed > GRACE_SECONDS) {
-      this.satisfaction -= DRAIN_BASE * this.drainMultiplier() * dt;
-      if (this.satisfaction <= 0) {
-        this.satisfaction = 0;
-        this.status = 'lost';
-        return;
-      }
     }
 
     this.spawnTimer += dt;
@@ -101,10 +96,25 @@ export class Game {
       if (!seg) return;
       if (seg.type === 'wait' && !segmentCompleted(seg)) {
         seg.elapsed += dt;
-        if (segmentCompleted(seg)) this.advance(inst);
+        if (segmentCompleted(seg)) {
+          // Fim do CR: se a tarefa foi entregue com escolha errada, rejeita e
+          // volta pro 1º passo com erro (refazer escolha + push + CR + merge).
+          if (this.rejectIfFlawed(inst)) {
+            this.emit('error');
+          } else {
+            const before = this.progKey(inst);
+            this.advance(inst);
+            this.progressSound(inst, before, false);
+          }
+        }
       } else if (seg.type === 'hold' && i === this.activeSlot && seg.holding) {
         seg.held += dt;
-        if (segmentCompleted(seg)) this.advance(inst);
+        if (segmentCompleted(seg)) {
+          this.emit('holdEnd');
+          const before = this.progKey(inst);
+          this.advance(inst);
+          this.progressSound(inst, before, false);
+        }
       }
     });
   }
@@ -113,6 +123,7 @@ export class Game {
     if (this.status !== 'playing') return;
     if (index < 0 || index >= SLOT_COUNT) return;
     if (!this.slots[index]) return;
+    if (this.activeSlot !== index) this.emit('tab');
     this.activeSlot = index;
   }
 
@@ -124,30 +135,61 @@ export class Game {
 
     const taskApp = this.currentApp(inst);
     const launchedBefore = this.isLaunched(inst);
-    // Ações de trabalho exigem o programa aberto E em foco; "abrir" não exige nada.
-    if (launchedBefore && inst.focused !== taskApp) return;
+    const key = raw.toLowerCase();
+
+    // Subjogo de abrir: no passo de abrir, pode-se abrir o programa ERRADO e é
+    // preciso fechá-lo com X antes de tentar de novo. (Sem foco exigido aqui.)
+    if (!launchedBefore) {
+      if (inst.wrongApp) {
+        if (key === CLOSE_KEY) {
+          inst.wrongApp = null;
+          this.emit('tab');
+        } else {
+          this.emit('error');
+        }
+        return;
+      }
+      if (key !== LAUNCH_KEY[taskApp]) {
+        const wrong = APP_BY_LAUNCH_KEY[key];
+        if (wrong) {
+          inst.wrongApp = wrong;
+          inst.errors += 1;
+          this.emit('open');
+        }
+        return; // tecla errada (app ou não): não abre o programa certo
+      }
+      // key === abrir correto → segue para o fluxo normal (o press abre o app)
+    } else if (inst.focused !== taskApp) {
+      // Ações de trabalho exigem o programa aberto E em foco.
+      return;
+    }
 
     const seg = this.currentSegment(inst);
     if (!seg) return;
-    const key = raw.toLowerCase();
+    const before = this.progKey(inst);
+    let incidental: SoundEvent | null = null;
 
     switch (seg.type) {
       case 'press': {
         const idx = seg.actions.findIndex((a, i) => !seg.pressed[i] && a.key === key);
         if (idx >= 0) {
           seg.pressed[idx] = true;
+          incidental = 'key';
         } else if (seg.distractors.some((d) => d.key === key)) {
           inst.errors += 1;
+          incidental = 'error';
         }
         break;
       }
       case 'nav': {
         // Move o cursor; pode passar do alvo (e voltar). Não conclui — isso é o confirm().
+        const at = seg.cursor;
         if (key === ARROW_KEY_BY_DIRECTION[seg.direction]) {
           seg.cursor = Math.min(seg.max, seg.cursor + 1);
         } else if (key === ARROW_KEY_BY_DIRECTION[REVERSE_DIR[seg.direction]]) {
           seg.cursor = Math.max(0, seg.cursor - 1);
         }
+        if (seg.cursor !== at) incidental = 'nav';
         break;
       }
       case 'selection': {
@@ -158,24 +200,37 @@ export class Game {
           if (idx !== seg.correctIndex) {
             seg.wrong = true;
             inst.errors += 1;
+            incidental = 'error';
+          } else {
+            incidental = 'select';
           }
         }
         break;
       }
       case 'hold': {
-        if (key === seg.action.key) seg.holding = true;
+        if (key === seg.action.key && !seg.holding) {
+          seg.holding = true;
+          incidental = 'holdStart';
+        }
         break;
       }
       case 'file': {
         if (seg.committed) break;
+        const at = seg.cursor;
         if (seg.searching) {
-          if (key === 'backspace') seg.query = seg.query.slice(0, -1);
-          else if (key.length === 1) seg.query += key;
+          if (key === 'backspace') {
+            seg.query = seg.query.slice(0, -1);
+            incidental = 'type';
+          } else if (key.length === 1) {
+            seg.query += key;
+            incidental = 'type';
+          }
         } else if (key === ARROW_KEY_BY_DIRECTION.down) {
           seg.cursor = Math.min(seg.files.length - 1, seg.cursor + 1);
         } else if (key === ARROW_KEY_BY_DIRECTION.up) {
           seg.cursor = Math.max(0, seg.cursor - 1);
         }
+        if (seg.cursor !== at) incidental = 'nav';
         break;
       }
       case 'wait':
@@ -185,7 +240,13 @@ export class Game {
     if (stepCompleted(this.currentStep(inst)!)) this.advance(inst);
 
     // Ação de "abrir" recém-concluída → foca o programa que abriu.
-    if (!launchedBefore && this.isLaunched(inst)) inst.focused = taskApp;
+    const launched = !launchedBefore && this.isLaunched(inst);
+    if (launched) inst.focused = taskApp;
+
+    // Abrir um programa soa só como "abrir" (clique neutro) — sem o blip de tecla
+    // por cima, que delataria a ação como acerto.
+    if (incidental && !launched) this.emit(incidental);
+    this.progressSound(inst, before, launched);
   }
 
   /** Ctrl+P: abre/fecha a busca rápida de arquivo (segmento `file`). */
@@ -197,6 +258,7 @@ export class Game {
     if (seg?.type === 'file' && !seg.committed) {
       seg.searching = !seg.searching;
       seg.query = '';
+      this.emit('tab');
     }
   }
 
@@ -212,17 +274,22 @@ export class Game {
   /** Foca um programa aberto (aba). */
   focusProgram(id: ProgramId): void {
     const inst = this.activeInstance();
-    if (!inst) return;
-    if (id === 'details' || this.openPrograms(inst).includes(id)) inst.focused = id;
+    if (!inst || inst.wrongApp) return;
+    if (id === 'details' || this.openPrograms(inst).includes(id)) {
+      if (inst.focused !== id) this.emit('tab');
+      inst.focused = id;
+    }
   }
 
   /** Alterna o foco entre as abas (Tab → frente; Shift+Tab → trás). */
   cycleFocus(dir: 1 | -1 = 1): void {
     const inst = this.activeInstance();
-    if (!inst) return;
+    if (!inst || inst.wrongApp) return;
     const tabs: ProgramId[] = ['details', ...this.openPrograms(inst)];
+    if (tabs.length < 2) return;
     const i = tabs.indexOf(inst.focused);
     inst.focused = tabs[(i + dir + tabs.length) % tabs.length];
+    this.emit('tab');
   }
 
   /** Tecla solta (keyup) — relevante só para `hold`. */
@@ -233,6 +300,7 @@ export class Game {
     const seg = this.currentSegment(inst);
     if (seg?.type === 'hold' && raw.toLowerCase() === seg.action.key) {
       seg.holding = false;
+      this.emit('holdEnd');
       if (seg.held < seg.target) seg.held = 0; // soltou cedo: reinicia (paridade com o PoC)
     }
   }
@@ -241,7 +309,7 @@ export class Game {
   confirm(): void {
     if (this.status !== 'playing') return;
     const inst = this.activeInstance();
-    if (!inst) return;
+    if (!inst || inst.wrongApp) return;
     if (inst.ready) {
       this.deliver();
       return;
@@ -249,14 +317,17 @@ export class Game {
     // Confirmar o nav é ação de trabalho — exige o programa em foco.
     if (inst.focused !== this.currentApp(inst)) return;
     const seg = this.currentSegment(inst);
+    const before = this.progKey(inst);
     if (seg?.type === 'nav' && !seg.committed) {
       seg.committed = true;
       if (seg.cursor !== seg.target) {
         seg.wrong = true;
         inst.errors += 1;
+        this.emit('error');
       }
       const step = this.currentStep(inst);
       if (step && stepCompleted(step)) this.advance(inst);
+      this.progressSound(inst, before, false);
     } else if (seg?.type === 'file' && !seg.committed) {
       const idx = seg.searching ? this.fileMatch(seg) : seg.cursor;
       seg.chosenIndex = idx;
@@ -265,9 +336,11 @@ export class Game {
       if (idx !== seg.targetIndex) {
         seg.wrong = true;
         inst.errors += 1;
+        this.emit('error');
       }
       const step = this.currentStep(inst);
       if (step && stepCompleted(step)) this.advance(inst);
+      this.progressSound(inst, before, false);
     }
   }
 
@@ -276,18 +349,16 @@ export class Game {
     const inst = this.slots[this.activeSlot];
     if (!inst || !inst.ready) return;
 
-    const reward = Math.max(2, 10 - inst.errors * 3);
-    this.satisfaction = Math.min(100, this.satisfaction + reward);
     this.delivered += 1;
     this.slots[this.activeSlot] = null;
     this.activeSlot = null;
+    this.emit('deliver');
   }
 
   snapshot(): Snapshot {
     return {
       status: this.status,
       clock: this.formatClock(),
-      satisfaction: Math.round(this.satisfaction),
       delivered: this.delivered,
       activeErrors: this.activeInstance()?.errors ?? 0,
       slots: this.slots.map((inst, i) => this.slotSnapshot(inst, i)),
@@ -295,7 +366,87 @@ export class Game {
     };
   }
 
+  /** Esvazia a fila de eventos sonoros acumulados desde a última chamada. */
+  drainSounds(): SoundEvent[] {
+    if (this.sounds.length === 0) return [];
+    const out = this.sounds;
+    this.sounds = [];
+    return out;
+  }
+
   // --- internos ---
+
+  private emit(s: SoundEvent): void {
+    this.sounds.push(s);
+  }
+
+  /** Assinatura de progresso (tarefa.passo + ready) — muda quando algo avança. */
+  private progKey(inst: TicketInstance): string {
+    return `${inst.ready ? 'r' : ''}${inst.taskIndex}.${inst.stepIndex}`;
+  }
+
+  /** Emite o som de progressão certo se o cursor avançou desde `before`. */
+  private progressSound(inst: TicketInstance, before: string, launched: boolean): void {
+    if (this.progKey(inst) === before) return;
+    if (inst.ready) this.emit('ready');
+    else if (launched) this.emit('open');
+    else this.emit('step');
+  }
+
+  /**
+   * Se a tarefa atual tem alguma escolha errada commitada, rejeita o CR: reseta
+   * do 1º passo com erro até o fim da tarefa e devolve o cursor pra lá. Retorna
+   * true se rejeitou. Se estava tudo certo, limpa a flag e retorna false.
+   */
+  private rejectIfFlawed(inst: TicketInstance): boolean {
+    const task = inst.tasks[inst.taskIndex];
+    if (!task) return false;
+    const firstWrong = task.steps.findIndex((s) => s.segments.some(segmentWrong));
+    if (firstWrong < 0) {
+      inst.reviewRejected = false;
+      inst.reviewComment = null;
+      return false;
+    }
+    // Comentário do reviewer ANTES de resetar (depois a escolha errada some).
+    const wrongSeg = task.steps[firstWrong].segments.find(segmentWrong);
+    inst.reviewComment = wrongSeg ? this.reviewComment(wrongSeg) : null;
+    for (let si = firstWrong; si < task.steps.length; si++) {
+      task.steps[si].segments.forEach(resetSegment);
+    }
+    inst.stepIndex = firstWrong;
+    inst.reviewRejected = true;
+    return true;
+  }
+
+  /** Texto do comentário de CR conforme o tipo de escolha errada. */
+  private reviewComment(seg: SegmentInstance): string {
+    switch (seg.type) {
+      case 'selection': {
+        const chose = seg.chosenIndex !== null ? seg.options[seg.chosenIndex].label : '?';
+        const want = seg.options[seg.correctIndex].label;
+        const labels = seg.options.map((o) => o.label);
+        if (labels.some((l) => /vermelho|verde|azul/i.test(l)))
+          return `A cor ficou ${chose}, mas o ticket pede ${want}. Ajusta?`;
+        if (labels.some((l) => /px$/.test(l)))
+          return `A fonte ficou ${chose}, mas o ticket pede ${want}. Ajusta?`;
+        if (labels.some((l) => /it[áa]lico|negrito|regular/i.test(l)))
+          return `O estilo ficou ${chose}, mas o ticket pede ${want}. Ajusta?`;
+        if (labels.some((l) => /button|title|input/i.test(l)))
+          return `Você editou o ${chose}, mas a mudança é no ${want}.`;
+        if (labels.some((l) => /^(texto|fundo)$/i.test(l)))
+          return `Você alterou o ${chose.toLowerCase()}, mas era pra mexer no ${want.toLowerCase()}.`;
+        return `Ficou ${chose}, mas o ticket pede ${want}.`;
+      }
+      case 'nav':
+        return `Você mexeu na linha ${seg.cursor + 1}, mas o problema é na linha ${seg.target + 1}.`;
+      case 'file': {
+        const chose = seg.chosenIndex !== null ? seg.files[seg.chosenIndex] : '?';
+        return `Esse PR alterou ${chose}, mas era pra ser ${seg.files[seg.targetIndex]}.`;
+      }
+      default:
+        return 'Isso ainda não está como o ticket pede.';
+    }
+  }
 
   /** Avança o cursor enquanto o passo atual estiver completo; marca `ready` ao fim. */
   private advance(inst: TicketInstance): void {
@@ -356,14 +507,6 @@ export class Game {
     this.slots[free] = instantiateTicket(this.pool[Math.floor(Math.random() * this.pool.length)]);
   }
 
-  private drainMultiplier(): number {
-    let max = 0;
-    for (const inst of this.slots) {
-      if (inst) max = Math.max(max, PRIORITY_DRAIN[inst.template.priority]);
-    }
-    return max || 1;
-  }
-
   private gameMinutes(): number {
     return DAY_START_MIN + this.elapsed * GAME_MIN_PER_SEC;
   }
@@ -415,6 +558,9 @@ export class Game {
       taskCount: inst.tasks.length,
       segments: inst.ready || !step ? [] : step.segments.map((s) => this.segmentView(s)),
       ready: inst.ready,
+      reviewRejected: inst.reviewRejected,
+      reviewComment: inst.reviewComment,
+      wrongApp: inst.wrongApp,
       app: appForTask(task.id),
       windowTitle: windowTitle(task.id, task.title),
       plan: this.buildPlan(inst),
@@ -476,6 +622,9 @@ export class Game {
             if (/tutorial/.test(l)) return 'tutorial';
             if (/document/.test(l)) return 'docs';
             if (/staging/.test(l)) return 'staging';
+            if (/issue/.test(l)) return 'issues';
+            if (/webmail|e-?mail/.test(l)) return 'inbox';
+            if (/reuni|meet/.test(l)) return 'meet';
           }
     return 'home';
   }
@@ -500,17 +649,17 @@ export class Game {
     const channel = SLACK_CHANNELS[nav[0] ?? 0] ?? 'o canal certo';
     switch (t.template.id) {
       case 'study':
-        return `Abra o navegador, acesse ${joinPt(
+        return `Abra o Chrome, acesse ${joinPt(
           this.pressLabelsAt(t, 1).map((s) => s.replace(/^Abrir /, '')),
         )} e leia a página.`;
       case 'meeting':
-        return `Entre na reunião pelo navegador e fale por ${hold[0] ?? 3}s.`;
+        return `Abra o Chrome, entre na reunião e fale por ${hold[0] ?? 3}s.`;
       case 'test_feature':
-        return `Acesse o staging pelo navegador e rode os testes por ${hold[0] ?? 3}s.`;
+        return `Abra o Chrome, acesse o staging e rode os testes por ${hold[0] ?? 3}s.`;
       case 'slack':
         return `Abra o Slack e responda a mensagem no ${channel}.`;
       case 'email':
-        return `Abra o e-mail no navegador e arquive a mensagem.`;
+        return `Abra o Chrome, abra o webmail e arquive a mensagem do chefe.`;
       case 'document':
         return `Documente a função no VSCode; faça push, aguarde o CR e o merge.`;
       case 'fix_typo':
@@ -544,6 +693,9 @@ export class Game {
             done: seg.pressed[i],
             current: i === firstPending,
           })),
+          // Opções "erradas" do mesmo passo (ex.: outros sites): a UI mostra todas
+          // para o jogador escolher — qual é a certa vem do ticket.
+          distractors: seg.distractors.map((a) => ({ key: a.key, label: a.label })),
         };
       }
       case 'hold':

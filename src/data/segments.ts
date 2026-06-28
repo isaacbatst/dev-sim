@@ -11,7 +11,7 @@ export const SEGMENTS: Record<string, Segment> = {
   press_open_browser: {
     type: 'press',
     maxItems: 1,
-    actions: [{ key: 'w', label: 'Abrir Web Browser' }],
+    actions: [{ key: 'c', label: 'Abrir Chrome' }],
   },
   // Estudar: 1) abrir a página da fonte, 2) ler a página (duas ações).
   press_open_source: {
@@ -22,13 +22,20 @@ export const SEGMENTS: Record<string, Segment> = {
       { key: 'p', label: 'Abrir Playbook' },
       { key: 's', label: 'Abrir Stack Overflow' },
       { key: 't', label: 'Abrir Tutorial' },
+      { key: 'i', label: 'Abrir Issues do GitHub' },
     ],
   },
   press_read: { type: 'press', maxItems: 1, actions: [{ key: 'l', label: 'Ler a página' }] },
-  press_enter_meeting: {
+  // Meet/Webmail são SITES dentro do navegador (não apps standalone).
+  press_join_meet: {
     type: 'press',
     maxItems: 1,
-    actions: [{ key: 'm', label: 'Entrar na Meeting' }],
+    actions: [{ key: 'm', label: 'Entrar na reunião' }],
+  },
+  press_open_webmail: {
+    type: 'press',
+    maxItems: 1,
+    actions: [{ key: 'e', label: 'Abrir o Webmail' }],
   },
   press_open_staging: {
     type: 'press',
@@ -37,9 +44,8 @@ export const SEGMENTS: Record<string, Segment> = {
   },
   press_open_slack: { type: 'press', maxItems: 1, actions: [{ key: 's', label: 'Abrir Slack' }] },
   press_reply: { type: 'press', maxItems: 1, actions: [{ key: 'r', label: 'Responder' }] },
-  press_open_email: { type: 'press', maxItems: 1, actions: [{ key: 'e', label: 'Abrir Email' }] },
   press_archive: { type: 'press', maxItems: 1, actions: [{ key: 'a', label: 'Arquivar' }] },
-  press_open_vscode: { type: 'press', maxItems: 1, actions: [{ key: 'c', label: 'Abrir VSCode' }] },
+  press_open_vscode: { type: 'press', maxItems: 1, actions: [{ key: 'v', label: 'Abrir VSCode' }] },
   press_write_doc: {
     type: 'press',
     maxItems: 1,

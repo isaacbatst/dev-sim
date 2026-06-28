@@ -52,11 +52,11 @@ const CONTENT: Record<string, string[]> = {
   ],
   js: [
     "import { api } from './api'",
-    '',
     'export function login(user) {',
     '  const token = createSession(user)',
     "  if (!token) throw new Error('auth')",
     '  return persist(token)',
+    '  return api.ok(token)',
     '}',
     'function createSession(u) {',
     '  return signJwt({ sub: u.id })',
@@ -67,21 +67,20 @@ const CONTENT: Record<string, string[]> = {
     '  const token = createSession(user)',
     '  if (!token) throw new AuthError()',
     '  return persist(token)',
+    '  return token',
     '}',
-    '',
     'function createSession(user: User) {',
     '  return signJwt({ sub: user.id })',
     '}',
   ],
   md: [
     '# Projeto',
-    '',
     '## Setup',
     '1. npm install',
     '2. npm run dev',
-    '',
     '## Deploy',
     'Push para a main dispara o CI.',
+    'Veja o guia de contribuição.',
   ],
 };
 function linesFor(file: string): string[] {
@@ -187,8 +186,10 @@ function CodeArea({
   targetLine: number;
 }) {
   const nav = focus?.type === 'nav' ? focus : null;
-  const fixing = focus?.type === 'press' && focus.tokens.some((t) => /corrigir/i.test(t.label));
   const cursorWrong = nav?.committed && nav.wrong;
+  // O typo já fica sublinhado (warn/erro) desde o início — é a própria pista de
+  // onde navegar, em vez de só aparecer depois de marcar a linha.
+  const bugLine = targetLine > 0 ? targetLine - 1 : -1;
   const lines = linesFor(file);
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden font-mono text-sm">
@@ -198,8 +199,7 @@ function CodeArea({
       <pre className="m-0 flex-1 overflow-y-auto p-3 leading-6">
         {lines.map((line, i) => {
           const isCursor = nav && i === nav.cursor;
-          const isTarget = nav && i === nav.target;
-          const isBug = fixing && targetLine > 0 && i === targetLine - 1;
+          const isBug = i === bugLine;
           return (
             <div
               key={i}
@@ -219,9 +219,6 @@ function CodeArea({
                 <span className={`animate-edgepulse ${cursorWrong ? 'text-fail' : 'text-amber'}`}>
                   ▎
                 </span>
-              )}
-              {isTarget && !nav?.committed && (
-                <span className="ml-auto pr-2 text-[10px] text-teal">◀ alvo</span>
               )}
               {isBug && <span className="ml-auto pr-2 text-[10px] text-amber">🐛 typo aqui</span>}
             </div>
@@ -379,11 +376,21 @@ function CssSelect({
   );
 }
 
-function PrPanel() {
+function PrPanel({ active }: { active: ActiveTicketSnapshot }) {
+  const reReview = !!active.reviewComment;
   return (
     <div className="flex-1 p-4 font-mono text-sm">
       <p className="text-ink">Pull Request #482</p>
-      <p className="mt-1 text-ink-dim">aguardando review de @tech-lead (online)…</p>
+      <p className="mt-1 text-ink-dim">
+        {reReview
+          ? '@tech-lead revisando suas alterações…'
+          : 'aguardando review de @tech-lead (online)…'}
+      </p>
+      {reReview && (
+        <div className="mt-3 border-l-2 border-fail/50 bg-fail/5 p-2 text-xs leading-relaxed text-ink-dim">
+          comentário anterior: “{active.reviewComment}”
+        </div>
+      )}
       <div className="mt-4 flex items-center gap-3">
         <span className="size-4 animate-spin rounded-full border-2 border-teal border-t-transparent" />
         <span className="text-ink-dim">CI ✓ · 0 conflitos</span>
@@ -399,7 +406,7 @@ export function EditorScene({ active }: { active: ActiveTicketSnapshot }) {
   let main: React.ReactNode;
   if (pick) main = <Preview file={pick.files[pick.cursor]} />;
   else if (focus?.type === 'selection') main = <CssSelect seg={focus} file={active.editorFile} />;
-  else if (focus?.type === 'wait') main = <PrPanel />;
+  else if (focus?.type === 'wait') main = <PrPanel active={active} />;
   else if (focus?.type === 'press' && /push|merge/i.test(focus.tokens[0]?.label ?? ''))
     main = <GitView focus={focus} file={active.editorFile} targetLine={active.editorLine} />;
   else main = <CodeArea focus={focus} file={active.editorFile} targetLine={active.editorLine} />;
@@ -414,6 +421,27 @@ export function EditorScene({ active }: { active: ActiveTicketSnapshot }) {
       </div>
       <ExplorerSidebar pick={pick} currentFile={active.editorFile} />
       <div className="relative flex min-h-0 flex-1 flex-col">
+        {active.reviewRejected && (
+          <div className="shrink-0 border-b border-fail/40 bg-fail/10 px-3 py-2">
+            <div className="flex items-center gap-2">
+              <span
+                className="flex size-5 items-center justify-center rounded-full bg-fail/25 text-[9px] font-bold text-fail"
+                aria-hidden
+              >
+                TL
+              </span>
+              <span className="text-xs font-semibold text-ink">@tech-lead</span>
+              <span className="rounded bg-fail/20 px-1.5 py-0.5 text-[10px] font-semibold text-fail">
+                alterações solicitadas
+              </span>
+            </div>
+            {active.reviewComment && (
+              <p className="mt-1.5 pl-7 text-xs leading-relaxed text-ink">
+                “{active.reviewComment}”
+              </p>
+            )}
+          </div>
+        )}
         {main}
         {pick?.searching && <QuickOpen seg={pick} />}
       </div>

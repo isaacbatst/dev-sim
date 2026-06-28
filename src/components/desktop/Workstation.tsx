@@ -7,7 +7,7 @@
  * projetada + contato) → periféricos (teclado/mouse/caneca) → vinheta.
  * Tudo ancorado na "emenda" parede/mesa (~62%) para proporção coerente.
  */
-const HORIZON = 80; // % da altura: emenda parede/mesa. Monitor domina; mesa é faixa fina.
+const HORIZON = 90; // % da altura: emenda parede/mesa. Monitor domina; mesa é faixa fina.
 
 function ambientFor(clock: string): string {
   const hour = Number(clock.slice(0, 2)) || 9;
@@ -73,7 +73,7 @@ export function Workstation({ clock, children }: { clock: string; children: Reac
         aria-hidden
         className="absolute left-1/2 h-[26%] w-[58%] -translate-x-1/2 blur-2xl"
         style={{
-          bottom: `${100 - HORIZON - 12}%`,
+          bottom: `${Math.max(2, 100 - HORIZON - 12)}%`,
           background: `radial-gradient(50% 50% at 50% 30%, color-mix(in srgb, ${ambient} 28%, transparent), transparent 70%)`,
           transition: 'background 1.5s ease',
         }}
@@ -103,7 +103,7 @@ export function Workstation({ clock, children }: { clock: string; children: Reac
             </div>
             <div
               className="relative overflow-hidden rounded-[10px] ring-1 ring-black/70"
-              style={{ width: 'min(1100px, 93vw)', height: 'min(68vh, 680px)' }}
+              style={{ width: 'min(1100px, 93vw)', height: 'min(74vh, 740px)' }}
             >
               {children}
               <div
@@ -145,7 +145,7 @@ export function Workstation({ clock, children }: { clock: string; children: Reac
       <div
         aria-hidden
         className="absolute left-1/2 -translate-x-1/2"
-        style={{ bottom: `${100 - HORIZON - 11}%`, perspective: '800px' }}
+        style={{ bottom: `${Math.max(1, 100 - HORIZON - 11)}%`, perspective: '800px' }}
       >
         <div
           className="flex items-end gap-5"

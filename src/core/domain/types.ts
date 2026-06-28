@@ -16,14 +16,6 @@
 
 export type Priority = 'urgente' | 'alta' | 'normal' | 'baixa';
 
-/** Multiplicador de drain por prioridade (GDD 3.3). */
-export const PRIORITY_DRAIN: Record<Priority, number> = {
-  urgente: 2.0,
-  alta: 1.5,
-  normal: 1.0,
-  baixa: 0.7,
-};
-
 /** Mapeia a prioridade inteira do Godot (0=urgente … 3=baixa) para o enum daqui. */
 export const PRIORITY_BY_INT: Priority[] = ['urgente', 'alta', 'normal', 'baixa'];
 

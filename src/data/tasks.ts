@@ -10,19 +10,19 @@ export const TASKS: Record<string, TaskTemplate> = {
   study: {
     id: 'study',
     title: 'Estudar',
-    description: 'Abrir o navegador, acessar a página e ler',
+    description: 'Abrir o Chrome, acessar a página e ler',
     steps: [step('press_open_browser'), step('press_open_source'), step('press_read')],
   },
   meeting: {
     id: 'meeting',
     title: 'Participar da Reunião',
-    description: 'Abrir o navegador, entrar na reunião e falar',
-    steps: [step('press_open_browser'), step('press_enter_meeting'), step('hold_speak')],
+    description: 'Abrir o Chrome, entrar na reunião e falar',
+    steps: [step('press_open_browser'), step('press_join_meet'), step('hold_speak')],
   },
   test_feature: {
     id: 'test_feature',
     title: 'Testar Funcionalidade',
-    description: 'Abrir o navegador, acessar staging e testar',
+    description: 'Abrir o Chrome, acessar staging e testar',
     steps: [step('press_open_browser'), step('press_open_staging'), step('hold_test')],
   },
   slack: {
@@ -34,8 +34,8 @@ export const TASKS: Record<string, TaskTemplate> = {
   email: {
     id: 'email',
     title: 'Verificar Email',
-    description: 'Abrir o navegador, abrir o email e arquivar',
-    steps: [step('press_open_browser'), step('press_open_email'), step('press_archive')],
+    description: 'Abrir o Chrome, abrir o webmail e arquivar',
+    steps: [step('press_open_browser'), step('press_open_webmail'), step('press_archive')],
   },
   document: {
     id: 'document',

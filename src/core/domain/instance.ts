@@ -14,7 +14,7 @@ import type {
   TaskTemplate,
   TicketTemplate,
 } from './types';
-import type { ProgramId } from '../snapshot';
+import type { AppId, ProgramId } from '../snapshot';
 import { PROJECT_FILES } from '@/data/files';
 
 function randInt(min: number, max: number): number {
@@ -107,6 +107,12 @@ export interface TicketInstance {
   stepIndex: number;
   errors: number;
   ready: boolean;
+  /** CR rejeitado: entregue com escolha errada; precisa refazer o passo e o push. */
+  reviewRejected: boolean;
+  /** Comentário do reviewer explicando o que rejeitou (null se não houve). */
+  reviewComment: string | null;
+  /** App aberto por engano no passo de abrir; bloqueia até fechar com X. */
+  wrongApp: AppId | null;
   /** Programa em foco (aba ativa): a "Comanda" (details) ou um app aberto. */
   focused: ProgramId;
 }
@@ -189,6 +195,9 @@ export function instantiateTicket(template: TicketTemplate): TicketInstance {
     stepIndex: 0,
     errors: 0,
     ready: false,
+    reviewRejected: false,
+    reviewComment: null,
+    wrongApp: null,
     focused: 'details',
   };
 }
@@ -212,6 +221,52 @@ export function segmentCompleted(seg: SegmentInstance): boolean {
 
 export function stepCompleted(step: StepInstance): boolean {
   return step.segments.every(segmentCompleted);
+}
+
+/** Segmento concluído com a escolha ERRADA (cor/linha/arquivo). Base do CR rejeitado. */
+export function segmentWrong(seg: SegmentInstance): boolean {
+  switch (seg.type) {
+    case 'selection':
+      return seg.chosenIndex !== null && seg.wrong;
+    case 'nav':
+    case 'file':
+      return seg.committed && seg.wrong;
+    default:
+      return false;
+  }
+}
+
+/** Zera o progresso de um segmento (mantém alvo/resposta correta) para refazê-lo. */
+export function resetSegment(seg: SegmentInstance): void {
+  switch (seg.type) {
+    case 'press':
+      seg.pressed = seg.pressed.map(() => false);
+      break;
+    case 'hold':
+      seg.held = 0;
+      seg.holding = false;
+      break;
+    case 'nav':
+      seg.cursor = 0;
+      seg.committed = false;
+      seg.wrong = false;
+      break;
+    case 'selection':
+      seg.chosenIndex = null;
+      seg.wrong = false;
+      break;
+    case 'wait':
+      seg.elapsed = 0;
+      break;
+    case 'file':
+      seg.cursor = 0;
+      seg.chosenIndex = null;
+      seg.committed = false;
+      seg.wrong = false;
+      seg.searching = false;
+      seg.query = '';
+      break;
+  }
 }
 
 export function priorityFromInt(p: number): Priority {

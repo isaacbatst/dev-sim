@@ -1,4 +1,11 @@
-import type { ActiveTicketSnapshot, PlanStatus, Priority, ProgramId } from '@/core/snapshot';
+import type {
+  ActiveTicketSnapshot,
+  AppId,
+  PlanStatus,
+  Priority,
+  ProgramId,
+  SlotSnapshot,
+} from '@/core/snapshot';
 import { APPS } from './apps';
 import { Scene } from './scenes';
 import { ActionBar } from './ActionBar';
@@ -68,6 +75,25 @@ function DetailsPanel({ active }: { active: ActiveTicketSnapshot }) {
   );
 }
 
+/** Programa aberto por engano: bloqueia até fechar com X. */
+function WrongApp({ appId }: { appId: AppId }) {
+  const app = APPS[appId];
+  return (
+    <div className="flex min-h-[22rem] flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
+      <span className="text-5xl opacity-50" aria-hidden>
+        {app.icon}
+      </span>
+      <p className="text-sm text-ink-dim">
+        Nada a fazer no <span className="font-medium text-ink">{app.name}</span> agora.
+      </p>
+      <p className="flex items-center gap-2 text-xs text-ink-dim">
+        feche para voltar
+        <kbd className="keycap !h-5 !min-w-5 !text-[10px]">X</kbd>
+      </p>
+    </div>
+  );
+}
+
 /** App aberto, mas não é onde está a ação agora. */
 function IdleApp({ appId, target }: { appId: ProgramId; target: string }) {
   const app = appId === 'details' ? null : APPS[appId];
@@ -111,18 +137,22 @@ function ProgramTab({
 
 export function AppWindow({
   active,
+  slots,
   shake,
   onFocusProgram,
 }: {
   active: ActiveTicketSnapshot;
+  slots: (SlotSnapshot | null)[];
   shake: boolean;
   onFocusProgram: (id: ProgramId) => void;
 }) {
   const focusedApp = active.focused !== 'details' ? APPS[active.focused] : null;
+  const wrongMeta = active.wrongApp ? APPS[active.wrongApp] : null;
 
-  // Título da janela conforme o programa em foco.
-  const title =
-    active.focused === 'details'
+  // Título da janela conforme o programa em foco (ou o aberto por engano).
+  const title = wrongMeta
+    ? wrongMeta.name
+    : active.focused === 'details'
       ? `Ticket — ${active.name}`
       : active.focused === active.app
         ? active.windowTitle
@@ -143,7 +173,7 @@ export function AppWindow({
           <span className="size-3 rounded-full bg-[#28c840]" />
         </div>
         <span className="text-sm" aria-hidden>
-          {focusedApp?.icon ?? '📋'}
+          {wrongMeta?.icon ?? focusedApp?.icon ?? '📋'}
         </span>
         <span className="truncate font-mono text-xs text-ink-dim">{title}</span>
         <span
@@ -170,17 +200,26 @@ export function AppWindow({
             onClick={() => onFocusProgram(id)}
           />
         ))}
+        {wrongMeta && (
+          <span className="flex items-center gap-1.5 rounded-md border border-line bg-surface-2 px-2.5 py-1 text-xs font-medium text-ink-dim">
+            <span aria-hidden>{wrongMeta.icon}</span>
+            {wrongMeta.name}
+            <span className="text-ink-dim">✕</span>
+          </span>
+        )}
         <span className="ml-auto hidden items-center gap-1 pr-1 text-[10px] text-ink-dim sm:flex">
           <kbd className="keycap !h-5 !min-w-7 !text-[10px]">Tab</kbd> alterna
         </span>
       </div>
 
-      {/* corpo: conteúdo do programa em foco */}
+      {/* corpo: conteúdo do programa em foco (ou o aberto por engano) */}
       <div className="flex flex-1 flex-col">
-        {active.focused === 'details' ? (
+        {active.wrongApp ? (
+          <WrongApp appId={active.wrongApp} />
+        ) : active.focused === 'details' ? (
           <DetailsPanel active={active} />
         ) : active.focused === active.app && active.appLaunched ? (
-          <Scene active={active} />
+          <Scene active={active} slots={slots} />
         ) : (
           <IdleApp appId={active.focused} target={APPS[active.app].name} />
         )}
