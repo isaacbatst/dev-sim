@@ -216,13 +216,13 @@ export class Game {
     if (id === 'details' || this.openPrograms(inst).includes(id)) inst.focused = id;
   }
 
-  /** Alterna o foco para a próxima aba (Tab). */
-  cycleFocus(): void {
+  /** Alterna o foco entre as abas (Tab → frente; Shift+Tab → trás). */
+  cycleFocus(dir: 1 | -1 = 1): void {
     const inst = this.activeInstance();
     if (!inst) return;
     const tabs: ProgramId[] = ['details', ...this.openPrograms(inst)];
     const i = tabs.indexOf(inst.focused);
-    inst.focused = tabs[(i + 1) % tabs.length];
+    inst.focused = tabs[(i + dir + tabs.length) % tabs.length];
   }
 
   /** Tecla solta (keyup) — relevante só para `hold`. */

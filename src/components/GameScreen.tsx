@@ -35,7 +35,7 @@ export function GameScreen() {
       if (e.ctrlKey || e.metaKey) return; // não capturar outros atalhos do SO
       if (e.key.startsWith('Arrow') || e.key === 'Tab' || e.key === 'Backspace') e.preventDefault();
       if (e.repeat) return;
-      if (e.key === 'Tab') return cycleFocus();
+      if (e.key === 'Tab') return cycleFocus(e.shiftKey ? -1 : 1);
       if (e.key >= '1' && e.key <= '5') return selectSlot(Number(e.key) - 1);
       if (e.key === 'Enter') return confirm();
       keyDown(e.key);

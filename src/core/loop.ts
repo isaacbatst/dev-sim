@@ -59,8 +59,8 @@ export class GameLoop {
     this.listener(this.game.snapshot());
   }
 
-  cycleFocus(): void {
-    this.game.cycleFocus();
+  cycleFocus(dir: 1 | -1 = 1): void {
+    this.game.cycleFocus(dir);
     this.listener(this.game.snapshot());
   }
 

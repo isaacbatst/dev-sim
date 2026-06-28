@@ -18,7 +18,7 @@ interface GameState {
   confirm: () => void;
   deliver: () => void;
   focusProgram: (id: ProgramId) => void;
-  cycleFocus: () => void;
+  cycleFocus: (dir?: 1 | -1) => void;
   quickOpen: () => void;
 }
 
@@ -50,7 +50,7 @@ export const useGameStore = create<GameState>((set) => {
     confirm: () => loop?.confirm(),
     deliver: () => loop?.deliver(),
     focusProgram: (id) => loop?.focusProgram(id),
-    cycleFocus: () => loop?.cycleFocus(),
+    cycleFocus: (dir) => loop?.cycleFocus(dir),
     quickOpen: () => loop?.quickOpen(),
   };
 });
