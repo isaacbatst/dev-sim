@@ -58,9 +58,7 @@ function Cue({ seg }: { seg: SegmentView }) {
     case 'selection':
       return (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <span className="text-sm text-ink-dim">
-            selecione <span className="font-semibold text-amber">{seg.prompt}</span>
-          </span>
+          <span className="text-sm text-ink-dim">selecionar:</span>
           {seg.options.map((o) => (
             <span key={o.key} className="flex items-center gap-1.5">
               <KeyCap state={seg.chosenKey === o.key ? (seg.wrong ? 'wrong' : 'done') : 'idle'}>

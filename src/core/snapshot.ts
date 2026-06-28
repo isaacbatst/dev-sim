@@ -82,12 +82,10 @@ export interface ActiveTicketSnapshot {
   /** App do desktop a abrir para a tarefa atual e o título da janela. */
   app: AppId;
   windowTitle: string;
-  /** Plano detalhado da demanda (comanda): subtarefas e seus passos. */
-  plan: {
-    title: string;
-    status: PlanStatus;
-    steps: { label: string; status: PlanStatus }[];
-  }[];
+  /** Comanda: por subtarefa, uma descrição em prosa com os detalhes mutáveis. */
+  plan: { title: string; status: PlanStatus; prose: string }[];
+  /** Arquivo aberto no editor (para a cena do VSCode). */
+  editorFile: string;
 }
 
 export type PlanStatus = 'done' | 'current' | 'pending';

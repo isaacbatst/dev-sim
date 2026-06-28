@@ -42,40 +42,25 @@ function DetailsPanel({ active }: { active: ActiveTicketSnapshot }) {
       </div>
 
       <div>
-        <p className="mb-2 text-[11px] uppercase tracking-wider text-ink-dim">passo a passo</p>
+        <p className="mb-2 text-[11px] uppercase tracking-wider text-ink-dim">o que fazer</p>
         <div className="flex flex-col gap-3">
           {active.plan.map((sub, i) => (
-            <div key={i}>
+            <div key={i} className="flex gap-2">
               {multi && (
-                <p
-                  className={`mb-1 flex items-center gap-2 text-sm font-semibold ${statusColor(sub.status)}`}
-                >
-                  <span>{statusMark(sub.status)}</span>
-                  {sub.title}
-                </p>
+                <span className={`mt-0.5 text-sm ${statusColor(sub.status)}`}>
+                  {statusMark(sub.status)}
+                </span>
               )}
-              <ol
-                className={`flex flex-col gap-1 ${multi ? 'ml-1.5 border-l border-line pl-3' : ''}`}
-              >
-                {sub.steps.map((st, j) => (
-                  <li key={j} className="flex items-center gap-2 text-sm text-ink-dim">
-                    <span className={`text-xs ${statusColor(st.status)}`}>
-                      {statusMark(st.status)}
-                    </span>
-                    <span
-                      className={
-                        st.status === 'done'
-                          ? 'line-through'
-                          : st.status === 'current'
-                            ? 'text-ink'
-                            : ''
-                      }
-                    >
-                      {st.label}
-                    </span>
-                  </li>
-                ))}
-              </ol>
+              <div>
+                {multi && (
+                  <p className={`text-sm font-semibold ${statusColor(sub.status)}`}>{sub.title}</p>
+                )}
+                <p
+                  className={`text-sm leading-relaxed ${sub.status === 'done' ? 'text-ink-dim line-through' : 'text-ink'}`}
+                >
+                  {sub.prose}
+                </p>
+              </div>
             </div>
           ))}
         </div>

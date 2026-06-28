@@ -6,6 +6,7 @@ import {
   stepCompleted,
   type SegmentInstance,
   type StepInstance,
+  type TaskInstance,
   type TicketInstance,
 } from './domain/instance';
 import { TICKET_POOL } from '@/data/tickets';
@@ -43,6 +44,16 @@ const GRACE_SECONDS = 12;
 const SPAWN_INTERVAL = 8;
 
 const REVERSE_DIR = { up: 'down', down: 'up', left: 'right', right: 'left' } as const;
+
+const FILE_NAME: Record<string, string> = { HTML: 'index.html', CSS: 'styles.css', JS: 'app.js' };
+function fileName(label?: string): string {
+  return (label && FILE_NAME[label]) || 'login.ts';
+}
+function joinPt(items: string[]): string {
+  if (items.length === 0) return '';
+  if (items.length === 1) return items[0];
+  return `${items.slice(0, -1).join(', ')} e ${items[items.length - 1]}`;
+}
 
 export class Game {
   private satisfaction = 100;
@@ -337,10 +348,12 @@ export class Game {
   private activeSnapshot(): ActiveTicketSnapshot | null {
     const inst = this.activeInstance();
     if (!inst) return null;
-    const task = inst.tasks[Math.min(inst.taskIndex, inst.tasks.length - 1)].template;
+    const taskInst = inst.tasks[Math.min(inst.taskIndex, inst.tasks.length - 1)];
+    const task = taskInst.template;
     const step = this.currentStep(inst);
     return {
       id: inst.id,
+      editorFile: this.editorFile(taskInst),
       // 1º passo de cada tarefa é "Abrir X"; antes disso, o app ainda não abriu.
       appLaunched: this.isLaunched(inst),
       focused: inst.focused,
@@ -359,38 +372,83 @@ export class Game {
     };
   }
 
-  /** Plano passo a passo da demanda, com status por subtarefa e por passo. */
+  /** Comanda: por subtarefa, uma descrição em prosa com os detalhes mutáveis. */
   private buildPlan(inst: TicketInstance): ActiveTicketSnapshot['plan'] {
-    const status = (ti: number, si: number): 'done' | 'current' | 'pending' => {
-      if (inst.ready || ti < inst.taskIndex) return 'done';
-      if (ti > inst.taskIndex) return 'pending';
-      if (si < inst.stepIndex) return 'done';
-      return si === inst.stepIndex ? 'current' : 'pending';
-    };
     return inst.tasks.map((task, ti) => ({
       title: task.template.title,
       status:
         inst.ready || ti < inst.taskIndex ? 'done' : ti === inst.taskIndex ? 'current' : 'pending',
-      steps: task.steps.map((step, si) => ({
-        label: step.segments.map((s) => this.segmentLabel(s)).join(' + '),
-        status: status(ti, si),
-      })),
+      prose: this.taskProse(task),
     }));
   }
 
-  private segmentLabel(seg: SegmentInstance): string {
-    switch (seg.type) {
-      case 'press':
-        return seg.actions.map((a) => a.label).join(' + ');
-      case 'hold':
-        return `${seg.action.label} (segurar ${seg.target}s)`;
-      case 'nav':
-        return `${SYMBOL_BY_DIRECTION[seg.direction]} ${seg.target}×`;
-      case 'selection':
-        return `Selecionar ${seg.options[seg.correctIndex].label}`;
-      case 'wait':
-        return `Aguardar code review (~${Math.round(seg.total)}s)`;
+  // Coletores de detalhes mutáveis (valores corretos sorteados na instância).
+  private selLabels(t: TaskInstance): string[] {
+    const out: string[] = [];
+    for (const step of t.steps)
+      for (const seg of step.segments)
+        if (seg.type === 'selection') out.push(seg.options[seg.correctIndex].label);
+    return out;
+  }
+  private navTargets(t: TaskInstance): number[] {
+    const out: number[] = [];
+    for (const step of t.steps)
+      for (const seg of step.segments) if (seg.type === 'nav') out.push(seg.target);
+    return out;
+  }
+  private holdSecs(t: TaskInstance): number[] {
+    const out: number[] = [];
+    for (const step of t.steps)
+      for (const seg of step.segments) if (seg.type === 'hold') out.push(seg.target);
+    return out;
+  }
+  private pressLabelsAt(t: TaskInstance, stepIdx: number): string[] {
+    const step = t.steps[stepIdx];
+    if (!step) return [];
+    for (const seg of step.segments)
+      if (seg.type === 'press') return seg.actions.map((a) => a.label);
+    return [];
+  }
+
+  /** Descrição em prosa da subtarefa, com os detalhes mutáveis embutidos. */
+  private taskProse(t: TaskInstance): string {
+    const sel = this.selLabels(t);
+    const nav = this.navTargets(t);
+    const hold = this.holdSecs(t);
+    switch (t.template.id) {
+      case 'study':
+        return `Abrir o navegador e ler ${joinPt(
+          this.pressLabelsAt(t, 1).map((s) => s.replace(/^Ler /, '')),
+        )}.`;
+      case 'meeting':
+        return `Abrir o navegador, entrar na reunião e falar por ${hold[0] ?? 3}s.`;
+      case 'test_feature':
+        return `Abrir o navegador, acessar o staging e rodar os testes por ${hold[0] ?? 3}s.`;
+      case 'slack':
+        return `Abrir o Slack, descer ${nav[0] ?? 1} canais até o canal certo e responder.`;
+      case 'email':
+        return `Abrir o navegador, abrir o e-mail e arquivar a mensagem.`;
+      case 'document':
+        return `Abrir o VSCode, escrever a documentação, dar push, aguardar o CR e fazer o merge.`;
+      case 'fix_typo':
+        return `Abrir o VSCode, abrir ${fileName(sel[0])}, descer até a linha ${nav[0] ?? 1}, corrigir o typo, dar push, aguardar o CR e fazer o merge.`;
+      case 'ui_color':
+        return `Abrir o CSS no VSCode, selecionar o ${sel[0]}, mudar a ${sel[1]} para ${sel[2]}, dar push, aguardar o CR e fazer o merge.`;
+      case 'ui_font':
+        return `Abrir o CSS no VSCode, selecionar o ${sel[0]}, ajustar a fonte (${nav[0] ?? 1}×) e o estilo para ${sel[1]}, dar push, aguardar o CR e fazer o merge.`;
+      default:
+        return t.template.description;
     }
+  }
+
+  /** Arquivo aberto no editor (para a cena do VSCode mostrar o conteúdo certo). */
+  private editorFile(t: TaskInstance): string {
+    for (const step of t.steps)
+      for (const seg of step.segments)
+        if (seg.type === 'selection' && seg.options.some((o) => FILE_NAME[o.label]))
+          return fileName(seg.options[seg.correctIndex].label);
+    if (t.template.id === 'ui_color' || t.template.id === 'ui_font') return 'styles.css';
+    return 'login.ts';
   }
 
   private segmentView(seg: SegmentInstance): SegmentView {

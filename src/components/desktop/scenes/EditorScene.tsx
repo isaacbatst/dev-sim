@@ -5,17 +5,60 @@ const FILE_COLOR: Record<string, string> = { HTML: '#e44d26', CSS: '#2965f1', JS
 const FILE_NAME: Record<string, string> = { HTML: 'index.html', CSS: 'styles.css', JS: 'app.js' };
 const SWATCH: Record<string, string> = { Vermelho: '#ff5c57', Verde: '#5fd07a', Azul: '#5b9bff' };
 
-const FAUX_CODE = [
-  'export function login(user: User) {',
-  '  const token = createSession(user)',
-  '  if (!token) throw new AuthError()',
-  '  return persist(token)',
-  '}',
-  '',
-  'function createSession(user: User) {',
-  '  return signJwt({ sub: user.id })',
-  '}',
-];
+/** Conteúdo por arquivo aberto, para o editor mostrar o código certo. */
+const FILES: Record<string, string[]> = {
+  'login.ts': [
+    'export function login(user: User) {',
+    '  const token = createSession(user)',
+    '  if (!token) throw new AuthError()',
+    '  return persist(token)',
+    '}',
+    '',
+    'function createSession(user: User) {',
+    '  return signJwt({ sub: user.id })',
+    '}',
+  ],
+  'index.html': [
+    '<!doctype html>',
+    '<html lang="pt-br">',
+    '  <head>',
+    '    <meta charset="utf-8" />',
+    '    <title>App</title>',
+    '  </head>',
+    '  <body>',
+    '    <button id="cta">Entrar</button>',
+    '    <h1 class="title">Olá</h1>',
+    '    <input name="email" />',
+    '  </body>',
+    '</html>',
+  ],
+  'styles.css': [
+    ':root {',
+    '  --primary: #3b82f6;',
+    '}',
+    '.button {',
+    '  background: var(--primary);',
+    '  color: #ffffff;',
+    '}',
+    '.title {',
+    '  font-size: 18px;',
+    '  font-weight: 600;',
+    '}',
+    '.input { border: 1px solid #ccc; }',
+  ],
+  'app.js': [
+    "import { api } from './api'",
+    '',
+    'export function login(user) {',
+    '  const token = createSession(user)',
+    "  if (!token) throw new Error('auth')",
+    '  return persist(token)',
+    '}',
+    'function createSession(u) {',
+    '  return signJwt({ sub: u.id })',
+    '}',
+  ],
+};
 
 /** Explorer com destaque do arquivo-alvo (sem keycap — a tecla mora na ActionBar). */
 function FileTree({ seg }: { seg: Extract<SegmentView, { type: 'selection' }> }) {
@@ -43,17 +86,18 @@ function FileTree({ seg }: { seg: Extract<SegmentView, { type: 'selection' }> })
   );
 }
 
-function CodeArea({ focus }: { focus?: SegmentView }) {
+function CodeArea({ focus, file }: { focus?: SegmentView; file: string }) {
   const nav = focus?.type === 'nav' ? focus : null;
   const fixing = focus?.type === 'press' && focus.tokens.some((t) => /corrigir/i.test(t.label));
   const cursorWrong = nav?.committed && nav.wrong;
+  const lines = FILES[file] ?? FILES['login.ts'];
   return (
     <div className="flex-1 overflow-hidden font-mono text-sm">
       <div className="flex border-b border-line bg-surface px-3 py-1 text-xs text-ink-dim">
-        <span className="border-b-2 border-amber px-2 py-1 text-ink">login.ts</span>
+        <span className="border-b-2 border-amber px-2 py-1 text-ink">{file}</span>
       </div>
       <pre className="m-0 p-3 leading-6">
-        {FAUX_CODE.map((line, i) => {
+        {lines.map((line, i) => {
           const isCursor = nav && i === nav.cursor;
           const isTarget = nav && i === nav.target;
           const isBug = fixing && i === 2;
@@ -155,7 +199,7 @@ export function EditorScene({ active }: { active: ActiveTicketSnapshot }) {
   else if (focus?.type === 'wait') main = <PrPanel />;
   else if (focus?.type === 'press' && /push|merge/i.test(focus.tokens[0]?.label ?? ''))
     main = <GitTerminal focus={focus} />;
-  else main = <CodeArea focus={focus} />;
+  else main = <CodeArea focus={focus} file={active.editorFile} />;
 
   return (
     <div className="flex min-h-[22rem] flex-1">
@@ -168,9 +212,11 @@ export function EditorScene({ active }: { active: ActiveTicketSnapshot }) {
       <div className="hidden w-40 shrink-0 flex-col border-r border-line bg-surface/60 p-2 font-mono text-xs text-ink-dim sm:flex">
         <p className="pb-1 uppercase tracking-wider">projeto</p>
         <p className="text-ink">▸ src</p>
-        <p className="pl-3">▸ auth</p>
-        <p className="pl-6 text-ink">login.ts</p>
-        <p className="pl-3">styles.css</p>
+        {['index.html', 'styles.css', 'app.js', 'login.ts'].map((f) => (
+          <p key={f} className={`pl-3 ${f === active.editorFile ? 'text-amber' : ''}`}>
+            {f}
+          </p>
+        ))}
       </div>
       {main}
     </div>
