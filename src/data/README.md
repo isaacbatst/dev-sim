@@ -1,12 +1,14 @@
 # `data/` — Templates de conteúdo
 
-Port dos arquivos `.tres` do Godot para JSON/objetos TS.
+Port dos arquivos `.tres` do Godot para objetos TS. **Migração concluída** (Fase 2):
 
-Conteúdo do PoC a migrar:
-
-- **24 segments** (press, hold, nav, selection, wait)
-- **9 tasks** (study, meeting, slack, email, document, fix_typo, ui_color, ui_font, test_feature)
-- **13 tickets** (9 single-task + 4 multi-task)
+- `segments.ts` — **24 segments** (press, hold, nav, selection, wait). Teclas vindas
+  do input map do `project.godot`.
+- `tasks.ts` — **9 tasks** compostas de segments.
+- `tickets.ts` — **13 tickets** (9 single-task wrap + 4 multi-task) + `TICKET_POOL`.
 
 Templates são **estáticos** (definição de conteúdo). O estado de runtime
-(instâncias) vive no `core/` — não misturar os dois.
+(`*Instance`, cursor, progresso) vive em `core/domain/instance.ts` — não misturar.
+
+> A progressão de dificuldade por nível (pools por fase do dia) é Fase 2 item 3,
+> ainda não migrada. Hoje o spawn usa o pool inteiro.

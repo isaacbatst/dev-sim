@@ -13,7 +13,8 @@ interface GameState {
   start: () => () => void;
   restart: () => void;
   selectSlot: (index: number) => void;
-  pressKey: (key: string) => void;
+  keyDown: (key: string) => void;
+  keyUp: (key: string) => void;
   deliver: () => void;
 }
 
@@ -40,7 +41,8 @@ export const useGameStore = create<GameState>((set) => {
 
     restart: () => spawn(),
     selectSlot: (index) => loop?.selectSlot(index),
-    pressKey: (key) => loop?.pressKey(key),
+    keyDown: (key) => loop?.keyDown(key),
+    keyUp: (key) => loop?.keyUp(key),
     deliver: () => loop?.deliver(),
   };
 });

@@ -1,52 +1,44 @@
+import { ARROW_KEY_BY_DIRECTION, PRIORITY_DRAIN, SYMBOL_BY_DIRECTION } from './domain/types';
 import type { TicketTemplate } from './domain/types';
-import { PRIORITY_DRAIN } from './domain/types';
-import { SLICE_TICKETS } from './content/slice';
-import type { ActiveTicketSnapshot, InputToken, Snapshot, SlotSnapshot } from './snapshot';
+import {
+  instantiateTicket,
+  segmentCompleted,
+  stepCompleted,
+  type SegmentInstance,
+  type StepInstance,
+  type TicketInstance,
+} from './domain/instance';
+import { TICKET_POOL } from '@/data/tickets';
+import type { ActiveTicketSnapshot, SegmentView, Snapshot, SlotSnapshot } from './snapshot';
 
 /**
  * Motor do jogo — lógica pura em TS, sem React e sem timers próprios.
- * O tempo entra por `tick(dtMs)`, chamado pelo game loop (RAF). A UI lê via `snapshot()`.
+ * O tempo entra por `tick(dtMs)` (game loop / RAF); a UI lê via `snapshot()`.
  *
- * Por enquanto é uma classe simples; o fluxo de input migra para XState quando os
- * outros tipos de segmento (hold/nav/selection/wait) entrarem (Fase 2).
+ * O cursor de progresso (tarefa/passo) vive em cada `TicketInstance`, então um
+ * ticket pode esperar (segmento `wait`) na própria fila enquanto o jogador
+ * trabalha em outro — sem o sistema de re-enfileiramento do PoC (ver AUDITORIA
+ * em domain/types.ts).
+ *
+ * Mantido em TS puro (sem XState) por ora: o modelo de cursor cobre os 5 tipos
+ * de segmento e mantém a iteração rápida. XState pode entrar se o fluxo crescer.
  */
 
 const SLOT_COUNT = 5;
-const DAY_START_MIN = 9 * 60; // 09:00
-const DAY_END_MIN = 17 * 60; // 17:00
-const DAY_REAL_SECONDS = 180; // 3 min reais = jornada inteira
+const DAY_START_MIN = 9 * 60;
+const DAY_END_MIN = 17 * 60;
+const DAY_REAL_SECONDS = 180;
 const GAME_MIN_PER_SEC = (DAY_END_MIN - DAY_START_MIN) / DAY_REAL_SECONDS;
 
-const DRAIN_BASE = 0.5; // por segundo (nível 0)
+const DRAIN_BASE = 0.5;
 const GRACE_SECONDS = 12;
-const SPAWN_INTERVAL = 8; // segundos
+const SPAWN_INTERVAL = 8;
 
-/** Cursor de progresso e estado de runtime de um ticket na fila. */
-interface TicketInstance {
-  template: TicketTemplate;
-  taskIndex: number;
-  stepIndex: number;
-  segmentIndex: number;
-  keyIndex: number;
-  errors: number;
-  ready: boolean;
-}
-
-function instantiate(template: TicketTemplate): TicketInstance {
-  return {
-    template,
-    taskIndex: 0,
-    stepIndex: 0,
-    segmentIndex: 0,
-    keyIndex: 0,
-    errors: 0,
-    ready: false,
-  };
-}
+const ARROW_KEYS = new Set(Object.values(ARROW_KEY_BY_DIRECTION));
 
 export class Game {
   private satisfaction = 100;
-  private elapsed = 0; // segundos reais decorridos
+  private elapsed = 0;
   private status: Snapshot['status'] = 'playing';
   private delivered = 0;
   private slots: (TicketInstance | null)[] = new Array(SLOT_COUNT).fill(null);
@@ -54,26 +46,22 @@ export class Game {
   private spawnTimer = 0;
   private pool: TicketTemplate[];
 
-  constructor(pool: TicketTemplate[] = SLICE_TICKETS) {
+  constructor(pool: TicketTemplate[] = TICKET_POOL) {
     this.pool = pool;
-    // Começa com dois tickets pra fila não nascer vazia.
     this.spawnTicket();
     this.spawnTicket();
   }
 
-  /** Avança o estado em `dtMs` milissegundos. Chamado pelo loop. */
   tick(dtMs: number): void {
     if (this.status !== 'playing') return;
     const dt = dtMs / 1000;
     this.elapsed += dt;
 
-    // Relógio / vitória.
     if (this.gameMinutes() >= DAY_END_MIN) {
       this.status = 'won';
       return;
     }
 
-    // Drain do chefe (após grace period), ponderado pela maior prioridade na fila.
     if (this.elapsed > GRACE_SECONDS) {
       this.satisfaction -= DRAIN_BASE * this.drainMultiplier() * dt;
       if (this.satisfaction <= 0) {
@@ -83,15 +71,27 @@ export class Game {
       }
     }
 
-    // Spawn periódico de tickets em slots vazios.
     this.spawnTimer += dt;
     if (this.spawnTimer >= SPAWN_INTERVAL) {
       this.spawnTimer -= SPAWN_INTERVAL;
       this.spawnTicket();
     }
+
+    // Segmentos por tempo: `wait` progride em qualquer slot; `hold` só no ativo, segurando.
+    this.slots.forEach((inst, i) => {
+      if (!inst || inst.ready) return;
+      const seg = this.currentSegment(inst);
+      if (!seg) return;
+      if (seg.type === 'wait' && !segmentCompleted(seg)) {
+        seg.elapsed += dt;
+        if (segmentCompleted(seg)) this.advance(inst);
+      } else if (seg.type === 'hold' && i === this.activeSlot && seg.holding) {
+        seg.held += dt;
+        if (segmentCompleted(seg)) this.advance(inst);
+      }
+    });
   }
 
-  /** Seleciona o ticket do slot (0-based). Ignora slots vazios. */
   selectSlot(index: number): void {
     if (this.status !== 'playing') return;
     if (index < 0 || index >= SLOT_COUNT) return;
@@ -99,29 +99,70 @@ export class Game {
     this.activeSlot = index;
   }
 
-  /** Processa uma tecla de input no ticket ativo. */
-  pressKey(raw: string): void {
+  /** Tecla pressionada (keydown). */
+  keyDown(raw: string): void {
     if (this.status !== 'playing') return;
     const inst = this.activeInstance();
     if (!inst || inst.ready) return;
+    const seg = this.currentSegment(inst);
+    if (!seg) return;
+    const key = raw.toLowerCase();
 
-    const segment = this.currentSegment(inst);
-    if (!segment) return;
+    switch (seg.type) {
+      case 'press': {
+        const idx = seg.actions.findIndex((a, i) => !seg.pressed[i] && a.key === key);
+        if (idx >= 0) {
+          seg.pressed[idx] = true;
+        } else if (seg.distractors.some((d) => d.key === key)) {
+          inst.errors += 1;
+        }
+        break;
+      }
+      case 'nav': {
+        if (key === ARROW_KEY_BY_DIRECTION[seg.direction]) {
+          if (!segmentCompleted(seg)) seg.count += 1;
+        } else if (ARROW_KEYS.has(key)) {
+          inst.errors += 1;
+        }
+        break;
+      }
+      case 'selection': {
+        if (seg.chosenIndex !== null) break;
+        const idx = seg.options.findIndex((o) => o.key === key);
+        if (idx >= 0) {
+          seg.chosenIndex = idx;
+          if (idx !== seg.correctIndex) {
+            seg.wrong = true;
+            inst.errors += 1;
+          }
+        }
+        break;
+      }
+      case 'hold': {
+        if (key === seg.action.key) seg.holding = true;
+        break;
+      }
+      case 'wait':
+        break;
+    }
 
-    const expected = segment.keys[inst.keyIndex];
-    if (!expected) return;
+    if (stepCompleted(this.currentStep(inst)!)) this.advance(inst);
+  }
 
-    if (raw.toLowerCase() === expected.key.toLowerCase()) {
-      this.advance(inst);
-    } else {
-      inst.errors += 1;
+  /** Tecla solta (keyup) — relevante só para `hold`. */
+  keyUp(raw: string): void {
+    if (this.status !== 'playing') return;
+    const inst = this.activeInstance();
+    if (!inst) return;
+    const seg = this.currentSegment(inst);
+    if (seg?.type === 'hold' && raw.toLowerCase() === seg.action.key) {
+      seg.holding = false;
+      if (seg.held < seg.target) seg.held = 0; // soltou cedo: reinicia (paridade com o PoC)
     }
   }
 
-  /** Entrega o ticket ativo se ele estiver pronto; aplica recompensa. */
   deliver(): void {
-    if (this.status !== 'playing') return;
-    if (this.activeSlot === null) return;
+    if (this.status !== 'playing' || this.activeSlot === null) return;
     const inst = this.slots[this.activeSlot];
     if (!inst || !inst.ready) return;
 
@@ -145,34 +186,31 @@ export class Game {
 
   // --- internos ---
 
+  /** Avança o cursor enquanto o passo atual estiver completo; marca `ready` ao fim. */
   private advance(inst: TicketInstance): void {
-    const segment = this.currentSegment(inst);
-    if (!segment) return;
-
-    inst.keyIndex += 1;
-    if (inst.keyIndex < segment.keys.length) return;
-
-    // Segmento concluído → próximo segmento/passo/tarefa.
-    inst.keyIndex = 0;
-    inst.segmentIndex += 1;
-    const step = inst.template.tasks[inst.taskIndex]?.steps[inst.stepIndex];
-    if (step && inst.segmentIndex < step.segments.length) return;
-
-    inst.segmentIndex = 0;
-    inst.stepIndex += 1;
-    const task = inst.template.tasks[inst.taskIndex];
-    if (task && inst.stepIndex < task.steps.length) return;
-
-    inst.stepIndex = 0;
-    inst.taskIndex += 1;
-    if (inst.taskIndex < inst.template.tasks.length) return;
-
-    // Todas as tarefas feitas → pronto para entregar.
-    inst.ready = true;
+    let step = this.currentStep(inst);
+    while (step && stepCompleted(step)) {
+      inst.stepIndex += 1;
+      const task = inst.tasks[inst.taskIndex];
+      if (inst.stepIndex >= task.steps.length) {
+        inst.stepIndex = 0;
+        inst.taskIndex += 1;
+        if (inst.taskIndex >= inst.tasks.length) {
+          inst.ready = true;
+          return;
+        }
+      }
+      step = this.currentStep(inst);
+    }
   }
 
-  private currentSegment(inst: TicketInstance) {
-    return inst.template.tasks[inst.taskIndex]?.steps[inst.stepIndex]?.segments[inst.segmentIndex];
+  private currentStep(inst: TicketInstance): StepInstance | undefined {
+    return inst.tasks[inst.taskIndex]?.steps[inst.stepIndex];
+  }
+
+  private currentSegment(inst: TicketInstance): SegmentInstance | undefined {
+    // Conteúdo atual tem 1 segmento por passo; pega o primeiro não concluído.
+    return this.currentStep(inst)?.segments.find((s) => !segmentCompleted(s));
   }
 
   private activeInstance(): TicketInstance | null {
@@ -181,9 +219,8 @@ export class Game {
 
   private spawnTicket(): void {
     const free = this.slots.findIndex((s) => s === null);
-    if (free === -1) return; // fila cheia
-    const template = this.pool[Math.floor(Math.random() * this.pool.length)];
-    this.slots[free] = instantiate(template);
+    if (free === -1) return;
+    this.slots[free] = instantiateTicket(this.pool[Math.floor(Math.random() * this.pool.length)]);
   }
 
   private drainMultiplier(): number {
@@ -200,51 +237,85 @@ export class Game {
 
   private formatClock(): string {
     const total = Math.min(DAY_END_MIN, Math.floor(this.gameMinutes()));
-    const h = Math.floor(total / 60);
-    const m = total % 60;
-    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+    return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
   }
 
   private slotSnapshot(inst: TicketInstance | null, index: number): SlotSnapshot | null {
     if (!inst) return null;
+    const seg = this.currentSegment(inst);
+    const waiting = seg?.type === 'wait' && !segmentCompleted(seg);
     return {
       index,
       name: inst.template.name,
       priority: inst.template.priority,
       ready: inst.ready,
       active: index === this.activeSlot,
+      waitRemaining: waiting ? Math.ceil(seg.total - seg.elapsed) : null,
     };
   }
 
   private activeSnapshot(): ActiveTicketSnapshot | null {
     const inst = this.activeInstance();
     if (!inst) return null;
-    const task = inst.template.tasks[inst.taskIndex] ?? inst.template.tasks.at(-1)!;
+    const task = inst.tasks[Math.min(inst.taskIndex, inst.tasks.length - 1)].template;
+    const step = this.currentStep(inst);
     return {
       name: inst.template.name,
       description: inst.template.description,
       priority: inst.template.priority,
       taskTitle: task.title,
-      taskIndex: Math.min(inst.taskIndex, inst.template.tasks.length - 1),
-      taskCount: inst.template.tasks.length,
-      inputs: this.activeInputs(inst),
+      taskIndex: Math.min(inst.taskIndex, inst.tasks.length - 1),
+      taskCount: inst.tasks.length,
+      segments: inst.ready || !step ? [] : step.segments.map((s) => this.segmentView(s)),
       ready: inst.ready,
     };
   }
 
-  /** Tokens do passo atual da tarefa atual, com o cursor de input marcado. */
-  private activeInputs(inst: TicketInstance): InputToken[] {
-    if (inst.ready) return [];
-    const step = inst.template.tasks[inst.taskIndex]?.steps[inst.stepIndex];
-    if (!step) return [];
-    const tokens: InputToken[] = [];
-    step.segments.forEach((segment, si) => {
-      segment.keys.forEach((k, ki) => {
-        const done = si < inst.segmentIndex || (si === inst.segmentIndex && ki < inst.keyIndex);
-        const current = si === inst.segmentIndex && ki === inst.keyIndex;
-        tokens.push({ key: k.key, label: k.label, done, current });
-      });
-    });
-    return tokens;
+  private segmentView(seg: SegmentInstance): SegmentView {
+    switch (seg.type) {
+      case 'press': {
+        const firstPending = seg.pressed.findIndex((p) => !p);
+        return {
+          type: 'press',
+          tokens: seg.actions.map((a, i) => ({
+            key: a.key,
+            label: a.label,
+            done: seg.pressed[i],
+            current: i === firstPending,
+          })),
+        };
+      }
+      case 'hold':
+        return {
+          type: 'hold',
+          key: seg.action.key,
+          label: seg.action.label,
+          targetSec: seg.target,
+          progress: Math.min(1, seg.held / seg.target),
+          holding: seg.holding,
+        };
+      case 'nav':
+        return {
+          type: 'nav',
+          symbol: SYMBOL_BY_DIRECTION[seg.direction],
+          direction: seg.direction,
+          count: seg.count,
+          target: seg.target,
+        };
+      case 'selection':
+        return {
+          type: 'selection',
+          prompt: seg.options[seg.correctIndex].label,
+          options: seg.options.map((o) => ({ key: o.key, label: o.label })),
+          chosenKey: seg.chosenIndex !== null ? seg.options[seg.chosenIndex].key : null,
+          wrong: seg.wrong,
+        };
+      case 'wait':
+        return {
+          type: 'wait',
+          remaining: Math.max(0, seg.total - seg.elapsed),
+          progress: Math.min(1, seg.elapsed / seg.total),
+        };
+    }
   }
 }

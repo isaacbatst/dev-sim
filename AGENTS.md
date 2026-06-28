@@ -8,10 +8,10 @@ This version has breaking changes — APIs, conventions, and file structure may 
 # Dev Task Chef
 
 Daily game web (grátis, viral, compartilhável) para devs — port do PoC em Godot
-para stack web TS. As referências de design vivem **fora deste repo**:
+para stack web TS. Referências de design:
 
-- `DESIGN_CONSULTORIA.md` — direção estratégica e decisão de migrar (Seção 10).
-- `GDD.md` — game design (hierarquia, mecânicas, roadmap, conteúdo do PoC).
+- `docs/DESIGN_CONSULTORIA.md` — direção estratégica e decisão de migrar (Seção 10).
+- `docs/GDD.md` — game design (hierarquia, mecânicas, roadmap, conteúdo do PoC).
 - **Linear** é a fonte da verdade de tarefas.
 
 ## Arquitetura (decisão da Seção 10.3)

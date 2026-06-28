@@ -39,8 +39,13 @@ export class GameLoop {
     this.listener(this.game.snapshot());
   }
 
-  pressKey(key: string): void {
-    this.game.pressKey(key);
+  keyDown(key: string): void {
+    this.game.keyDown(key);
+    this.listener(this.game.snapshot());
+  }
+
+  keyUp(key: string): void {
+    this.game.keyUp(key);
     this.listener(this.game.snapshot());
   }
 

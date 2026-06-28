@@ -1,4 +1,4 @@
-import type { Priority } from './domain/types';
+import type { NavDirection, Priority } from './domain/types';
 
 /**
  * Visão imutável do estado do jogo, publicada pelo loop a cada frame e lida pela UI.
@@ -7,13 +7,34 @@ import type { Priority } from './domain/types';
 
 export type GameStatus = 'playing' | 'won' | 'lost';
 
-/** Um token de input do ticket ativo, para a UI renderizar a sequência. */
-export interface InputToken {
+/** Token de `press`: uma tecla da sequência. */
+export interface PressToken {
   key: string;
   label: string;
   done: boolean;
   current: boolean;
 }
+
+/** Visão de um segmento do passo atual, por tipo. */
+export type SegmentView =
+  | { type: 'press'; tokens: PressToken[] }
+  | {
+      type: 'hold';
+      key: string;
+      label: string;
+      targetSec: number;
+      progress: number;
+      holding: boolean;
+    }
+  | { type: 'nav'; symbol: string; direction: NavDirection; count: number; target: number }
+  | {
+      type: 'selection';
+      prompt: string;
+      options: { key: string; label: string }[];
+      chosenKey: string | null;
+      wrong: boolean;
+    }
+  | { type: 'wait'; remaining: number; progress: number };
 
 export interface SlotSnapshot {
   index: number;
@@ -21,6 +42,8 @@ export interface SlotSnapshot {
   priority: Priority;
   ready: boolean;
   active: boolean;
+  /** Segundos restantes se o passo atual for um `wait` em andamento; senão null. */
+  waitRemaining: number | null;
 }
 
 export interface ActiveTicketSnapshot {
@@ -30,7 +53,7 @@ export interface ActiveTicketSnapshot {
   taskTitle: string;
   taskIndex: number;
   taskCount: number;
-  inputs: InputToken[];
+  segments: SegmentView[];
   ready: boolean;
 }
 
@@ -39,7 +62,6 @@ export interface Snapshot {
   clock: string;
   satisfaction: number;
   delivered: number;
-  /** Sempre 5 posições; `null` = slot vazio. */
   slots: (SlotSnapshot | null)[];
   active: ActiveTicketSnapshot | null;
 }
