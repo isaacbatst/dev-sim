@@ -23,7 +23,7 @@ export function Desktop({
   const mood = moodFor(satisfaction);
 
   return (
-    <div className="relative flex h-dvh flex-col overflow-hidden">
+    <div className="relative flex h-full flex-col overflow-hidden">
       <MenuBar mood={mood} satisfaction={satisfaction} clock={clock} delivered={delivered} />
 
       {/* Wallpaper: gradiente + grade técnica sutil + brilho do humor */}
@@ -48,9 +48,9 @@ export function Desktop({
 
         <InboxPanel slots={slots} onSelect={onSelect} />
 
-        <section className="flex flex-1 items-center justify-center pb-16">
+        <section className="flex min-w-0 flex-1 items-center justify-center pb-16">
           {active ? (
-            <div className="relative">
+            <div className="relative w-full max-w-[34rem]">
               <AppWindow active={active} shake={shake} />
               {floatScore && (
                 <span className="animate-floatup pointer-events-none absolute -top-3 left-1/2 -translate-x-1/2 font-mono text-lg font-bold text-pass">

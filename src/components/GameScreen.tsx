@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { Desktop } from './desktop/Desktop';
+import { Workstation } from './desktop/Workstation';
 
 export function GameScreen() {
   const snapshot = useGameStore((s) => s.snapshot);
@@ -64,12 +65,14 @@ export function GameScreen() {
   }
 
   return (
-    <Desktop
-      snapshot={snapshot}
-      shake={shake}
-      floatScore={floatScore}
-      onSelect={selectSlot}
-      onRestart={restart}
-    />
+    <Workstation clock={snapshot.clock}>
+      <Desktop
+        snapshot={snapshot}
+        shake={shake}
+        floatScore={floatScore}
+        onSelect={selectSlot}
+        onRestart={restart}
+      />
+    </Workstation>
   );
 }

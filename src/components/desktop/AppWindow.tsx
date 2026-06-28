@@ -1,7 +1,7 @@
 import type { ActiveTicketSnapshot, Priority } from '@/core/snapshot';
 import { APPS } from './apps';
 import { Scene } from './scenes';
-import { KeyCap } from './primitives';
+import { ActionBar } from './ActionBar';
 
 const PRIORITY_LABEL: Record<Priority, string> = {
   urgente: 'URGENTE',
@@ -17,14 +17,14 @@ const PRIORITY_CLASS: Record<Priority, string> = {
   baixa: 'text-ink-dim border-line',
 };
 
-/** Janela do app aberto pela demanda ativa. Cada app renderiza sua própria cena. */
+/** Janela do app aberto pela demanda ativa. Cena (ambiente) + ActionBar (hint padronizada). */
 export function AppWindow({ active, shake }: { active: ActiveTicketSnapshot; shake: boolean }) {
   const app = APPS[active.app];
 
   return (
     <div
       key={active.app}
-      className={`animate-windowin flex w-[36rem] max-w-full flex-col overflow-hidden rounded-lg border border-line bg-surface shadow-2xl shadow-black/60 ${
+      className={`animate-windowin flex w-full flex-col overflow-hidden rounded-lg border border-line bg-surface shadow-2xl shadow-black/60 ${
         shake ? 'animate-shake' : ''
       }`}
     >
@@ -56,17 +56,13 @@ export function AppWindow({ active, shake }: { active: ActiveTicketSnapshot; sha
         )}
       </div>
 
-      {/* corpo: a cena do app, ou o estado "pronto" */}
-      {active.ready ? (
-        <div className="flex min-h-72 flex-col items-center justify-center gap-3 p-8 text-center">
-          <span className="text-3xl">📦</span>
-          <p className="animate-edgepulse text-pass">
-            Tudo pronto — pressione <KeyCap state="current">⏎</KeyCap> para entregar
-          </p>
-        </div>
-      ) : (
+      {/* cena do app (ambiente) */}
+      <div className="flex flex-1 flex-col">
         <Scene active={active} />
-      )}
+      </div>
+
+      {/* hint padronizada */}
+      <ActionBar active={active} />
     </div>
   );
 }

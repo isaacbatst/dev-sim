@@ -18,7 +18,7 @@ export function InboxPanel({
 }) {
   const open = slots.filter(Boolean).length;
   return (
-    <aside className="flex w-72 shrink-0 flex-col overflow-hidden rounded-lg border border-line bg-surface shadow-xl shadow-black/40">
+    <aside className="flex w-60 shrink-0 flex-col overflow-hidden rounded-lg border border-line bg-surface shadow-xl shadow-black/40">
       <div className="flex items-center gap-2 border-b border-line bg-surface-2 px-3 py-2">
         <div className="flex gap-1.5">
           <span className="size-3 rounded-full bg-[#ff5f57]" />
