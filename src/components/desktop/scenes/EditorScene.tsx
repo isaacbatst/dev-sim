@@ -405,7 +405,7 @@ export function EditorScene({ active }: { active: ActiveTicketSnapshot }) {
   else main = <CodeArea focus={focus} file={active.editorFile} targetLine={active.editorLine} />;
 
   return (
-    <div className="flex h-[24rem] flex-1 overflow-hidden">
+    <div className="flex h-[24rem] w-full overflow-hidden">
       <div className="flex w-10 shrink-0 flex-col items-center gap-4 border-r border-line bg-surface-2 py-3 text-ink-dim">
         <span>📄</span>
         <span>🔍</span>
