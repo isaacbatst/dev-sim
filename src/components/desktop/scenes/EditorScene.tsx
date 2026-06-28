@@ -205,10 +205,14 @@ function CodeArea({
               key={i}
               className={`flex items-center gap-3 ${
                 isCursor ? (cursorWrong ? 'bg-fail/20' : 'bg-amber/15') : ''
-              } ${isBug ? 'bg-fail/10' : ''}`}
+              } ${isBug ? 'bg-amber/10' : ''}`}
             >
               <span className="w-6 select-none text-right text-ink-dim">{i + 1}</span>
-              <span className={isBug ? 'text-fail underline decoration-wavy' : 'text-ink'}>
+              <span
+                className={
+                  isBug ? 'text-amber underline decoration-amber decoration-wavy' : 'text-ink'
+                }
+              >
                 {line || ' '}
               </span>
               {isCursor && (
@@ -219,6 +223,7 @@ function CodeArea({
               {isTarget && !nav?.committed && (
                 <span className="ml-auto pr-2 text-[10px] text-teal">◀ alvo</span>
               )}
+              {isBug && <span className="ml-auto pr-2 text-[10px] text-amber">🐛 typo aqui</span>}
             </div>
           );
         })}
@@ -227,18 +232,46 @@ function CodeArea({
   );
 }
 
-function GitTerminal({ focus }: { focus: Extract<SegmentView, { type: 'press' }> }) {
+/** Editor com terminal integrado (push/merge). A linha corrigida aparece em verde. */
+function GitView({
+  focus,
+  file,
+  targetLine,
+}: {
+  focus: Extract<SegmentView, { type: 'press' }>;
+  file: string;
+  targetLine: number;
+}) {
   const merge = /merge/i.test(focus.tokens[0]?.label ?? '');
   return (
-    <div className="flex-1 bg-black/50 p-3 font-mono text-sm">
-      <p className="text-ink-dim">desenvolvedor@devOS:~/projeto$</p>
-      <p className="mt-1 text-pass">
-        $ {merge ? 'git merge --no-ff feature' : 'git push origin HEAD'}
-      </p>
-      <p className="mt-1 text-ink-dim">
-        {merge ? 'Merge made by recursive.' : 'Enumerating objects: 12, done.'}
-      </p>
-      <p className="text-ink-dim">_</p>
+    <div className="flex flex-1 flex-col">
+      <div className="flex-1 overflow-hidden font-mono text-sm">
+        <div className="flex border-b border-line bg-surface px-3 py-1 text-xs text-ink-dim">
+          <span className="border-b-2 border-amber px-2 py-1 text-ink">{file}</span>
+        </div>
+        <pre className="m-0 p-3 leading-6">
+          {linesFor(file).map((line, i) => {
+            const fixed = targetLine > 0 && i === targetLine - 1;
+            return (
+              <div key={i} className={`flex items-center gap-3 ${fixed ? 'bg-pass/10' : ''}`}>
+                <span className="w-6 select-none text-right text-ink-dim">{i + 1}</span>
+                <span className={fixed ? 'text-pass' : 'text-ink'}>{line || ' '}</span>
+                {fixed && <span className="ml-auto pr-2 text-[10px] text-pass">✓ corrigido</span>}
+              </div>
+            );
+          })}
+        </pre>
+      </div>
+      <div className="border-t border-line bg-black/60 p-2.5 font-mono text-xs">
+        <p className="text-[10px] uppercase tracking-wider text-ink-dim">terminal</p>
+        <p className="mt-1 text-ink-dim">desenvolvedor@devOS:~/projeto$</p>
+        <p className="text-pass">
+          $ {merge ? 'git merge --no-ff feature' : 'git push origin HEAD'}
+        </p>
+        <p className="text-ink-dim">
+          {merge ? 'Merge made by recursive.' : 'Enumerating objects: 12, done.'}
+        </p>
+      </div>
     </div>
   );
 }
@@ -349,7 +382,7 @@ export function EditorScene({ active }: { active: ActiveTicketSnapshot }) {
   else if (focus?.type === 'selection') main = <CssSelect seg={focus} file={active.editorFile} />;
   else if (focus?.type === 'wait') main = <PrPanel />;
   else if (focus?.type === 'press' && /push|merge/i.test(focus.tokens[0]?.label ?? ''))
-    main = <GitTerminal focus={focus} />;
+    main = <GitView focus={focus} file={active.editorFile} targetLine={active.editorLine} />;
   else main = <CodeArea focus={focus} file={active.editorFile} targetLine={active.editorLine} />;
 
   return (

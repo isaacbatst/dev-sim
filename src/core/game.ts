@@ -458,8 +458,14 @@ export class Game {
       for (const seg of step.segments) if (seg.type === 'file') return seg.files[seg.targetIndex];
     return null;
   }
-  /** Linha-alvo (1-based) onde está o typo: parte da linha 1 e desce `target`. */
+  /** Linha-alvo (1-based) do typo — só p/ tarefas que têm um passo "Corrigir". */
   private editorLine(t: TaskInstance): number {
+    const hasFix = t.steps.some((s) =>
+      s.segments.some(
+        (seg) => seg.type === 'press' && seg.actions.some((a) => /corrigir/i.test(a.label)),
+      ),
+    );
+    if (!hasFix) return 0;
     for (const step of t.steps)
       for (const seg of step.segments) if (seg.type === 'nav') return seg.target + 1;
     return 0;
