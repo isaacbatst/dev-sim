@@ -3,6 +3,7 @@ import { moodFor } from './mood';
 import { MenuBar } from './MenuBar';
 import { InboxPanel } from './InboxPanel';
 import { AppWindow } from './AppWindow';
+import { Dock } from './Dock';
 
 /** A área de trabalho inteira. Apresentação pura — sem lógica de jogo. */
 export function Desktop({
@@ -25,33 +26,44 @@ export function Desktop({
     <div className="relative flex h-dvh flex-col overflow-hidden">
       <MenuBar mood={mood} satisfaction={satisfaction} clock={clock} delivered={delivered} />
 
-      {/* Wallpaper */}
-      <main
-        className="relative flex flex-1 gap-4 p-4"
-        style={{
-          background:
-            'radial-gradient(120% 80% at 50% -10%, color-mix(in srgb, var(--amber) 6%, transparent), transparent 60%), var(--bg)',
-        }}
-      >
+      {/* Wallpaper: gradiente + grade técnica sutil + brilho do humor */}
+      <main className="relative flex flex-1 gap-5 overflow-hidden p-5">
+        <div
+          aria-hidden
+          className="absolute inset-0 -z-10"
+          style={{
+            background:
+              'radial-gradient(140% 90% at 50% -20%, color-mix(in srgb, var(--amber) 7%, transparent), transparent 55%), linear-gradient(180deg, #0f1118, #181b27)',
+          }}
+        />
+        <div
+          aria-hidden
+          className="absolute inset-0 -z-10 opacity-[0.06]"
+          style={{
+            backgroundImage:
+              'linear-gradient(var(--ink) 1px, transparent 1px), linear-gradient(90deg, var(--ink) 1px, transparent 1px)',
+            backgroundSize: '34px 34px',
+          }}
+        />
+
         <InboxPanel slots={slots} onSelect={onSelect} />
 
-        <section className="flex flex-1 items-center justify-center">
+        <section className="flex flex-1 items-center justify-center pb-16">
           {active ? (
             <div className="relative">
               <AppWindow active={active} shake={shake} />
               {floatScore && (
-                <span className="animate-floatup pointer-events-none absolute -top-2 left-1/2 -translate-x-1/2 font-mono text-lg font-bold text-pass">
+                <span className="animate-floatup pointer-events-none absolute -top-3 left-1/2 -translate-x-1/2 font-mono text-lg font-bold text-pass">
                   {floatScore}
                 </span>
               )}
             </div>
           ) : (
-            <div className="max-w-xs -rotate-2 rounded-md border border-amber/40 bg-amber/10 px-5 py-4 text-center text-sm text-ink shadow-lg">
-              <p className="font-grotesk font-semibold">Bom dia. 🌅</p>
-              <p className="mt-1 text-ink-dim">
-                Escolha uma demanda na inbox — teclas{' '}
-                <kbd className="keycap !h-6 !min-w-6 !text-xs">1</kbd>–
-                <kbd className="keycap !h-6 !min-w-6 !text-xs">5</kbd>
+            <div className="max-w-sm rounded-lg border border-line bg-surface/80 p-6 text-center shadow-xl">
+              <p className="font-grotesk text-lg font-semibold text-ink">09:00 — bom dia ☕</p>
+              <p className="mt-2 text-sm text-ink-dim">
+                As demandas do dia estão no backlog à esquerda. Abra uma com as teclas{' '}
+                <KeyHintInline /> e sobreviva até as 17:00.
               </p>
             </div>
           )}
@@ -62,24 +74,20 @@ export function Desktop({
           aria-hidden
           className={`pointer-events-none absolute inset-0 ${mood.vignette.pulse ? 'animate-edgepulse' : ''}`}
           style={{
-            boxShadow: `inset 0 0 140px 24px color-mix(in srgb, ${mood.vignette.color} ${Math.round(
+            boxShadow: `inset 0 0 160px 30px color-mix(in srgb, ${mood.vignette.color} ${Math.round(
               mood.vignette.opacity * 100,
             )}%, transparent)`,
             transition: 'box-shadow 0.4s ease',
           }}
         />
+
+        <Dock activeApp={active?.app ?? null} />
       </main>
 
-      <footer className="border-t border-line bg-surface/60 px-4 py-2 text-center text-xs text-ink-dim">
-        <kbd className="keycap !h-6 !min-w-6 !text-xs">1–5</kbd> selecionar ·{' '}
-        <span className="text-ink">teclas/setas</span> executar ·{' '}
-        <kbd className="keycap !h-6 !min-w-6 !text-xs">⏎</kbd> entregar
-      </footer>
-
       {status !== 'playing' && (
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 bg-black/85 backdrop-blur-sm">
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-4 bg-black/85 backdrop-blur-sm">
           <span className="text-5xl">{status === 'won' ? '🎉' : '💀'}</span>
-          <h2 className="font-grotesk text-2xl font-bold">
+          <h2 className="px-6 text-center font-grotesk text-2xl font-bold">
             {status === 'won'
               ? '17:00 — você sobreviveu ao expediente'
               : 'Game over — o chefe desistiu de você'}
@@ -94,5 +102,14 @@ export function Desktop({
         </div>
       )}
     </div>
+  );
+}
+
+function KeyHintInline() {
+  return (
+    <span className="inline-flex items-center gap-0.5 align-middle">
+      <kbd className="keycap !h-5 !min-w-5 !text-[10px]">1</kbd>–
+      <kbd className="keycap !h-5 !min-w-5 !text-[10px]">5</kbd>
+    </span>
   );
 }

@@ -1,6 +1,7 @@
 import type { ActiveTicketSnapshot, Priority } from '@/core/snapshot';
 import { APPS } from './apps';
-import { Segments } from './Segments';
+import { Scene } from './scenes';
+import { KeyCap } from './primitives';
 
 const PRIORITY_LABEL: Record<Priority, string> = {
   urgente: 'URGENTE',
@@ -16,28 +17,28 @@ const PRIORITY_CLASS: Record<Priority, string> = {
   baixa: 'text-ink-dim border-line',
 };
 
-/** Janela do app aberto pela demanda ativa. `shake` dispara o tremor de erro. */
+/** Janela do app aberto pela demanda ativa. Cada app renderiza sua própria cena. */
 export function AppWindow({ active, shake }: { active: ActiveTicketSnapshot; shake: boolean }) {
   const app = APPS[active.app];
 
   return (
     <div
-      // key força a animação de abertura ao trocar de app/demanda
-      key={active.windowTitle}
-      className={`animate-windowin flex w-full max-w-2xl flex-col overflow-hidden rounded-xl border border-line bg-surface shadow-2xl shadow-black/50 ${
+      key={active.app}
+      className={`animate-windowin flex w-[36rem] max-w-full flex-col overflow-hidden rounded-lg border border-line bg-surface shadow-2xl shadow-black/60 ${
         shake ? 'animate-shake' : ''
       }`}
-      style={{ ['--accent' as string]: app.accent }}
     >
       {/* Barra de título */}
-      <div className="flex items-center gap-3 border-b border-line bg-surface-2 px-4 py-2.5">
-        <div className="flex gap-2">
-          <span className="size-3 rounded-full bg-fail" />
-          <span className="size-3 rounded-full bg-amber" />
-          <span className="size-3 rounded-full bg-pass" />
+      <div className="flex items-center gap-3 border-b border-line bg-surface-2 px-3 py-2">
+        <div className="flex gap-1.5">
+          <span className="size-3 rounded-full bg-[#ff5f57]" />
+          <span className="size-3 rounded-full bg-[#febc2e]" />
+          <span className="size-3 rounded-full bg-[#28c840]" />
         </div>
-        <span className="text-base">{app.icon}</span>
-        <span className="truncate font-mono text-sm text-ink">{active.windowTitle}</span>
+        <span className="text-sm" aria-hidden>
+          {app.icon}
+        </span>
+        <span className="truncate font-mono text-xs text-ink-dim">{active.windowTitle}</span>
         <span
           className={`ml-auto rounded border px-1.5 py-0.5 text-[10px] font-semibold ${PRIORITY_CLASS[active.priority]}`}
         >
@@ -45,32 +46,27 @@ export function AppWindow({ active, shake }: { active: ActiveTicketSnapshot; sha
         </span>
       </div>
 
-      {app.context(active.taskTitle)}
-
-      {/* Corpo: a interação */}
-      <div className="flex min-h-56 flex-col gap-4 p-6">
-        <div>
-          <h2 className="font-grotesk text-lg font-semibold text-ink">{active.name}</h2>
-          <p className="text-sm text-ink-dim">{active.description}</p>
-        </div>
-
+      {/* faixa de contexto da demanda */}
+      <div className="flex items-baseline gap-2 border-b border-line bg-bg/40 px-4 py-2">
+        <span className="truncate font-grotesk text-sm font-semibold text-ink">{active.name}</span>
         {active.taskCount > 1 && (
-          <p className="text-xs text-ink-dim">
-            {active.taskTitle} · subtarefa {active.taskIndex + 1}/{active.taskCount}
-          </p>
+          <span className="ml-auto shrink-0 text-[11px] text-ink-dim">
+            {active.taskTitle} · {active.taskIndex + 1}/{active.taskCount}
+          </span>
         )}
-
-        <div className="mt-2">
-          {active.ready ? (
-            <p className="animate-edgepulse text-pass">
-              ✓ Tudo pronto — pressione <kbd className="keycap keycap--current">⏎</kbd> para
-              entregar
-            </p>
-          ) : (
-            <Segments segments={active.segments} />
-          )}
-        </div>
       </div>
+
+      {/* corpo: a cena do app, ou o estado "pronto" */}
+      {active.ready ? (
+        <div className="flex min-h-72 flex-col items-center justify-center gap-3 p-8 text-center">
+          <span className="text-3xl">📦</span>
+          <p className="animate-edgepulse text-pass">
+            Tudo pronto — pressione <KeyCap state="current">⏎</KeyCap> para entregar
+          </p>
+        </div>
+      ) : (
+        <Scene active={active} />
+      )}
     </div>
   );
 }
