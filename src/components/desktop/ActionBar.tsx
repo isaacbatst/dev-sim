@@ -164,10 +164,7 @@ export function ActionBar({ active }: { active: ActiveTicketSnapshot }) {
   const wrong = active.wrongApp ? APPS[active.wrongApp] : null;
   const opening = !active.ready && !active.appLaunched && !wrong;
   return (
-    <div
-      className="flex min-h-14 items-center gap-3 border-t border-line bg-bg/70 px-4 py-2.5"
-      style={{ boxShadow: `inset 3px 0 0 ${app.accent}` }}
-    >
+    <div className="flex min-h-14 items-center gap-3 border-t border-line bg-bg/40 px-4 py-2.5">
       <div className="flex-1">
         {wrong ? (
           <span className="flex items-center gap-2 text-ink-dim">

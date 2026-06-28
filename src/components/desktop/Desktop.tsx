@@ -33,17 +33,13 @@ export function Desktop({
           className="absolute inset-0 -z-10"
           style={{
             background:
-              'radial-gradient(140% 90% at 50% -20%, color-mix(in srgb, var(--amber) 7%, transparent), transparent 55%), linear-gradient(180deg, #0f1118, #181b27)',
+              'radial-gradient(120% 80% at 50% -10%, color-mix(in srgb, var(--amber) 5%, transparent), transparent 50%), linear-gradient(180deg, #0d0f17 0%, #14161f 60%, #181b27 100%)',
           }}
         />
+        {/* Grão sutil no lugar da grade técnica — textura orgânica, anti-AI. */}
         <div
           aria-hidden
-          className="absolute inset-0 -z-10 opacity-[0.06]"
-          style={{
-            backgroundImage:
-              'linear-gradient(var(--ink) 1px, transparent 1px), linear-gradient(90deg, var(--ink) 1px, transparent 1px)',
-            backgroundSize: '34px 34px',
-          }}
+          className="bg-noise pointer-events-none absolute inset-0 -z-10 opacity-[0.05] mix-blend-soft-light"
         />
 
         <InboxPanel slots={slots} active={active} onSelect={onSelect} />

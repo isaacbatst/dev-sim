@@ -15,7 +15,6 @@ export function Dock({ activeApp }: { activeApp: AppId | null }) {
                 className={`flex size-11 items-center justify-center rounded-xl border text-lg transition-transform group-hover:-translate-y-1 ${
                   on ? 'border-amber/60 bg-amber/10' : 'border-white/10 bg-surface-2'
                 }`}
-                style={{ boxShadow: on ? `0 0 16px -4px ${app.accent}` : undefined }}
                 aria-hidden
               >
                 {app.icon}

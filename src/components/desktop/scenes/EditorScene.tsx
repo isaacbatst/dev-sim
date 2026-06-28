@@ -387,8 +387,8 @@ function PrPanel({ active }: { active: ActiveTicketSnapshot }) {
           : 'aguardando review de @tech-lead (online)…'}
       </p>
       {reReview && (
-        <div className="mt-3 border-l-2 border-fail/50 bg-fail/5 p-2 text-xs leading-relaxed text-ink-dim">
-          comentário anterior: “{active.reviewComment}”
+        <div className="mt-3 rounded bg-surface-2/60 p-2 text-xs leading-relaxed text-ink-dim">
+          <span className="text-ink-dim/70">comentário anterior:</span> “{active.reviewComment}”
         </div>
       )}
       <div className="mt-4 flex items-center gap-3">

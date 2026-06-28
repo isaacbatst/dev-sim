@@ -23,7 +23,7 @@ export function InboxPanel({
   const sub = active?.plan.find((p) => p.status === 'current') ?? active?.plan[0];
 
   return (
-    <aside className="flex w-72 shrink-0 flex-col overflow-hidden rounded-xl border border-line bg-surface shadow-xl shadow-black/40">
+    <aside className="elev-1 flex w-72 shrink-0 flex-col overflow-hidden rounded-xl border border-line bg-surface">
       {/* Header */}
       <div className="flex items-center gap-2 px-3 py-2.5">
         <span className="size-2 rounded-[3px] bg-amber" />
