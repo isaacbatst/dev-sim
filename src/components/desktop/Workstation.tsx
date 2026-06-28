@@ -7,7 +7,7 @@
  * projetada + contato) → periféricos (teclado/mouse/caneca) → vinheta.
  * Tudo ancorado na "emenda" parede/mesa (~62%) para proporção coerente.
  */
-const HORIZON = 62; // % da altura: linha onde a mesa encontra a parede
+const HORIZON = 80; // % da altura: emenda parede/mesa. Monitor domina; mesa é faixa fina.
 
 function ambientFor(clock: string): string {
   const hour = Number(clock.slice(0, 2)) || 9;
@@ -73,7 +73,7 @@ export function Workstation({ clock, children }: { clock: string; children: Reac
         aria-hidden
         className="absolute left-1/2 h-[26%] w-[58%] -translate-x-1/2 blur-2xl"
         style={{
-          bottom: `${100 - HORIZON - 22}%`,
+          bottom: `${100 - HORIZON - 12}%`,
           background: `radial-gradient(50% 50% at 50% 30%, color-mix(in srgb, ${ambient} 28%, transparent), transparent 70%)`,
           transition: 'background 1.5s ease',
         }}
@@ -103,7 +103,7 @@ export function Workstation({ clock, children }: { clock: string; children: Reac
             </div>
             <div
               className="relative overflow-hidden rounded-[10px] ring-1 ring-black/70"
-              style={{ width: 'min(1000px, 92vw)', height: 'min(56vh, 540px)' }}
+              style={{ width: 'min(1100px, 93vw)', height: 'min(68vh, 680px)' }}
             >
               {children}
               <div
@@ -145,14 +145,14 @@ export function Workstation({ clock, children }: { clock: string; children: Reac
       <div
         aria-hidden
         className="absolute left-1/2 -translate-x-1/2"
-        style={{ bottom: `${100 - HORIZON - 18}%`, perspective: '800px' }}
+        style={{ bottom: `${100 - HORIZON - 11}%`, perspective: '800px' }}
       >
         <div
           className="flex items-end gap-5"
           style={{ transform: 'rotateX(58deg)', transformOrigin: 'center bottom' }}
         >
           {/* caneca */}
-          <div className="relative mb-1 h-9 w-8 shrink-0">
+          <div className="relative mb-1 h-7 w-6 shrink-0">
             <div
               className="absolute inset-0 rounded-b-[10px] rounded-t-[4px]"
               style={{ background: 'linear-gradient(180deg, #2c3140, #171a22)' }}
@@ -163,7 +163,7 @@ export function Workstation({ clock, children }: { clock: string; children: Reac
 
           {/* teclado */}
           <div
-            className="relative h-24 w-[min(440px,52vw)] rounded-xl"
+            className="relative h-20 w-[min(420px,48vw)] rounded-xl"
             style={{
               background: 'linear-gradient(180deg, #191b24, #0c0e14)',
               boxShadow: '0 30px 36px -12px rgba(0,0,0,0.75), 0 1px 0 rgba(255,255,255,0.05) inset',
@@ -176,7 +176,7 @@ export function Workstation({ clock, children }: { clock: string; children: Reac
 
           {/* mouse */}
           <div
-            className="mb-2 h-14 w-9 shrink-0 rounded-[45%]"
+            className="mb-2 h-11 w-7 shrink-0 rounded-[45%]"
             style={{
               background: 'linear-gradient(180deg, #1c1f29, #0d0f15)',
               boxShadow: '0 16px 18px -8px rgba(0,0,0,0.7)',
