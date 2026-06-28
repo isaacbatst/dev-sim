@@ -10,6 +10,7 @@ import {
   type TicketInstance,
 } from './domain/instance';
 import { TICKET_POOL } from '@/data/tickets';
+import { SLACK_CHANNELS } from '@/data/channels';
 import { appForTask, windowTitle } from './domain/apps';
 import type {
   ActiveTicketSnapshot,
@@ -415,27 +416,28 @@ export class Game {
     const sel = this.selLabels(t);
     const nav = this.navTargets(t);
     const hold = this.holdSecs(t);
+    const channel = SLACK_CHANNELS[nav[0] ?? 0] ?? 'o canal certo';
     switch (t.template.id) {
       case 'study':
-        return `Abrir o navegador e ler ${joinPt(
+        return `Pesquise no navegador: leia ${joinPt(
           this.pressLabelsAt(t, 1).map((s) => s.replace(/^Ler /, '')),
         )}.`;
       case 'meeting':
-        return `Abrir o navegador, entrar na reunião e falar por ${hold[0] ?? 3}s.`;
+        return `Entre na reunião pelo navegador e fale por ${hold[0] ?? 3}s.`;
       case 'test_feature':
-        return `Abrir o navegador, acessar o staging e rodar os testes por ${hold[0] ?? 3}s.`;
+        return `Acesse o staging pelo navegador e rode os testes por ${hold[0] ?? 3}s.`;
       case 'slack':
-        return `Abrir o Slack, descer ${nav[0] ?? 1} canais até o canal certo e responder.`;
+        return `Abra o Slack e responda a mensagem no ${channel}.`;
       case 'email':
-        return `Abrir o navegador, abrir o e-mail e arquivar a mensagem.`;
+        return `Abra o e-mail no navegador e arquive a mensagem.`;
       case 'document':
-        return `Abrir o VSCode, escrever a documentação, dar push, aguardar o CR e fazer o merge.`;
+        return `Documente a função no VSCode; faça push, aguarde o CR e o merge.`;
       case 'fix_typo':
-        return `Abrir o VSCode, abrir ${fileName(sel[0])}, descer até a linha ${nav[0] ?? 1}, corrigir o typo, dar push, aguardar o CR e fazer o merge.`;
+        return `No VSCode, corrija o typo na linha ${nav[0] ?? 1} de ${fileName(sel[0])}; faça push, aguarde o CR e o merge.`;
       case 'ui_color':
-        return `Abrir o CSS no VSCode, selecionar o ${sel[0]}, mudar a ${sel[1]} para ${sel[2]}, dar push, aguardar o CR e fazer o merge.`;
+        return `No CSS, mude a ${sel[1]} do ${sel[0]} para ${sel[2]}; faça push, aguarde o CR e o merge.`;
       case 'ui_font':
-        return `Abrir o CSS no VSCode, selecionar o ${sel[0]}, ajustar a fonte (${nav[0] ?? 1}×) e o estilo para ${sel[1]}, dar push, aguardar o CR e fazer o merge.`;
+        return `No CSS, ajuste a fonte do ${sel[0]} (${nav[0] ?? 1}×) para o estilo ${sel[1]}; faça push, aguarde o CR e o merge.`;
       default:
         return t.template.description;
     }

@@ -51,15 +51,21 @@ export function InboxPanel({
               <span className="flex min-w-0 flex-col gap-1">
                 <span className="flex items-start gap-2">
                   <span
-                    className={`mt-1 size-2 shrink-0 rounded-full ${PRIORITY_DOT[slot.priority]}`}
+                    className={`mt-1 size-2 shrink-0 rounded-full ${
+                      slot.ready
+                        ? 'bg-pass shadow-[0_0_6px] shadow-pass/70'
+                        : slot.waitRemaining !== null
+                          ? 'bg-sky-400 shadow-[0_0_6px] shadow-sky-400/70'
+                          : PRIORITY_DOT[slot.priority]
+                    }`}
                   />
                   <span className="line-clamp-2 text-sm leading-snug text-ink">{slot.name}</span>
                 </span>
                 <span className="pl-4 text-[11px]">
                   {slot.ready ? (
-                    <span className="text-pass">✓ pronto p/ entregar</span>
+                    <span className="text-pass">✓ pronto p/ concluir</span>
                   ) : slot.waitRemaining !== null ? (
-                    <span className="text-teal">⏳ em review · {slot.waitRemaining}s</span>
+                    <span className="text-sky-400">⏳ em review · {slot.waitRemaining}s</span>
                   ) : slot.active ? (
                     <span className="text-amber">em foco</span>
                   ) : (

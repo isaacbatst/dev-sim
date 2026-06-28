@@ -1,17 +1,5 @@
 import type { ActiveTicketSnapshot } from '@/core/snapshot';
-
-const CHANNELS = [
-  '#geral',
-  '#dev-frontend',
-  '#dev-backend',
-  '#incidentes',
-  '#deploys',
-  '#random',
-  '#design',
-  '#produto',
-  '#rh-avisos',
-  '#memes',
-];
+import { SLACK_CHANNELS as CHANNELS } from '@/data/channels';
 
 export function SlackScene({ active }: { active: ActiveTicketSnapshot }) {
   const nav = active.segments[0]?.type === 'nav' ? active.segments[0] : null;

@@ -38,7 +38,6 @@ function DetailsPanel({ active }: { active: ActiveTicketSnapshot }) {
           </span>
           <h2 className="font-grotesk text-lg font-semibold text-ink">{active.name}</h2>
         </div>
-        <p className="text-sm text-ink-dim">{active.description}</p>
       </div>
 
       <div>

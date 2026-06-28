@@ -99,7 +99,7 @@ export function ActionBar({ active }: { active: ActiveTicketSnapshot }) {
       <div className="flex-1">
         {active.ready ? (
           <span className="flex items-center gap-2 text-pass">
-            <KeyCap state="current">⏎</KeyCap> entregar a demanda
+            <KeyCap state="current">⏎</KeyCap> concluir a demanda
           </span>
         ) : needFocus ? (
           <span className="flex items-center gap-2 text-amber">
