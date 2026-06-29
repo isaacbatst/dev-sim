@@ -639,14 +639,12 @@ function ConflictBlock({
   feature,
   ext: e,
   active,
-  progress,
   blockRef,
 }: {
   head: string;
   feature: string;
   ext: string;
   active: boolean;
-  progress: number;
   blockRef?: React.Ref<HTMLDivElement>;
 }) {
   return (
@@ -658,17 +656,6 @@ function ConflictBlock({
         aria-hidden
         className={`absolute inset-y-0 left-0 w-0.5 ${active ? 'bg-fail' : 'bg-fail/40'}`}
       />
-      {active && (
-        <div className="flex items-center gap-2 px-3 pt-0.5 text-[10px] text-fail">
-          <span className="uppercase tracking-wider">resolvendo conflito</span>
-          <span className="h-1 w-16 overflow-hidden rounded-full bg-fail/20">
-            <span
-              className="block h-full rounded-full bg-fail transition-[width] duration-75"
-              style={{ width: `${Math.round(progress * 100)}%` }}
-            />
-          </span>
-        </div>
-      )}
       <pre className="m-0 px-3 leading-6 text-fail">{'<<<<<<< HEAD'}</pre>
       <pre className="m-0 px-3 leading-6">
         <Code line={head} ext={e} />
@@ -700,7 +687,6 @@ function GitView({
   const merge = !!mash;
   const groups = mash?.groups ?? 0;
   const activeGroup = mash?.activeGroup ?? 0;
-  const groupProgress = mash?.groupProgress ?? 0;
   const lines = linesFor(file);
   // Conflitos do merge: quantidade (= grupos do mash), locais e conteúdo
   // determinísticos pelo ticket — estável entre frames.
@@ -742,7 +728,6 @@ function GitView({
                   key={i}
                   blockRef={k === activeGroup ? activeRef : undefined}
                   active={k === activeGroup}
-                  progress={k === activeGroup ? groupProgress : 0}
                   head={conflicts[k].head}
                   feature={conflicts[k].feature}
                   ext={ext(file)}
