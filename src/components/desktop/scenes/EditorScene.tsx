@@ -446,6 +446,15 @@ function GitView({
   const mash = focus.type === 'mash' ? focus : null;
   const merge = !!mash;
   const progress = mash?.progress ?? 0;
+  const lines = linesFor(file);
+  // Tarefas sem "linha alterada" explícita (document, ui_update) não têm alvo de
+  // nav → cai num fallback determinístico: a 1ª linha "de conteúdo" (não só
+  // chave/brace). Assim o diff/conflito sempre tem onde aparecer no editor.
+  const fallback = Math.max(
+    0,
+    lines.findIndex((l) => l.trim().length > 3 && !/^[{}()[\]]+$/.test(l.trim())),
+  );
+  const changedLine = targetLine > 0 ? targetLine - 1 : fallback;
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden font-code text-sm">
@@ -453,8 +462,8 @@ function GitView({
           <span className="border-b-2 border-amber px-2 py-1 text-ink">{file}</span>
         </div>
         <pre className="m-0 flex-1 overflow-y-auto p-3 leading-6">
-          {linesFor(file).map((line, i) => {
-            const changed = targetLine > 0 && i === targetLine - 1;
+          {lines.map((line, i) => {
+            const changed = i === changedLine;
             // No merge, a linha alterada está em CONFLITO → bloco com marcadores.
             if (changed && merge) {
               return <ConflictBlock key={i} line={line} ext={ext(file)} progress={progress} />;
