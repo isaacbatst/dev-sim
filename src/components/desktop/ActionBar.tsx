@@ -97,6 +97,31 @@ function Cue({ seg }: { seg: SegmentView }) {
           </span>
         </div>
       );
+    case 'combo':
+      return (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          {seg.tokens.map((t, i) => {
+            const st = t.done ? 'done' : t.current ? 'current' : 'idle';
+            return (
+              <span key={i} className="flex items-center gap-1.5">
+                <span className="flex items-center gap-0.5">
+                  {t.combo.split('+').map((p, j) => (
+                    <span key={j} className="flex items-center gap-0.5">
+                      {j > 0 && <span className="text-xs text-ink-dim">+</span>}
+                      <KeyCap state={st}>
+                        {p === 'ctrl' ? 'Ctrl' : p === 'meta' ? 'Cmd' : p.toUpperCase()}
+                      </KeyCap>
+                    </span>
+                  ))}
+                </span>
+                <span className={`text-sm ${t.done ? 'text-ink-dim line-through' : 'text-ink'}`}>
+                  {t.label}
+                </span>
+              </span>
+            );
+          })}
+        </div>
+      );
     case 'nav': {
       const onTarget = seg.cursor === seg.target;
       return (

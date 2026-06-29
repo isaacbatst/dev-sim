@@ -90,6 +90,12 @@ export type SegmentView =
       groupProgress: number;
     }
   | {
+      type: 'combo';
+      /** Passos do combo, em ordem (ex.: Ctrl+C, Ctrl+V). `combo` = chave bruta
+       *  p/ casar/exibir (ex.: 'ctrl+c'). */
+      tokens: { combo: string; label: string; done: boolean; current: boolean }[];
+    }
+  | {
       type: 'file';
       /** Todos os caminhos (para o Ctrl+P buscar em pastas aninhadas). */
       files: string[];

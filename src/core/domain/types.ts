@@ -19,7 +19,8 @@ export type Priority = 'urgente' | 'alta' | 'normal' | 'baixa';
 /** Mapeia a prioridade inteira do Godot (0=urgente … 3=baixa) para o enum daqui. */
 export const PRIORITY_BY_INT: Priority[] = ['urgente', 'alta', 'normal', 'baixa'];
 
-export type SegmentType = 'press' | 'hold' | 'nav' | 'selection' | 'wait' | 'file' | 'mash';
+export type SegmentType =
+  'press' | 'hold' | 'nav' | 'selection' | 'wait' | 'file' | 'mash' | 'combo';
 
 /** Uma ação/tecla com rótulo legível (ex.: { key: 'w', label: 'Abrir navegador' }). */
 export interface Action {
@@ -95,6 +96,23 @@ export interface MashSegment {
   maxGroups?: number;
 }
 
+/** Um passo de `combo`: tecla com modificador (ex.: Ctrl+C). */
+export interface ComboStep {
+  mod?: 'ctrl' | 'meta';
+  key: string;
+  label: string;
+}
+
+/**
+ * `combo`: sequência ORDENADA de atalhos (modificador + tecla), ex.: Ctrl+C →
+ * Ctrl+V (copiar a correção e colar). Mimético do gesto real do dev. Cada passo
+ * é uma ação; pressionar fora de ordem é ignorado (sem penalidade).
+ */
+export interface ComboSegment {
+  type: 'combo';
+  steps: ComboStep[];
+}
+
 export type Segment =
   | PressSegment
   | HoldSegment
@@ -102,7 +120,8 @@ export type Segment =
   | SelectionSegment
   | WaitSegment
   | FileSegment
-  | MashSegment;
+  | MashSegment
+  | ComboSegment;
 
 /** Passo: contém segmentos do mesmo tipo (GDD 3.1). No conteúdo atual, 1 por passo. */
 export interface StepTemplate {

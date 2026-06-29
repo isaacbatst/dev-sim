@@ -49,18 +49,34 @@ export const TASKS: Record<string, TaskTemplate> = {
       step('mash_merge'),
     ],
   },
+  // Bug fix: a cada vez sorteia COMO corrigir — digitar o fix (typo) ou colar a
+  // correção do Stack Overflow (combo Ctrl+C/Ctrl+V). Ver `variants`.
   fix_typo: {
     id: 'fix_typo',
     title: 'Corrigir Typo',
     description: 'Abrir o VSCode, abrir o arquivo, navegar até a linha, corrigir, push, CR e merge',
-    steps: [
-      step('press_open_vscode'),
-      step('open_file'),
-      step('nav_find_line'),
-      step('press_fix'),
-      step('press_push'),
-      step('wait_cr'),
-      step('mash_merge'),
+    steps: [],
+    variants: [
+      // variante TYPO (digitar a correção, F)
+      [
+        step('press_open_vscode'),
+        step('open_file'),
+        step('nav_find_line'),
+        step('press_fix'),
+        step('press_push'),
+        step('wait_cr'),
+        step('mash_merge'),
+      ],
+      // variante PASTE (copiar a correção e colar, Ctrl+C/Ctrl+V)
+      [
+        step('press_open_vscode'),
+        step('open_file'),
+        step('nav_find_line'),
+        step('combo_paste'),
+        step('press_push'),
+        step('wait_cr'),
+        step('mash_merge'),
+      ],
     ],
   },
   // Uma só task: a cada vez sorteia uma mudança de COR ou de FONTE (o detalhe

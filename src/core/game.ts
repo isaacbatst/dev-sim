@@ -231,6 +231,18 @@ export class Game {
         }
         break;
       }
+      case 'combo': {
+        const next = seg.done.findIndex((d) => !d);
+        if (next < 0) break;
+        const step = seg.steps[next];
+        const expected = step.mod ? `${step.mod}+${step.key}` : step.key;
+        // Só o próximo atalho da sequência avança (ordem importa: copiar→colar).
+        if (key === expected) {
+          seg.done[next] = true;
+          incidental = 'key';
+        }
+        break;
+      }
       case 'file': {
         if (seg.committed) break;
         if (seg.searching) {
@@ -702,14 +714,23 @@ export class Game {
           }
     return 'home';
   }
-  /** Linha-alvo (1-based) do typo — só p/ tarefas que têm um passo "Corrigir". */
-  private editorLine(t: TaskInstance): number {
-    const hasFix = t.steps.some((s) =>
+  /** A tarefa corrige uma linha? (passo "Corrigir" F, ou o combo de colar.) */
+  private hasFixStep(t: TaskInstance): boolean {
+    return t.steps.some((s) =>
       s.segments.some(
-        (seg) => seg.type === 'press' && seg.actions.some((a) => /corrigir/i.test(a.label)),
+        (seg) =>
+          (seg.type === 'press' && seg.actions.some((a) => /corrigir/i.test(a.label))) ||
+          seg.type === 'combo',
       ),
     );
-    if (!hasFix) return 0;
+  }
+  /** A tarefa de bug é resolvida colando (combo Ctrl+C/Ctrl+V) em vez de digitar? */
+  private isPasteFix(t: TaskInstance): boolean {
+    return t.steps.some((s) => s.segments.some((seg) => seg.type === 'combo'));
+  }
+  /** Linha-alvo (1-based) do bug — só p/ tarefas que têm um passo de correção. */
+  private editorLine(t: TaskInstance): number {
+    if (!this.hasFixStep(t)) return 0;
     for (const step of t.steps)
       for (const seg of step.segments) if (seg.type === 'nav') return seg.target + 1;
     return 0;
@@ -745,8 +766,13 @@ export class Game {
         return `Abra o Chrome, abra o webmail e arquive a mensagem do chefe.`;
       case 'document':
         return `Documente a função no VSCode; faça push, aguarde o CR e o merge.`;
-      case 'fix_typo':
-        return `No VSCode, corrija o typo na linha ${(nav[0] ?? 0) + 1} de ${this.fileTarget(t) ?? 'login.ts'}; faça push, aguarde o CR e o merge.`;
+      case 'fix_typo': {
+        const line = (nav[0] ?? 0) + 1;
+        const file = this.fileTarget(t) ?? 'login.ts';
+        return this.isPasteFix(t)
+          ? `No VSCode, vá até a linha ${line} de ${file}, copie a correção e cole (Ctrl+C / Ctrl+V); faça push, aguarde o CR e o merge.`
+          : `No VSCode, corrija o typo na linha ${line} de ${file}; faça push, aguarde o CR e o merge.`;
+      }
       case 'ui_update': {
         // A variante (cor|fonte) é detectada pelas seleções da instância.
         const file = this.fileTarget(t) ?? 'styles.css';
@@ -833,6 +859,18 @@ export class Game {
           groups: seg.groups,
           activeGroup,
           groupProgress,
+        };
+      }
+      case 'combo': {
+        const firstPending = seg.done.findIndex((d) => !d);
+        return {
+          type: 'combo',
+          tokens: seg.steps.map((s, i) => ({
+            combo: s.mod ? `${s.mod}+${s.key}` : s.key,
+            label: s.label,
+            done: seg.done[i],
+            current: i === firstPending,
+          })),
         };
       }
       case 'file': {

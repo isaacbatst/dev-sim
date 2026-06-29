@@ -777,6 +777,84 @@ function GitView({
   );
 }
 
+/** Bug fix via combo: copiar a correção do Stack Overflow (Ctrl+C) e colar no
+ *  código (Ctrl+V). Mostra o trecho a copiar e a linha-alvo recebendo o patch. */
+function ComboFix({
+  seg,
+  file,
+  fixedLine,
+}: {
+  seg: Extract<SegmentView, { type: 'combo' }>;
+  file: string;
+  fixedLine: number;
+}) {
+  const copied = seg.tokens[0]?.done ?? false;
+  const pasted = seg.tokens[1]?.done ?? false;
+  const lines = linesFor(file);
+  const target = fixedLine > 0 ? fixedLine - 1 : -1;
+  const SNIPPET = 'return value ?? fallback';
+  return (
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden font-code text-sm">
+      {/* Resposta do Stack Overflow: o trecho a copiar e colar. */}
+      <div className="shrink-0 border-b border-line bg-surface/60 px-3 py-2">
+        <div className="flex items-center gap-2 text-[11px] text-ink-dim">
+          <span className="rounded bg-[#f48024] px-1.5 py-0.5 text-[10px] font-bold text-black">
+            stack overflow
+          </span>
+          <span>correção sugerida</span>
+          <span className="ml-auto text-[10px]">
+            {pasted ? (
+              <span className="text-pass">colado ✓</span>
+            ) : copied ? (
+              <span className="text-teal">copiado ✓ — Ctrl+V para colar</span>
+            ) : (
+              <span className="text-ink-dim">Ctrl+C para copiar</span>
+            )}
+          </span>
+        </div>
+        <pre
+          className={`mt-1.5 rounded border px-2 py-1 leading-6 ${
+            copied ? 'border-teal/50 bg-teal/5' : 'border-line bg-bg/40'
+          }`}
+        >
+          <Code line={SNIPPET} ext={ext(file)} />
+        </pre>
+      </div>
+      <div className="flex shrink-0 border-b border-line bg-surface px-3 py-1 text-xs text-ink-dim">
+        <span className="border-b-2 border-amber px-2 py-1 text-ink">{file}</span>
+      </div>
+      <pre className="m-0 flex-1 overflow-y-auto p-3 leading-6">
+        {lines.map((line, i) => {
+          const isTarget = i === target;
+          const showPasted = isTarget && pasted;
+          return (
+            <div
+              key={i}
+              className={`relative flex items-center gap-3 ${
+                isTarget ? (pasted ? 'bg-pass/10' : 'bg-amber/10') : ''
+              }`}
+            >
+              {isTarget && (
+                <span
+                  aria-hidden
+                  className={`absolute inset-y-0 left-0 w-0.5 ${pasted ? 'bg-pass' : 'bg-amber'}`}
+                />
+              )}
+              <span className="w-6 select-none text-right text-ink-dim">
+                {isTarget ? <span className={pasted ? 'text-pass' : 'text-amber'}>▸</span> : i + 1}
+              </span>
+              <span>
+                <Code line={showPasted ? SNIPPET : line} ext={ext(file)} />
+              </span>
+              {showPasted && <span className="ml-auto pr-2 text-[10px] text-pass">colado</span>}
+            </div>
+          );
+        })}
+      </pre>
+    </div>
+  );
+}
+
 const COMPONENTS = ['Button', 'Title', 'Input'];
 const PROPERTIES = ['Texto', 'Fundo'];
 const PROP_CSS: Record<string, string> = { Texto: 'color', Fundo: 'background' };
@@ -915,6 +993,8 @@ export function EditorScene({ active }: { active: ActiveTicketSnapshot }) {
     else main = <FolderPreview name={row?.name ?? ''} open={row?.open ?? false} />;
   } else if (focus?.type === 'selection') main = <CssSelect seg={focus} file={active.editorFile} />;
   else if (focus?.type === 'wait') main = <PrPanel active={active} />;
+  else if (focus?.type === 'combo')
+    main = <ComboFix seg={focus} file={active.editorFile} fixedLine={active.editorFixedLine} />;
   else if (
     focus?.type === 'mash' ||
     (focus?.type === 'press' && /push/i.test(focus.tokens[0]?.label ?? ''))

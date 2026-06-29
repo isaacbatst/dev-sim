@@ -54,6 +54,16 @@ export const SEGMENTS: Record<string, Segment> = {
   press_push: { type: 'press', maxItems: 1, actions: [{ key: 'p', label: 'Push' }] },
   press_fix: { type: 'press', maxItems: 1, actions: [{ key: 'f', label: 'Corrigir' }] },
 
+  // --- combo (atalho modificador+tecla; mimético) ---
+  // Variante "colar correção": copiar o patch do Stack Overflow e colar no código.
+  combo_paste: {
+    type: 'combo',
+    steps: [
+      { mod: 'ctrl', key: 'c', label: 'Copiar a correção' },
+      { mod: 'ctrl', key: 'v', label: 'Colar no código' },
+    ],
+  },
+
   // --- mash (suco por tecla — DIRECAO_GAMEPLAY.md §6) ---
   // Merge = resolver o conflito esfregando ⬅️➡️. A assinatura tátil comum a todas
   // as tarefas de código (substitui o antigo "press M").

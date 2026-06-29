@@ -7,6 +7,7 @@
  */
 import type {
   Action,
+  ComboStep,
   NavDirection,
   Priority,
   Segment,
@@ -88,6 +89,13 @@ export interface MashInstance {
   expect: number;
 }
 
+export interface ComboInstance {
+  type: 'combo';
+  steps: ComboStep[];
+  /** Passos já pressionados, em ordem. */
+  done: boolean[];
+}
+
 export interface FileInstance {
   type: 'file';
   files: string[];
@@ -167,7 +175,8 @@ export type SegmentInstance =
   | SelectionInstance
   | WaitInstance
   | FileInstance
-  | MashInstance;
+  | MashInstance
+  | ComboInstance;
 
 export interface StepInstance {
   segments: SegmentInstance[];
@@ -252,6 +261,8 @@ function instantiateSegment(segment: Segment): SegmentInstance {
         expect: 0,
       };
     }
+    case 'combo':
+      return { type: 'combo', steps: segment.steps, done: segment.steps.map(() => false) };
     case 'file': {
       const allowed = segment.ext
         ? PROJECT_FILES.map((f, i) => (f.endsWith(`.${segment.ext}`) ? i : -1)).filter(
@@ -315,6 +326,8 @@ export function segmentCompleted(seg: SegmentInstance): boolean {
       return seg.committed;
     case 'mash':
       return seg.count >= seg.target;
+    case 'combo':
+      return seg.done.every(Boolean);
   }
 }
 
@@ -368,6 +381,9 @@ export function resetSegment(seg: SegmentInstance): void {
     case 'mash':
       seg.count = 0;
       seg.expect = 0;
+      break;
+    case 'combo':
+      seg.done = seg.done.map(() => false);
       break;
   }
 }
