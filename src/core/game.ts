@@ -6,6 +6,8 @@ import {
   segmentCompleted,
   segmentWrong,
   stepCompleted,
+  fileBasename,
+  fileRows,
   type FileInstance,
   type SegmentInstance,
   type StepInstance,
@@ -216,7 +218,6 @@ export class Game {
       }
       case 'file': {
         if (seg.committed) break;
-        const at = seg.cursor;
         if (seg.searching) {
           if (key === 'backspace') {
             seg.query = seg.query.slice(0, -1);
@@ -225,12 +226,17 @@ export class Game {
             seg.query += key;
             incidental = 'type';
           }
-        } else if (key === ARROW_KEY_BY_DIRECTION.down) {
-          seg.cursor = Math.min(seg.files.length - 1, seg.cursor + 1);
-        } else if (key === ARROW_KEY_BY_DIRECTION.up) {
-          seg.cursor = Math.max(0, seg.cursor - 1);
+        } else {
+          // Cursor anda sobre as LINHAS visíveis da árvore (pastas + arquivos).
+          const rows = fileRows(seg.files, new Set(seg.expanded));
+          const at = seg.cursor;
+          if (key === ARROW_KEY_BY_DIRECTION.down) {
+            seg.cursor = Math.min(rows.length - 1, seg.cursor + 1);
+          } else if (key === ARROW_KEY_BY_DIRECTION.up) {
+            seg.cursor = Math.max(0, seg.cursor - 1);
+          }
+          if (seg.cursor !== at) incidental = 'nav';
         }
-        if (seg.cursor !== at) incidental = 'nav';
         break;
       }
       case 'wait':
@@ -262,13 +268,17 @@ export class Game {
     }
   }
 
+  /** Ctrl+P: melhor match por nome do arquivo (em qualquer pasta). -1 se nenhum. */
   private fileMatch(seg: FileInstance): number {
     const q = seg.query.toLowerCase();
-    if (!q) return seg.cursor;
-    const starts = seg.files.findIndex((f) => f.toLowerCase().startsWith(q));
-    if (starts >= 0) return starts;
-    const inc = seg.files.findIndex((f) => f.toLowerCase().includes(q));
-    return inc >= 0 ? inc : seg.cursor;
+    if (!q) return -1;
+    const byName = (pred: (name: string) => boolean) =>
+      seg.files.findIndex((f) => pred(fileBasename(f).toLowerCase()));
+    let i = byName((n) => n.startsWith(q));
+    if (i >= 0) return i;
+    i = byName((n) => n.includes(q));
+    if (i >= 0) return i;
+    return seg.files.findIndex((f) => f.toLowerCase().includes(q));
   }
 
   /** Foca um programa aberto (aba). */
@@ -329,19 +339,41 @@ export class Game {
       if (step && stepCompleted(step)) this.advance(inst);
       this.progressSound(inst, before, false);
     } else if (seg?.type === 'file' && !seg.committed) {
-      const idx = seg.searching ? this.fileMatch(seg) : seg.cursor;
-      seg.chosenIndex = idx;
-      seg.committed = true;
-      seg.searching = false;
-      if (idx !== seg.targetIndex) {
-        seg.wrong = true;
-        inst.errors += 1;
-        this.emit('error');
+      if (seg.searching) {
+        // Ctrl+P: confirma o arquivo do match (qualquer pasta). Sem match, ignora.
+        const idx = this.fileMatch(seg);
+        if (idx >= 0) this.commitFile(inst, seg, idx, before);
+      } else {
+        const row = fileRows(seg.files, new Set(seg.expanded))[seg.cursor];
+        if (!row) return;
+        if (row.kind === 'folder') {
+          // Enter numa pasta: expande/colapsa (não conclui o passo).
+          seg.expanded = seg.expanded.includes(row.path)
+            ? seg.expanded.filter((p) => p !== row.path)
+            : [...seg.expanded, row.path];
+          const rows = fileRows(seg.files, new Set(seg.expanded));
+          seg.cursor = Math.min(seg.cursor, rows.length - 1);
+          this.emit('tab');
+        } else {
+          this.commitFile(inst, seg, row.fileIndex, before);
+        }
       }
-      const step = this.currentStep(inst);
-      if (step && stepCompleted(step)) this.advance(inst);
-      this.progressSound(inst, before, false);
     }
+  }
+
+  /** Commita a escolha de arquivo (índice em files) e avança o passo. */
+  private commitFile(inst: TicketInstance, seg: FileInstance, idx: number, before: string): void {
+    seg.chosenIndex = idx;
+    seg.committed = true;
+    seg.searching = false;
+    if (idx !== seg.targetIndex) {
+      seg.wrong = true;
+      inst.errors += 1;
+      this.emit('error');
+    }
+    const step = this.currentStep(inst);
+    if (step && stepCompleted(step)) this.advance(inst);
+    this.progressSound(inst, before, false);
   }
 
   deliver(): void {
@@ -440,8 +472,8 @@ export class Game {
       case 'nav':
         return `Você mexeu na linha ${seg.cursor + 1}, mas o problema é na linha ${seg.target + 1}.`;
       case 'file': {
-        const chose = seg.chosenIndex !== null ? seg.files[seg.chosenIndex] : '?';
-        return `Esse PR alterou ${chose}, mas era pra ser ${seg.files[seg.targetIndex]}.`;
+        const chose = seg.chosenIndex !== null ? fileBasename(seg.files[seg.chosenIndex]) : '?';
+        return `Esse PR alterou ${chose}, mas era pra ser ${fileBasename(seg.files[seg.targetIndex])}.`;
       }
       default:
         return 'Isso ainda não está como o ticket pede.';
@@ -607,7 +639,8 @@ export class Game {
   /** Arquivo-alvo do segmento `file` (o que a comanda manda abrir), se houver. */
   private fileTarget(t: TaskInstance): string | null {
     for (const step of t.steps)
-      for (const seg of step.segments) if (seg.type === 'file') return seg.files[seg.targetIndex];
+      for (const seg of step.segments)
+        if (seg.type === 'file') return fileBasename(seg.files[seg.targetIndex]);
     return null;
   }
   /** Site aberto no navegador (deriva das ações "Abrir {fonte}" / staging da tarefa). */
@@ -677,7 +710,7 @@ export class Game {
   private editorFile(t: TaskInstance): string {
     for (const step of t.steps)
       for (const seg of step.segments)
-        if (seg.type === 'file') return seg.files[seg.chosenIndex ?? seg.targetIndex];
+        if (seg.type === 'file') return fileBasename(seg.files[seg.chosenIndex ?? seg.targetIndex]);
     return 'login.ts';
   }
 
@@ -731,19 +764,29 @@ export class Game {
           remaining: Math.max(0, seg.total - seg.elapsed),
           progress: Math.min(1, seg.elapsed / seg.total),
         };
-      case 'file':
+      case 'file': {
+        const expanded = new Set(seg.expanded);
+        const rows = fileRows(seg.files, expanded).map((r) => ({
+          kind: r.kind,
+          name: r.name,
+          depth: r.depth,
+          open: r.kind === 'folder' ? expanded.has(r.path) : false,
+          fileIndex: r.fileIndex,
+        }));
         return {
           type: 'file',
           files: seg.files,
-          cursor: seg.cursor,
+          rows,
+          cursor: Math.min(seg.cursor, Math.max(0, rows.length - 1)),
           target: seg.targetIndex,
           chosenIndex: seg.chosenIndex,
           committed: seg.committed,
           wrong: seg.wrong,
           searching: seg.searching,
           query: seg.query,
-          matchIndex: seg.searching ? this.fileMatch(seg) : seg.cursor,
+          matchIndex: seg.searching ? this.fileMatch(seg) : -1,
         };
+      }
     }
   }
 }

@@ -28,14 +28,7 @@ export function Desktop({
 
       {/* Wallpaper: gradiente + grade técnica sutil + brilho do humor */}
       <main className="relative flex flex-1 gap-5 overflow-hidden p-5">
-        <div
-          aria-hidden
-          className="absolute inset-0 -z-10"
-          style={{
-            background:
-              'radial-gradient(120% 80% at 50% -10%, color-mix(in srgb, var(--amber) 5%, transparent), transparent 50%), linear-gradient(180deg, #0d0f17 0%, #14161f 60%, #181b27 100%)',
-          }}
-        />
+        <div aria-hidden className="absolute inset-0 -z-10" style={{ background: 'var(--wall)' }} />
         {/* Grão sutil no lugar da grade técnica — textura orgânica, anti-AI. */}
         <div
           aria-hidden

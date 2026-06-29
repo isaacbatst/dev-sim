@@ -4,25 +4,71 @@
    devOS — design tokens
    Paleta "turno da madrugada": índigo profundo + âmbar de fósforo.
    ───────────────────────────────────────────────────────────── */
+/* Compartilhado entre identidades (profundidade não muda por tema). */
 :root {
-  --bg: #14161f;
-  --surface: #1e2230;
-  --surface-2: #2a2f42;
-  --line: #353b52;
-  --ink: #e7e4dd;
-  --ink-dim: #8b90a6;
-  --amber: #f5a623;
-  --teal: #4ec9b0;
-  --pass: #5fd07a;
-  --fail: #ff5c57;
-
-  /* Profundidade: a "mesa" onde a casca assenta + sombras por elevação. */
-  --shell: #0e1016;
-  --elev-1: 0 1px 2px rgba(0, 0, 0, 0.35); /* casca: backlog, menubar, dock   */
+  --elev-1:
+    0 1px 2px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04); /* casca: fill + realce no topo    */
   --elev-2:
     0 24px 60px -18px rgba(0, 0, 0, 0.7), 0 4px 12px rgba(0, 0, 0, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.06); /* janela em foco (flutua)        */
   --elev-3: 0 30px 70px -10px rgba(0, 0, 0, 0.8); /* overlays (Quick Open)      */
+}
+
+/* ── Identidade 1 · GRAVEYARD — terminal phosphor (dark, âmbar) [padrão] ── */
+:root,
+[data-theme='graveyard'] {
+  --bg: #0e1016;
+  --surface: #161922;
+  --surface-2: #1f2430;
+  --line: #2b3140; /* divisórias internas + keycaps (mantém o tátil)   */
+  /* `edge` = contorno dos painéis. No escuro = SEM traço (jeito macOS): a
+     separação vem de fill + sombra + realce no topo, não de um stroke 1px. */
+  --edge: transparent;
+  --ink: #d8dbe4;
+  --ink-dim: #7e8597;
+  --amber: #f5a623; /* primário: âmbar de fósforo */
+  --teal: #4ec9b0; /* secundário: código          */
+  --pass: #5fd07a;
+  --fail: #ff5c57;
+  --shell: #0a0c12;
+  --font-grotesk: var(--font-geist);
+  --font-mono: var(--font-jetbrains);
+  /* Sheen sutil no topo (luz de tela), não um painel "glassy". */
+  --window-bg: linear-gradient(180deg, #1d2130 0%, var(--surface) 48%);
+  --wall:
+    radial-gradient(
+      120% 80% at 50% -10%,
+      color-mix(in srgb, var(--amber) 5%, transparent),
+      transparent 50%
+    ),
+    linear-gradient(180deg, #0d0f17 0%, #14161f 60%, #181b27 100%);
+}
+
+/* ── Identidade 2 · DAYBREAK — paper IDE (claro, tinta + vermelho) ── */
+[data-theme='daybreak'] {
+  --bg: #e9e5db;
+  --surface: #fbfaf6;
+  --surface-2: #efebe1;
+  --line: #d7d2c6;
+  --edge: #d7d2c6; /* no claro o contorno é natural (papel) */
+  --ink: #1f1b15;
+  --ink-dim: #6b6556;
+  --amber: #cf4926; /* primário: vermelho-terracota */
+  --teal: #1f7a6a; /* secundário: verde profundo   */
+  --pass: #2e7d4f;
+  --fail: #c0392b;
+  --shell: #d9d3c6;
+  --font-grotesk: var(--font-schibsted);
+  --font-mono: var(--font-plex);
+  --window-bg: linear-gradient(180deg, #ffffff 0%, var(--surface) 55%);
+  --wall:
+    radial-gradient(
+      120% 80% at 50% -10%,
+      color-mix(in srgb, var(--amber) 7%, transparent),
+      transparent 50%
+    ),
+    linear-gradient(180deg, #efece4 0%, #e5e0d6 100%);
 }
 
 @theme inline {
@@ -30,6 +76,7 @@
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
   --color-line: var(--line);
+  --color-edge: var(--edge);
   --color-ink: var(--ink);
   --color-ink-dim: var(--ink-dim);
   --color-amber: var(--amber);

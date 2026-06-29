@@ -161,12 +161,12 @@ export function AppWindow({
   return (
     <div
       key={active.id}
-      className={`animate-windowin elev-2 flex w-full flex-col overflow-hidden rounded-lg border border-line ${
+      className={`animate-windowin elev-2 flex w-full flex-col overflow-hidden rounded-lg border border-edge ${
         shake ? 'animate-shake' : ''
       }`}
-      // Material da janela: leve gradiente de cima (mais clara) p/ baixo — luz
-      // de tela real, não glow. É mais clara que o backlog → "flutua" sozinha.
-      style={{ background: 'linear-gradient(180deg, #262c40 0%, var(--surface) 42%)' }}
+      // Material da janela (por identidade): leve gradiente de cima p/ baixo —
+      // mais clara que o backlog → "flutua". Sem glow/borda colorida.
+      style={{ background: 'var(--window-bg)' }}
     >
       {/* Barra de título */}
       <div className="flex items-center gap-3 border-b border-line bg-surface-2 px-3 py-2">

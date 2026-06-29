@@ -78,6 +78,8 @@ export interface FileInstance {
   type: 'file';
   files: string[];
   targetIndex: number;
+  /** Pastas abertas (caminhos). O cursor anda sobre as LINHAS visíveis. */
+  expanded: string[];
   cursor: number;
   chosenIndex: number | null;
   committed: boolean;
@@ -85,6 +87,63 @@ export interface FileInstance {
   /** Modo busca (Ctrl+P) e o texto digitado. */
   searching: boolean;
   query: string;
+}
+
+/** Último segmento de um caminho (nome do arquivo/pasta). */
+export function fileBasename(path: string): string {
+  return path.split('/').pop() ?? path;
+}
+
+/** Caminhos de TODAS as pastas presentes na lista de arquivos. */
+export function allFolderPaths(files: string[]): string[] {
+  const set = new Set<string>();
+  for (const f of files) {
+    const parts = f.split('/');
+    for (let d = 0; d < parts.length - 1; d++) set.add(parts.slice(0, d + 1).join('/'));
+  }
+  return [...set];
+}
+
+export interface FileRow {
+  kind: 'folder' | 'file';
+  path: string;
+  name: string;
+  depth: number;
+  /** Índice em `files` (linhas de arquivo); -1 para pastas. */
+  fileIndex: number;
+}
+
+/** Linhas visíveis da árvore: pastas primeiro, descendo só nas expandidas. */
+export function fileRows(files: string[], expanded: Set<string>): FileRow[] {
+  type Node = { folders: Map<string, Node>; files: number[] };
+  const root: Node = { folders: new Map(), files: [] };
+  files.forEach((f, i) => {
+    const parts = f.split('/');
+    let node = root;
+    for (let d = 0; d < parts.length - 1; d++) {
+      const key = parts.slice(0, d + 1).join('/');
+      let child = node.folders.get(key);
+      if (!child) {
+        child = { folders: new Map(), files: [] };
+        node.folders.set(key, child);
+      }
+      node = child;
+    }
+    node.files.push(i);
+  });
+
+  const out: FileRow[] = [];
+  const walk = (node: Node, depth: number) => {
+    for (const [path, child] of node.folders) {
+      out.push({ kind: 'folder', path, name: fileBasename(path), depth, fileIndex: -1 });
+      if (expanded.has(path)) walk(child, depth + 1);
+    }
+    for (const i of node.files) {
+      out.push({ kind: 'file', path: files[i], name: fileBasename(files[i]), depth, fileIndex: i });
+    }
+  };
+  walk(root, 0);
+  return out;
 }
 
 export type SegmentInstance =
@@ -171,6 +230,7 @@ function instantiateSegment(segment: Segment): SegmentInstance {
         type: 'file',
         files: PROJECT_FILES,
         targetIndex,
+        expanded: [], // começa tudo colapsado; o jogador abre as pastas
         cursor: 0,
         chosenIndex: null,
         committed: false,

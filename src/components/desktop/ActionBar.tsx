@@ -87,7 +87,7 @@ function Cue({ seg }: { seg: SegmentView }) {
             <span className="text-sm text-ink-dim">mover</span>
           </span>
           <span className="flex items-center gap-1.5">
-            <KeyCap state={onTarget ? 'current' : 'idle'}>⏎</KeyCap>
+            <KeyCap state={onTarget ? 'current' : 'idle'}>Enter</KeyCap>
             <span className="text-sm text-ink-dim">confirmar</span>
           </span>
           <span className="font-mono text-sm">
@@ -129,7 +129,7 @@ function Cue({ seg }: { seg: SegmentView }) {
           <span className="text-sm text-ink-dim">buscar:</span>
           <span className="font-mono text-sm text-amber">{seg.query || '…'}</span>
           <span className="flex items-center gap-1.5">
-            <KeyCap state="current">⏎</KeyCap>
+            <KeyCap state="current">Enter</KeyCap>
             <span className="text-sm text-ink-dim">abrir</span>
           </span>
           <span className="flex items-center gap-1.5">
@@ -145,8 +145,8 @@ function Cue({ seg }: { seg: SegmentView }) {
             <span className="text-sm text-ink-dim">navegar</span>
           </span>
           <span className="flex items-center gap-1.5">
-            <KeyCap state="idle">⏎</KeyCap>
-            <span className="text-sm text-ink-dim">abrir</span>
+            <KeyCap state="idle">Enter</KeyCap>
+            <span className="text-sm text-ink-dim">abrir / expandir</span>
           </span>
           <span className="flex items-center gap-1.5">
             <KeyCap state="idle">Ctrl+P</KeyCap>
@@ -174,7 +174,7 @@ export function ActionBar({ active }: { active: ActiveTicketSnapshot }) {
           <OpenPicker />
         ) : active.ready ? (
           <span className="flex items-center gap-2 text-pass">
-            <KeyCap state="current">⏎</KeyCap> concluir a demanda
+            <KeyCap state="current">Enter</KeyCap> concluir a demanda
           </span>
         ) : needFocus ? (
           <span className="flex items-center gap-2 text-amber">

@@ -1,5 +1,6 @@
 import type { ActiveTicketSnapshot, SegmentView } from '@/core/snapshot';
 import { PROJECT_FILES } from '@/data/files';
+import { fileRows, allFolderPaths, fileBasename } from '@/core/domain/instance';
 
 type FileView = Extract<SegmentView, { type: 'file' }>;
 
@@ -87,22 +88,33 @@ function linesFor(file: string): string[] {
   return CONTENT[ext(file)] ?? CONTENT.ts;
 }
 
-/** Sidebar do explorer (estilo VS Code/Slack). Navegável no passo de abrir arquivo. */
+/** Explorer em árvore (estilo VS Code): pastas expandem/colapsam; cursor navega. */
 function ExplorerSidebar({ pick, currentFile }: { pick: FileView | null; currentFile: string }) {
-  const files = pick?.files ?? PROJECT_FILES;
+  // No passo de abrir: as linhas vêm do core (com expandido). Fora dele: árvore
+  // estática toda aberta, destacando o arquivo atual.
+  const rows = pick
+    ? pick.rows
+    : fileRows(PROJECT_FILES, new Set(allFolderPaths(PROJECT_FILES))).map((r) => ({
+        kind: r.kind,
+        name: r.name,
+        depth: r.depth,
+        open: true,
+        fileIndex: r.fileIndex,
+      }));
   return (
     <div className="hidden w-52 shrink-0 flex-col overflow-auto border-r border-line bg-surface/60 py-2 font-mono text-xs sm:flex">
-      <p className="px-3 pb-1 uppercase tracking-wider text-ink-dim">explorer</p>
-      <p className="px-3 pb-1 text-ink-dim">▸ src</p>
-      {files.map((f, i) => {
-        const onCursor = pick && i === pick.cursor;
-        const isTarget = pick && i === pick.target && !pick.committed;
-        const chosenWrong = pick?.committed && pick.wrong && i === pick.chosenIndex;
-        const isCurrent = !pick && f === currentFile;
+      <p className="px-3 pb-1.5 uppercase tracking-wider text-ink-dim">explorer</p>
+      {rows.map((row, ri) => {
+        const onCursor = pick && ri === pick.cursor;
+        const isFile = row.kind === 'file';
+        const isTarget = pick && isFile && row.fileIndex === pick.target && !pick.committed;
+        const chosenWrong =
+          pick?.committed && pick.wrong && isFile && row.fileIndex === pick.chosenIndex;
+        const isCurrent = !pick && isFile && row.name === currentFile;
         return (
           <div
-            key={f}
-            className={`mx-1 flex items-center gap-1.5 rounded px-2 py-1 ${
+            key={ri}
+            className={`mx-1 flex items-center gap-1.5 rounded py-1 pr-2 ${
               onCursor
                 ? chosenWrong
                   ? 'bg-fail/20'
@@ -111,13 +123,41 @@ function ExplorerSidebar({ pick, currentFile }: { pick: FileView | null; current
                   ? 'bg-amber/10'
                   : ''
             }`}
+            style={{ paddingLeft: 8 + row.depth * 12 }}
           >
-            <span className="size-2.5 rounded-[2px]" style={{ background: extColor(f) }} />
-            <span className={onCursor || isCurrent ? 'text-ink' : 'text-ink-dim'}>{f}</span>
-            {isTarget && <span className="ml-auto text-[10px] text-teal">◀</span>}
+            {row.kind === 'folder' ? (
+              <>
+                <span className="w-2.5 text-center text-ink-dim">{row.open ? '▾' : '▸'}</span>
+                <span className={onCursor ? 'text-ink' : 'text-ink-dim'}>{row.name}</span>
+              </>
+            ) : (
+              <>
+                <span
+                  className="size-2.5 rounded-[2px]"
+                  style={{ background: extColor(row.name) }}
+                />
+                <span className={onCursor || isCurrent ? 'text-ink' : 'text-ink-dim'}>
+                  {row.name}
+                </span>
+                {isTarget && <span className="ml-auto text-[10px] text-teal">◀</span>}
+              </>
+            )}
           </div>
         );
       })}
+    </div>
+  );
+}
+
+/** Placeholder quando o cursor está numa pasta (nada pra prever). */
+function FolderPreview({ name, open }: { name: string; open: boolean }) {
+  return (
+    <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-1.5 text-ink-dim">
+      <span className="font-mono text-2xl text-ink-dim/70">{open ? '▾' : '▸'}</span>
+      <p className="text-xs">
+        pasta <span className="font-mono text-ink">{name}/</span>
+      </p>
+      <p className="text-[11px]">Enter {open ? 'colapsa' : 'expande'}</p>
     </div>
   );
 }
@@ -145,7 +185,12 @@ function Preview({ file }: { file: string }) {
 
 /** Overlay do Quick Open (Ctrl+P), centralizado sobre o editor. */
 function QuickOpen({ seg }: { seg: FileView }) {
-  const matches = seg.files.filter((f) => f.toLowerCase().includes(seg.query.toLowerCase()));
+  const q = seg.query.toLowerCase();
+  // Busca por nome em qualquer pasta aninhada (e por caminho).
+  const matches = seg.files.filter(
+    (f) => fileBasename(f).toLowerCase().includes(q) || f.toLowerCase().includes(q),
+  );
+  const activePath = seg.matchIndex >= 0 ? seg.files[seg.matchIndex] : null;
   return (
     <div className="absolute inset-x-0 top-0 z-10 flex justify-center px-4 pt-3">
       <div className="w-full max-w-md overflow-hidden rounded-md border border-amber bg-surface-2 shadow-2xl shadow-black/60">
@@ -159,17 +204,22 @@ function QuickOpen({ seg }: { seg: FileView }) {
           {matches.length === 0 && (
             <p className="px-3 py-1.5 text-xs text-ink-dim">nenhum arquivo</p>
           )}
-          {matches.map((f) => (
-            <div
-              key={f}
-              className={`flex items-center gap-2 px-3 py-1 font-mono text-sm ${
-                seg.files[seg.matchIndex] === f ? 'bg-amber/15 text-ink' : 'text-ink-dim'
-              }`}
-            >
-              <span className="size-2.5 rounded-[2px]" style={{ background: extColor(f) }} />
-              {f}
-            </div>
-          ))}
+          {matches.map((f) => {
+            const name = fileBasename(f);
+            const dir = f.slice(0, Math.max(0, f.length - name.length - 1));
+            return (
+              <div
+                key={f}
+                className={`flex items-center gap-2 px-3 py-1 font-mono text-sm ${
+                  activePath === f ? 'bg-amber/15 text-ink' : 'text-ink-dim'
+                }`}
+              >
+                <span className="size-2.5 rounded-[2px]" style={{ background: extColor(name) }} />
+                {name}
+                {dir && <span className="ml-auto text-[10px] text-ink-dim/70">{dir}</span>}
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
@@ -259,13 +309,15 @@ function GitView({
           })}
         </pre>
       </div>
-      <div className="shrink-0 border-t border-line bg-black/60 p-2.5 font-mono text-xs">
-        <p className="text-[10px] uppercase tracking-wider text-ink-dim">terminal</p>
-        <p className="mt-1 text-ink-dim">desenvolvedor@devOS:~/projeto$</p>
-        <p className="text-pass">
+      {/* Terminal é SEMPRE escuro (qualquer tema) → cores fixas claras, não
+          tokens (que no tema claro virariam texto escuro sobre fundo escuro). */}
+      <div className="shrink-0 border-t border-white/10 bg-[#0c0e14] p-2.5 font-mono text-xs">
+        <p className="text-[10px] uppercase tracking-wider text-zinc-500">terminal</p>
+        <p className="mt-1 text-zinc-400">desenvolvedor@devOS:~/projeto$</p>
+        <p className="text-emerald-400">
           $ {merge ? 'git merge --no-ff feature' : 'git push origin HEAD'}
         </p>
-        <p className="text-ink-dim">
+        <p className="text-zinc-400">
           {merge ? 'Merge made by recursive.' : 'Enumerating objects: 12, done.'}
         </p>
       </div>
@@ -404,8 +456,12 @@ export function EditorScene({ active }: { active: ActiveTicketSnapshot }) {
   const pick = focus?.type === 'file' ? focus : null;
 
   let main: React.ReactNode;
-  if (pick) main = <Preview file={pick.files[pick.cursor]} />;
-  else if (focus?.type === 'selection') main = <CssSelect seg={focus} file={active.editorFile} />;
+  if (pick) {
+    // Prévia do que está sob o cursor: arquivo → conteúdo; pasta → placeholder.
+    const row = pick.rows[pick.cursor];
+    if (row?.kind === 'file') main = <Preview file={fileBasename(pick.files[row.fileIndex])} />;
+    else main = <FolderPreview name={row?.name ?? ''} open={row?.open ?? false} />;
+  } else if (focus?.type === 'selection') main = <CssSelect seg={focus} file={active.editorFile} />;
   else if (focus?.type === 'wait') main = <PrPanel active={active} />;
   else if (focus?.type === 'press' && /push|merge/i.test(focus.tokens[0]?.label ?? ''))
     main = <GitView focus={focus} file={active.editorFile} targetLine={active.editorLine} />;

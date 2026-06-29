@@ -72,14 +72,26 @@ export type SegmentView =
   | { type: 'wait'; remaining: number; progress: number }
   | {
       type: 'file';
+      /** Todos os caminhos (para o Ctrl+P buscar em pastas aninhadas). */
       files: string[];
+      /** Linhas visíveis da árvore (pastas/arquivos respeitando o expandido). */
+      rows: {
+        kind: 'folder' | 'file';
+        name: string;
+        depth: number;
+        open: boolean;
+        fileIndex: number;
+      }[];
+      /** Cursor sobre as LINHAS visíveis (`rows`). */
       cursor: number;
+      /** Índice (em `files`) do arquivo-alvo e do escolhido. */
       target: number;
       chosenIndex: number | null;
       committed: boolean;
       wrong: boolean;
       searching: boolean;
       query: string;
+      /** Índice (em `files`) do match atual do Ctrl+P; -1 se nenhum. */
       matchIndex: number;
     };
 

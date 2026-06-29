@@ -26,6 +26,27 @@ profissional principal deste produto.** (Ver _Layout Rules_.)
 
 ---
 
+## Aparências (claro / escuro)
+
+São **duas aparências** trocáveis em runtime (controle "Aparência" na menu bar:
+Claro / Escuro / Sistema; `data-theme` no `<html>`; tudo via tokens, o app
+re-skina sozinho). Exploramos uma 3ª ("Overclock", arcade neon) e descartamos —
+ficamos com o par dark/light, que cobre melhor o uso real.
+
+| Aparência (`data-theme`) | Conceito                  | Paleta                              | Fontes (UI / mono)        |
+| ------------------------ | ------------------------- | ----------------------------------- | ------------------------- |
+| **Escuro** (`graveyard`) | terminal phosphor, 2am    | índigo near-black + **âmbar**; teal | Geist / JetBrains Mono    |
+| **Claro** (`daybreak`)   | paper IDE, estúdio diurno | papel quente + **tinta** + vermelho | Schibsted / IBM Plex Mono |
+
+> As seções abaixo descrevem o **Escuro** (padrão). Regras de _Spacing_, _Shape_,
+> _Layout_ e _Do Not Use_ valem para os dois; só paleta/fontes mudam por tema.
+
+**Bordas por tema (lição do exercício macOS/Windows):** painel não leva _stroke_
+em volta. No **escuro**, `--edge: transparent` — janela/backlog se separam por
+**sombra + fill + realce de 1px no topo** (jeito macOS; um traço 1px no escuro
+sempre vira "card de AI"). No **claro**, `--edge` é um fio de papel sutil. O
+`--line` (keycaps + divisórias internas) é outro token e continua visível.
+
 ## Typography
 
 Duas vozes, papéis fixos. Não misture.
@@ -268,6 +289,19 @@ pra hierarquia e pro grão.
 
 ## Changelog
 
+- **2026-06-28:** **Claro/Escuro como aparências** (Escuro=Graveyard,
+  Claro=Daybreak); Overclock descartado. Controle "Aparência" na menu bar
+  (Claro/Escuro/Sistema), persistido + script anti-flash. **Bordas dos painéis no
+  escuro removidas** (`--edge: transparent`): separação por sombra+fill+realce no
+  topo (jeito macOS). Token `--edge` (contorno de painel) separado de `--line`
+  (keycaps/divisórias). Terminal do editor com cores fixas (legível nos 2 temas).
+  Glifo `⏎` → texto "Enter". Explorer do VSCode em **árvore de pastas** (Enter
+  expande/colapsa; Ctrl+P busca aninhado).
+- **2026-06-28:** **3 identidades em avaliação** (Graveyard / Daybreak /
+  Overclock) implementadas como temas via `data-theme` + tokens; seletor de dev
+  ao vivo (`ThemeSwitcher`). Tokens `--window-bg` e `--wall` por tema; wallpaper,
+  dock e janela passaram a ler tokens. Fontes carregadas: Geist, Schibsted, Space
+  Grotesk, JetBrains Mono, IBM Plex Mono.
 - **2026-06-28:** Fonte de UI: **Space Grotesk → Geist** (saindo do default de
   LLM). JetBrains Mono mantida na voz máquina.
 - **2026-06-28:** **Passada anti-AI** (baseada em análise de UIs vibe-coded).

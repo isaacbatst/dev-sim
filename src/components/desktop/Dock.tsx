@@ -5,7 +5,7 @@ import { APPS, DOCK_APPS } from './apps';
 export function Dock({ activeApp }: { activeApp: AppId | null }) {
   return (
     <div className="pointer-events-none absolute inset-x-0 bottom-3 flex justify-center">
-      <div className="pointer-events-auto flex items-end gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 backdrop-blur-md">
+      <div className="pointer-events-auto flex items-end gap-2 rounded-2xl border border-edge bg-surface/60 px-3 py-2 backdrop-blur-md">
         {DOCK_APPS.map((id) => {
           const app = APPS[id];
           const on = id === activeApp;
