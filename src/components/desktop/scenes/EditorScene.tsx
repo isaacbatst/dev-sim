@@ -392,19 +392,36 @@ function GitView({
           {linesFor(file).map((line, i) => {
             // "alterada" (diff), não "corrigida" — pode ser a linha errada.
             const changed = targetLine > 0 && i === targetLine - 1;
+            // No merge o CR já foi aprovado → "corrigido" (verde). No push é só
+            // "alterada" (pode ser a linha errada; o CR ainda vai avaliar).
+            const approved = changed && merge;
             return (
               <div
                 key={i}
-                className={`relative flex items-center gap-3 ${changed ? 'bg-amber/[0.08]' : ''}`}
+                className={`relative flex items-center gap-3 ${
+                  changed ? (approved ? 'bg-pass/10' : 'bg-amber/[0.08]') : ''
+                }`}
               >
-                {changed && <span className="absolute inset-y-0 left-0 w-0.5 bg-amber/70" />}
-                <span className="w-6 select-none text-right text-ink-dim">
-                  {changed ? '~' : i + 1}
+                {changed && (
+                  <span
+                    className={`absolute inset-y-0 left-0 w-0.5 ${approved ? 'bg-pass/70' : 'bg-amber/70'}`}
+                  />
+                )}
+                <span
+                  className={`w-6 select-none text-right ${approved ? 'text-pass' : 'text-ink-dim'}`}
+                >
+                  {changed ? (approved ? '✓' : '~') : i + 1}
                 </span>
                 <span>
                   <Code line={line} ext={ext(file)} />
                 </span>
-                {changed && <span className="ml-auto pr-2 text-[10px] text-ink-dim">alterada</span>}
+                {changed && (
+                  <span
+                    className={`ml-auto pr-2 text-[10px] ${approved ? 'text-pass' : 'text-ink-dim'}`}
+                  >
+                    {approved ? 'corrigido' : 'alterada'}
+                  </span>
+                )}
               </div>
             );
           })}
