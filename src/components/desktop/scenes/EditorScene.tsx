@@ -853,8 +853,11 @@ const PROPERTIES = ['Texto', 'Fundo'];
 const PROP_CSS: Record<string, string> = { Texto: 'color', Fundo: 'background' };
 const COLOR_HEX: Record<string, string> = {
   Vermelho: '#ef4444',
+  Laranja: '#f97316',
+  Amarelo: '#eab308',
   Verde: '#22c55e',
   Azul: '#3b82f6',
+  Roxo: '#9333ea',
 };
 
 type SelKind = 'component' | 'property' | 'color' | 'size' | 'style';
@@ -951,6 +954,80 @@ function CssSelect({
   );
 }
 
+/** Discar um valor (cor/tamanho) ⬅️➡️ com preview AO VIVO — afinar, não escolher
+ *  de um menu frio. O alvo vem do ticket; confirma com Enter. */
+function ScrubDial({ seg, file }: { seg: Extract<SegmentView, { type: 'scrub' }>; file: string }) {
+  const isSize = /px$/.test(seg.options[0]?.label ?? '');
+  const current = seg.options[seg.cursor]?.label ?? '';
+  return (
+    <div className="flex flex-1 flex-col font-code text-sm">
+      <div className="flex border-b border-line bg-surface px-3 py-1 text-xs text-ink-dim">
+        <span className="border-b-2 border-amber px-2 py-1 text-ink">{file}</span>
+      </div>
+      <div className="flex flex-1 flex-col gap-4 p-4">
+        <p className="text-[11px] uppercase tracking-wider text-ink-dim">
+          {isSize ? 'discar tamanho da fonte' : 'discar cor'}
+        </p>
+
+        {/* A linha de CSS com o valor discado ao vivo + preview grande. */}
+        <div className="rounded-md border border-line/60 bg-bg/40 px-3 py-3">
+          {isSize ? (
+            <div className="flex items-center gap-4">
+              <span>
+                <span className="text-sky-400">font-size</span>
+                <span className="text-ink-dim">: </span>
+                <span className="text-amber">{current}</span>
+                <span className="text-ink-dim">;</span>
+              </span>
+              <span className="leading-none text-ink" style={{ fontSize: current }} aria-hidden>
+                Aa
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <span
+                className="size-8 shrink-0 rounded"
+                style={{ background: COLOR_HEX[current] ?? '#888' }}
+              />
+              <span>
+                <span className="text-sky-400">color</span>
+                <span className="text-ink-dim">: </span>
+                <span className="text-amber">{COLOR_HEX[current] ?? '—'}</span>
+                <span className="text-ink-dim">; /* {current} */</span>
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* O "dial": a escala de valores, com o atual destacado. */}
+        <div className="flex items-center gap-1.5">
+          {seg.options.map((o, i) =>
+            isSize ? (
+              <span
+                key={o.key}
+                className={`rounded px-2 py-1 text-xs ${
+                  i === seg.cursor ? 'bg-amber/20 text-amber' : 'text-ink-dim'
+                }`}
+              >
+                {o.label}
+              </span>
+            ) : (
+              <span
+                key={o.key}
+                aria-hidden
+                className={`size-6 rounded transition-all ${
+                  i === seg.cursor ? 'ring-2 ring-amber ring-offset-2 ring-offset-bg' : 'opacity-40'
+                }`}
+                style={{ background: COLOR_HEX[o.label] ?? '#888' }}
+              />
+            ),
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PrPanel({ active }: { active: ActiveTicketSnapshot }) {
   const reReview = !!active.reviewComment;
   return (
@@ -985,6 +1062,7 @@ export function EditorScene({ active }: { active: ActiveTicketSnapshot }) {
     if (row?.kind === 'file') main = <Preview file={fileBasename(pick.files[row.fileIndex])} />;
     else main = <FolderPreview name={row?.name ?? ''} open={row?.open ?? false} />;
   } else if (focus?.type === 'selection') main = <CssSelect seg={focus} file={active.editorFile} />;
+  else if (focus?.type === 'scrub') main = <ScrubDial seg={focus} file={active.editorFile} />;
   else if (focus?.type === 'wait') main = <PrPanel active={active} />;
   else if (focus?.type === 'combo')
     main = <ComboFix seg={focus} file={active.editorFile} fixedLine={active.editorFixedLine} />;

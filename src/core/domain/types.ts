@@ -20,7 +20,7 @@ export type Priority = 'urgente' | 'alta' | 'normal' | 'baixa';
 export const PRIORITY_BY_INT: Priority[] = ['urgente', 'alta', 'normal', 'baixa'];
 
 export type SegmentType =
-  'press' | 'hold' | 'nav' | 'selection' | 'wait' | 'file' | 'mash' | 'combo';
+  'press' | 'hold' | 'nav' | 'selection' | 'wait' | 'file' | 'mash' | 'combo' | 'scrub';
 
 /** Uma ação/tecla com rótulo legível (ex.: { key: 'w', label: 'Abrir navegador' }). */
 export interface Action {
@@ -116,6 +116,16 @@ export interface ComboSegment {
   steps: ComboStep[];
 }
 
+/**
+ * `scrub`: discar um valor ⬅️➡️ com preview ao vivo (cor, tamanho de fonte) e
+ * confirmar com Enter. Substitui a escolha "fria" pelo gesto de afinar. Pode
+ * ficar errado (valor ≠ alvo) → CR rejeita, como `selection`.
+ */
+export interface ScrubSegment {
+  type: 'scrub';
+  options: Action[];
+}
+
 export type Segment =
   | PressSegment
   | HoldSegment
@@ -124,7 +134,8 @@ export type Segment =
   | WaitSegment
   | FileSegment
   | MashSegment
-  | ComboSegment;
+  | ComboSegment
+  | ScrubSegment;
 
 /** Passo: contém segmentos do mesmo tipo (GDD 3.1). No conteúdo atual, 1 por passo. */
 export interface StepTemplate {

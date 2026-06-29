@@ -92,23 +92,23 @@ export const TASKS: Record<string, TaskTemplate> = {
     description: 'Abrir o VSCode, ajustar o CSS da UI, push, CR e merge',
     steps: [],
     variants: [
-      // variante COR
+      // variante COR (discar a cor ⬅️➡️ com preview)
       [
         step('press_open_vscode'),
         step('open_css_file'),
         step('selection_element'),
         step('selection_property'),
-        step('selection_color'),
+        step('scrub_color'),
         step('press_push'),
         step('wait_cr'),
         step('mash_merge'),
       ],
-      // variante FONTE
+      // variante FONTE (discar o tamanho ⬅️➡️ com preview)
       [
         step('press_open_vscode'),
         step('open_css_file'),
         step('selection_element'),
-        step('selection_font_size'),
+        step('scrub_font_size'),
         step('selection_font_style'),
         step('press_push'),
         step('wait_cr'),

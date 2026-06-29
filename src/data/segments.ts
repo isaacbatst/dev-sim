@@ -115,15 +115,31 @@ export const SEGMENTS: Record<string, Segment> = {
   nav_find_line: { type: 'nav', direction: 'down', minCount: 1, maxCount: 5 },
   nav_select_channel: { type: 'nav', direction: 'down', minCount: 1, maxCount: 5 },
 
-  // --- selection ---
-  selection_color: {
-    type: 'selection',
+  // --- scrub (discar valor ⬅️➡️ com preview ao vivo) ---
+  scrub_color: {
+    type: 'scrub',
     options: [
-      { key: 'r', label: 'Vermelho' },
-      { key: 'g', label: 'Verde' },
-      { key: 'b', label: 'Azul' },
+      { key: '1', label: 'Vermelho' },
+      { key: '2', label: 'Laranja' },
+      { key: '3', label: 'Amarelo' },
+      { key: '4', label: 'Verde' },
+      { key: '5', label: 'Azul' },
+      { key: '6', label: 'Roxo' },
     ],
   },
+  scrub_font_size: {
+    type: 'scrub',
+    options: [
+      { key: '1', label: '12px' },
+      { key: '2', label: '14px' },
+      { key: '3', label: '16px' },
+      { key: '4', label: '18px' },
+      { key: '5', label: '20px' },
+      { key: '6', label: '24px' },
+    ],
+  },
+
+  // --- selection ---
   selection_element: {
     type: 'selection',
     options: [
@@ -148,15 +164,6 @@ export const SEGMENTS: Record<string, Segment> = {
     options: [
       { key: 't', label: 'Texto' },
       { key: 'b', label: 'Fundo' },
-    ],
-  },
-  selection_font_size: {
-    type: 'selection',
-    options: [
-      { key: 'p', label: '12px' },
-      { key: 'm', label: '16px' },
-      { key: 'g', label: '20px' },
-      { key: 'x', label: '24px' },
     ],
   },
 

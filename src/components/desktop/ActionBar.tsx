@@ -122,6 +122,23 @@ function Cue({ seg }: { seg: SegmentView }) {
           })}
         </div>
       );
+    case 'scrub': {
+      const current = seg.options[seg.cursor]?.label ?? '';
+      return (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <span className="flex items-center gap-1.5">
+            <KeyCap state="idle">←</KeyCap>
+            <KeyCap state="idle">→</KeyCap>
+            <span className="text-sm text-ink-dim">discar</span>
+          </span>
+          <span className="flex items-center gap-1.5">
+            <KeyCap state="idle">Enter</KeyCap>
+            <span className="text-sm text-ink-dim">confirmar</span>
+          </span>
+          <span className="text-sm text-amber">{current}</span>
+        </div>
+      );
+    }
     case 'nav': {
       const onTarget = seg.cursor === seg.target;
       return (

@@ -96,6 +96,15 @@ export type SegmentView =
       tokens: { combo: string; label: string; done: boolean; current: boolean }[];
     }
   | {
+      type: 'scrub';
+      /** Valores a discar ⬅️➡️ (ex.: cores, tamanhos). */
+      options: { key: string; label: string }[];
+      /** Índice do valor atualmente discado (preview). */
+      cursor: number;
+      committed: boolean;
+      wrong: boolean;
+    }
+  | {
       type: 'file';
       /** Todos os caminhos (para o Ctrl+P buscar em pastas aninhadas). */
       files: string[];

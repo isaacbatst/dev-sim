@@ -242,6 +242,18 @@ export class Game {
         }
         break;
       }
+      case 'scrub': {
+        // Disca o valor ⬅️➡️ (preview ao vivo). Confirma com Enter (confirm()).
+        if (seg.committed) break;
+        const at = seg.cursor;
+        if (key === ARROW_KEY_BY_DIRECTION.right) {
+          seg.cursor = Math.min(seg.options.length - 1, seg.cursor + 1);
+        } else if (key === ARROW_KEY_BY_DIRECTION.left) {
+          seg.cursor = Math.max(0, seg.cursor - 1);
+        }
+        if (seg.cursor !== at) incidental = 'nav';
+        break;
+      }
       case 'file': {
         if (seg.committed) break;
         if (seg.searching) {
@@ -376,7 +388,19 @@ export class Game {
     if (inst.focused !== this.currentApp(inst)) return;
     const seg = this.currentSegment(inst);
     const before = this.progKey(inst);
-    if (seg?.type === 'nav' && !seg.committed) {
+    if (seg?.type === 'scrub' && !seg.committed) {
+      seg.committed = true;
+      if (seg.cursor !== seg.correctIndex) {
+        seg.wrong = true;
+        inst.errors += 1;
+        this.emit('error');
+      } else {
+        this.emit('select');
+      }
+      const step = this.currentStep(inst);
+      if (step && stepCompleted(step)) this.advance(inst);
+      this.progressSound(inst, before, false);
+    } else if (seg?.type === 'nav' && !seg.committed) {
       seg.committed = true;
       if (seg.cursor !== seg.target) {
         seg.wrong = true;
@@ -519,6 +543,14 @@ export class Game {
       }
       case 'nav':
         return `Você mexeu na linha ${seg.cursor + 1}, mas o problema é na linha ${seg.target + 1}.`;
+      case 'scrub': {
+        const chose = seg.options[seg.cursor]?.label ?? '?';
+        const want = seg.options[seg.correctIndex].label;
+        const isSize = /px$/.test(want);
+        return isSize
+          ? `A fonte ficou ${chose}, mas o ticket pede ${want}. Ajusta?`
+          : `A cor ficou ${chose}, mas o ticket pede ${want}. Ajusta?`;
+      }
       case 'file': {
         const chose = seg.chosenIndex !== null ? fileBasename(seg.files[seg.chosenIndex]) : '?';
         return `Esse PR alterou ${chose}, mas era pra ser ${fileBasename(seg.files[seg.targetIndex])}.`;
@@ -686,11 +718,13 @@ export class Game {
   }
 
   // Coletores de detalhes mutáveis (valores corretos sorteados na instância).
+  // Inclui `selection` e `scrub` (o valor discado) na ordem dos passos.
   private selLabels(t: TaskInstance): string[] {
     const out: string[] = [];
     for (const step of t.steps)
       for (const seg of step.segments)
-        if (seg.type === 'selection') out.push(seg.options[seg.correctIndex].label);
+        if (seg.type === 'selection' || seg.type === 'scrub')
+          out.push(seg.options[seg.correctIndex].label);
     return out;
   }
   private navTargets(t: TaskInstance): number[] {
@@ -797,12 +831,12 @@ export class Game {
           : `No VSCode, corrija o typo na linha ${line} de ${file}; faça push, aguarde o CR e o merge.`;
       }
       case 'ui_update': {
-        // A variante (cor|fonte) é detectada pelas seleções da instância.
+        // Variante fonte tem um valor em "px"; senão é a variante cor.
         const file = this.fileTarget(t) ?? 'styles.css';
-        const isColor = sel.some((l) => /vermelho|verde|azul/i.test(l));
-        return isColor
-          ? `Em ${file}, mude a ${sel[1]} do ${sel[0]} para ${sel[2]}; faça push, aguarde o CR e o merge.`
-          : `Em ${file}, deixe a fonte do ${sel[0]} em ${sel[1]} e o estilo ${sel[2]}; faça push, aguarde o CR e o merge.`;
+        const isSize = sel.some((l) => /px$/.test(l));
+        return isSize
+          ? `Em ${file}, deixe a fonte do ${sel[0]} em ${sel[1]} e o estilo ${sel[2]}; faça push, aguarde o CR e o merge.`
+          : `Em ${file}, mude a ${sel[1]} do ${sel[0]} para ${sel[2]}; faça push, aguarde o CR e o merge.`;
       }
       default:
         return t.template.description;
@@ -896,6 +930,14 @@ export class Game {
           })),
         };
       }
+      case 'scrub':
+        return {
+          type: 'scrub',
+          options: seg.options.map((o) => ({ key: o.key, label: o.label })),
+          cursor: seg.cursor,
+          committed: seg.committed,
+          wrong: seg.wrong,
+        };
       case 'file': {
         const expanded = new Set(seg.expanded);
         const rows = fileRows(seg.files, expanded).map((r) => ({

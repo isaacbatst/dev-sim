@@ -98,6 +98,16 @@ export interface ComboInstance {
   done: boolean[];
 }
 
+export interface ScrubInstance {
+  type: 'scrub';
+  options: Action[];
+  correctIndex: number;
+  /** Valor atualmente discado. */
+  cursor: number;
+  committed: boolean;
+  wrong: boolean;
+}
+
 export interface FileInstance {
   type: 'file';
   files: string[];
@@ -178,7 +188,8 @@ export type SegmentInstance =
   | WaitInstance
   | FileInstance
   | MashInstance
-  | ComboInstance;
+  | ComboInstance
+  | ScrubInstance;
 
 export interface StepInstance {
   segments: SegmentInstance[];
@@ -271,6 +282,19 @@ function instantiateSegment(segment: Segment): SegmentInstance {
     }
     case 'combo':
       return { type: 'combo', steps: segment.steps, done: segment.steps.map(() => false) };
+    case 'scrub': {
+      const correctIndex = randInt(0, segment.options.length - 1);
+      // Começa longe do alvo pra exigir o gesto de discar (não já em cima).
+      const cursor = correctIndex === 0 ? segment.options.length - 1 : 0;
+      return {
+        type: 'scrub',
+        options: segment.options,
+        correctIndex,
+        cursor,
+        committed: false,
+        wrong: false,
+      };
+    }
     case 'file': {
       const allowed = segment.ext
         ? PROJECT_FILES.map((f, i) => (f.endsWith(`.${segment.ext}`) ? i : -1)).filter(
@@ -336,6 +360,8 @@ export function segmentCompleted(seg: SegmentInstance): boolean {
       return seg.count >= seg.target;
     case 'combo':
       return seg.done.every(Boolean);
+    case 'scrub':
+      return seg.committed;
   }
 }
 
@@ -350,6 +376,7 @@ export function segmentWrong(seg: SegmentInstance): boolean {
       return seg.chosenIndex !== null && seg.wrong;
     case 'nav':
     case 'file':
+    case 'scrub':
       return seg.committed && seg.wrong;
     default:
       return false;
@@ -392,6 +419,11 @@ export function resetSegment(seg: SegmentInstance): void {
       break;
     case 'combo':
       seg.done = seg.done.map(() => false);
+      break;
+    case 'scrub':
+      seg.cursor = seg.correctIndex === 0 ? seg.options.length - 1 : 0;
+      seg.committed = false;
+      seg.wrong = false;
       break;
   }
 }
