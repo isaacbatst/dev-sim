@@ -1,7 +1,7 @@
 import type { ActiveTicketSnapshot, SegmentView } from '@/core/snapshot';
 import { LAUNCH_KEY } from '@/core/domain/apps';
 import { APPS, DOCK_APPS } from './apps';
-import { KeyCap, Meter, ARROW_GLYPH } from './primitives';
+import { KeyCap, Meter, ARROW_GLYPH, KEY_GLYPH } from './primitives';
 
 /**
  * Passo de abrir: mostra TODOS os programas que dá pra abrir (com a tecla de
@@ -68,6 +68,22 @@ function Cue({ seg }: { seg: SegmentView }) {
           <span className="text-sm text-ink">
             segure — {seg.label} <span className="text-ink-dim">({seg.targetSec}s)</span>
           </span>
+          <span className="w-32">
+            <Meter value={seg.progress} color="var(--amber)" />
+          </span>
+        </div>
+      );
+    case 'mash':
+      return (
+        <div className="flex items-center gap-3">
+          <span className="flex items-center gap-1.5">
+            {seg.keys.map((k) => (
+              <KeyCap key={k} state={k === seg.expectKey ? 'current' : 'idle'}>
+                {KEY_GLYPH[k] ?? k}
+              </KeyCap>
+            ))}
+          </span>
+          <span className="text-sm text-ink">{seg.label}</span>
           <span className="w-32">
             <Meter value={seg.progress} color="var(--amber)" />
           </span>

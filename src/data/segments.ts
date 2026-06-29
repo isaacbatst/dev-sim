@@ -52,8 +52,18 @@ export const SEGMENTS: Record<string, Segment> = {
     actions: [{ key: 'w', label: 'Escrever Documentação' }],
   },
   press_push: { type: 'press', maxItems: 1, actions: [{ key: 'p', label: 'Push' }] },
-  press_merge: { type: 'press', maxItems: 1, actions: [{ key: 'm', label: 'Merge' }] },
   press_fix: { type: 'press', maxItems: 1, actions: [{ key: 'f', label: 'Corrigir' }] },
+
+  // --- mash (suco por tecla — DIRECAO_GAMEPLAY.md §6) ---
+  // Merge = resolver o conflito esfregando ⬅️➡️. A assinatura tátil comum a todas
+  // as tarefas de código (substitui o antigo "press M").
+  mash_merge: {
+    type: 'mash',
+    keys: ['arrowleft', 'arrowright'],
+    label: 'Resolver conflito',
+    minCount: 8,
+    maxCount: 12,
+  },
 
   // --- hold (AUDITORIA: tempo morto) ---
   hold_speak: {

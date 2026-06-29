@@ -46,7 +46,7 @@ export const TASKS: Record<string, TaskTemplate> = {
       step('press_write_doc'),
       step('press_push'),
       step('wait_cr'),
-      step('press_merge'),
+      step('mash_merge'),
     ],
   },
   fix_typo: {
@@ -60,7 +60,7 @@ export const TASKS: Record<string, TaskTemplate> = {
       step('press_fix'),
       step('press_push'),
       step('wait_cr'),
-      step('press_merge'),
+      step('mash_merge'),
     ],
   },
   // Uma só task: a cada vez sorteia uma mudança de COR ou de FONTE (o detalhe
@@ -80,7 +80,7 @@ export const TASKS: Record<string, TaskTemplate> = {
         step('selection_color'),
         step('press_push'),
         step('wait_cr'),
-        step('press_merge'),
+        step('mash_merge'),
       ],
       // variante FONTE
       [
@@ -91,7 +91,7 @@ export const TASKS: Record<string, TaskTemplate> = {
         step('selection_font_style'),
         step('press_push'),
         step('wait_cr'),
-        step('press_merge'),
+        step('mash_merge'),
       ],
     ],
   },

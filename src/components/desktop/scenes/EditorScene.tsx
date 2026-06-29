@@ -353,7 +353,13 @@ function CodeArea({
             <div
               key={i}
               className={`relative flex items-center gap-3 ${
-                isCursor ? (cursorWrong ? 'bg-fail/20' : 'bg-amber/15') : isConfirmed ? 'bg-amber/10' : ''
+                isCursor
+                  ? cursorWrong
+                    ? 'bg-fail/20'
+                    : 'bg-amber/15'
+                  : isConfirmed
+                    ? 'bg-amber/10'
+                    : ''
               }`}
             >
               {/* Linha confirmada (cursor "fixado" antes de corrigir): rail + caret
@@ -385,17 +391,61 @@ function CodeArea({
   );
 }
 
-/** Editor com terminal integrado (push/merge). A linha alterada aparece como diff. */
+/** A linha em conflito mostrada com os marcadores reais do git (HEAD × feature),
+ *  que vão "fechando" conforme o conflito é resolvido (progress → 1). */
+function ConflictBlock({
+  line,
+  ext: e,
+  progress,
+}: {
+  line: string;
+  ext: string;
+  progress: number;
+}) {
+  // Marcadores desbotam à medida que o conflito some.
+  const markerOpacity = Math.max(0.15, 1 - progress);
+  return (
+    <div className="relative">
+      <span aria-hidden className="absolute inset-y-0 left-0 w-0.5 bg-fail/70" />
+      <div className="bg-fail/[0.07] py-0.5">
+        <pre className="m-0 px-3 leading-6 text-fail" style={{ opacity: markerOpacity }}>
+          {'<<<<<<< HEAD'}
+        </pre>
+        <pre className="m-0 px-3 leading-6">
+          <span className="pl-3">
+            <Code line={line} ext={e} />
+          </span>
+        </pre>
+        <pre className="m-0 px-3 leading-6 text-ink-dim" style={{ opacity: markerOpacity }}>
+          {'======='}
+        </pre>
+        <pre className="m-0 px-3 leading-6">
+          <span className="pl-3">
+            <Code line={line} ext={e} />
+          </span>
+        </pre>
+        <pre className="m-0 px-3 leading-6 text-fail" style={{ opacity: markerOpacity }}>
+          {'>>>>>>> feature'}
+        </pre>
+      </div>
+    </div>
+  );
+}
+
+/** Editor com terminal integrado. Push = diff "alterada"; merge = resolver o
+ *  conflito esfregando ⬅️➡️ (mash), com os marcadores fechando ao vivo. */
 function GitView({
   focus,
   file,
   targetLine,
 }: {
-  focus: Extract<SegmentView, { type: 'press' }>;
+  focus: Extract<SegmentView, { type: 'press' | 'mash' }>;
   file: string;
   targetLine: number;
 }) {
-  const merge = /merge/i.test(focus.tokens[0]?.label ?? '');
+  const mash = focus.type === 'mash' ? focus : null;
+  const merge = !!mash;
+  const progress = mash?.progress ?? 0;
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden font-code text-sm">
@@ -404,38 +454,24 @@ function GitView({
         </div>
         <pre className="m-0 flex-1 overflow-y-auto p-3 leading-6">
           {linesFor(file).map((line, i) => {
-            // "alterada" (diff), não "corrigida" — pode ser a linha errada.
             const changed = targetLine > 0 && i === targetLine - 1;
-            // No merge o CR já foi aprovado → "corrigido" (verde). No push é só
-            // "alterada" (pode ser a linha errada; o CR ainda vai avaliar).
-            const approved = changed && merge;
+            // No merge, a linha alterada está em CONFLITO → bloco com marcadores.
+            if (changed && merge) {
+              return <ConflictBlock key={i} line={line} ext={ext(file)} progress={progress} />;
+            }
             return (
               <div
                 key={i}
-                className={`relative flex items-center gap-3 ${
-                  changed ? (approved ? 'bg-pass/10' : 'bg-amber/[0.08]') : ''
-                }`}
+                className={`relative flex items-center gap-3 ${changed ? 'bg-amber/[0.08]' : ''}`}
               >
-                {changed && (
-                  <span
-                    className={`absolute inset-y-0 left-0 w-0.5 ${approved ? 'bg-pass/70' : 'bg-amber/70'}`}
-                  />
-                )}
-                <span
-                  className={`w-6 select-none text-right ${approved ? 'text-pass' : 'text-ink-dim'}`}
-                >
-                  {changed ? (approved ? '✓' : '~') : i + 1}
+                {changed && <span className="absolute inset-y-0 left-0 w-0.5 bg-amber/70" />}
+                <span className="w-6 select-none text-right text-ink-dim">
+                  {changed ? '~' : i + 1}
                 </span>
                 <span>
                   <Code line={line} ext={ext(file)} />
                 </span>
-                {changed && (
-                  <span
-                    className={`ml-auto pr-2 text-[10px] ${approved ? 'text-pass' : 'text-ink-dim'}`}
-                  >
-                    {approved ? 'corrigido' : 'alterada'}
-                  </span>
-                )}
+                {changed && <span className="ml-auto pr-2 text-[10px] text-ink-dim">alterada</span>}
               </div>
             );
           })}
@@ -449,9 +485,15 @@ function GitView({
         <p className="text-emerald-400">
           $ {merge ? 'git merge --no-ff feature' : 'git push origin HEAD'}
         </p>
-        <p className="text-zinc-400">
-          {merge ? 'Merge made by recursive.' : 'Enumerating objects: 12, done.'}
-        </p>
+        {merge ? (
+          <p className={progress >= 1 ? 'text-emerald-400' : 'text-amber-400'}>
+            {progress >= 1
+              ? 'Conflito resolvido. Merge made by recursive.'
+              : `CONFLICT (content): Merge conflict in ${file}`}
+          </p>
+        ) : (
+          <p className="text-zinc-400">Enumerating objects: 12, done.</p>
+        )}
       </div>
     </div>
   );
@@ -595,7 +637,10 @@ export function EditorScene({ active }: { active: ActiveTicketSnapshot }) {
     else main = <FolderPreview name={row?.name ?? ''} open={row?.open ?? false} />;
   } else if (focus?.type === 'selection') main = <CssSelect seg={focus} file={active.editorFile} />;
   else if (focus?.type === 'wait') main = <PrPanel active={active} />;
-  else if (focus?.type === 'press' && /push|merge/i.test(focus.tokens[0]?.label ?? ''))
+  else if (
+    focus?.type === 'mash' ||
+    (focus?.type === 'press' && /push/i.test(focus.tokens[0]?.label ?? ''))
+  )
     main = <GitView focus={focus} file={active.editorFile} targetLine={active.editorFixedLine} />;
   else
     main = (

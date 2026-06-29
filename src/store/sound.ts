@@ -15,6 +15,10 @@ let muted = false;
 let combo = 0;
 let lastKeyAt = -1;
 
+// Mash (resolver conflito ⬅️➡️): cada batida sobe de tom — "catraca" que escala.
+let mashCombo = 0;
+let lastMashAt = -1;
+
 // Cochicho do `hold` (segurar — falar na reunião, rodar testes): murmúrio.
 let holdTimer: ReturnType<typeof setTimeout> | null = null;
 let holding = false;
@@ -103,6 +107,20 @@ function keyBlip(): void {
   const freq = 360 * Math.pow(2, combo / 30);
   tone(freq, 0.05, { type: 'triangle', gain: 0.1, cutoff: 1700 });
   noiseBurst(0.012, 1500, 0.04);
+}
+
+/** Batida do mash: catraca curta cujo tom sobe com o ritmo (reseta se esfriar). */
+function mashTick(): void {
+  const c = audio();
+  if (!c) return;
+  const now = c.currentTime;
+  if (lastMashAt < 0 || now - lastMashAt > 0.5) mashCombo = 0;
+  else mashCombo = Math.min(mashCombo + 1, 24);
+  lastMashAt = now;
+  // Sobe ~1.5 oitava ao longo do mash; corpo curto + "click" de catraca.
+  const freq = 240 * Math.pow(2, mashCombo / 18);
+  tone(freq, 0.045, { type: 'triangle', gain: 0.11, cutoff: 2000 });
+  noiseBurst(0.01, 2600, 0.05);
 }
 
 /** Estouro curto de ruído filtrado — um "chic" percussivo (chocalho/hi-hat). */
@@ -232,6 +250,9 @@ export function playSound(event: SoundEvent): void {
       break;
     case 'win':
       arpeggio([523, 659, 784, 1046, 1318], 0.13, 0.5, 'triangle', 0.17);
+      break;
+    case 'mash':
+      mashTick();
       break;
     case 'holdStart':
       startHold();

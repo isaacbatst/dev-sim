@@ -220,6 +220,17 @@ export class Game {
         }
         break;
       }
+      case 'mash': {
+        if (segmentCompleted(seg)) break;
+        // Só a próxima tecla do ciclo avança (ritmo ⬅️➡️). Outras teclas do mash
+        // fora de ordem são ignoradas (sem penalidade) — forgiving, mas rítmico.
+        if (key === seg.keys[seg.expect]) {
+          seg.count += 1;
+          seg.expect = (seg.expect + 1) % seg.keys.length;
+          incidental = 'mash';
+        }
+        break;
+      }
       case 'file': {
         if (seg.committed) break;
         if (seg.searching) {
@@ -578,9 +589,12 @@ export class Game {
     if (!inst) return null;
     const seg = this.currentSegment(inst);
     const waiting = seg?.type === 'wait' && !segmentCompleted(seg);
-    // Review voltou e o passo atual é o merge → pronto pro merge.
+    // Review voltou e o passo atual é o merge → pronto pro merge. O merge agora é
+    // um `mash` (resolver conflito); aceita também o press legado por segurança.
     const readyToMerge =
-      !inst.ready && seg?.type === 'press' && seg.actions.some((a) => /merge/i.test(a.label));
+      !inst.ready &&
+      ((seg?.type === 'mash' && /merge|conflito/i.test(seg.label)) ||
+        (seg?.type === 'press' && seg.actions.some((a) => /merge/i.test(a.label))));
     return {
       index,
       id: inst.id,
@@ -803,6 +817,16 @@ export class Game {
           type: 'wait',
           remaining: Math.max(0, seg.total - seg.elapsed),
           progress: Math.min(1, seg.elapsed / seg.total),
+        };
+      case 'mash':
+        return {
+          type: 'mash',
+          keys: seg.keys,
+          label: seg.label,
+          expectKey: seg.keys[seg.expect],
+          count: seg.count,
+          target: seg.target,
+          progress: Math.min(1, seg.count / seg.target),
         };
       case 'file': {
         const expanded = new Set(seg.expanded);

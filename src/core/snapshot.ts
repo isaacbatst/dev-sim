@@ -26,7 +26,8 @@ export type SoundEvent =
   | 'win' // 17:00 — fim do expediente
   | 'tab' // troca de foco / seleção de slot
   | 'holdStart' // começou a segurar (hold)
-  | 'holdEnd'; // soltou / hold concluído
+  | 'holdEnd' // soltou / hold concluído
+  | 'mash'; // batida rítmica (mash) — tom sobe com o ritmo
 
 /** Qual "app" do desktop a tarefa atual representa (UI diegética). */
 export type AppId = 'editor' | 'browser' | 'slack' | 'mail' | 'meet';
@@ -70,6 +71,17 @@ export type SegmentView =
       wrong: boolean;
     }
   | { type: 'wait'; remaining: number; progress: number }
+  | {
+      type: 'mash';
+      /** Teclas do ciclo (ex.: ['arrowleft','arrowright']). */
+      keys: string[];
+      label: string;
+      /** Próxima tecla esperada no ciclo (destaque do ritmo). */
+      expectKey: string;
+      count: number;
+      target: number;
+      progress: number;
+    }
   | {
       type: 'file';
       /** Todos os caminhos (para o Ctrl+P buscar em pastas aninhadas). */

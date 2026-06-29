@@ -74,6 +74,18 @@ export interface WaitInstance {
   elapsed: number;
 }
 
+export interface MashInstance {
+  type: 'mash';
+  keys: string[];
+  label: string;
+  /** Batidas exigidas. */
+  target: number;
+  /** Batidas feitas. */
+  count: number;
+  /** Índice (em `keys`) da próxima tecla esperada no ciclo. */
+  expect: number;
+}
+
 export interface FileInstance {
   type: 'file';
   files: string[];
@@ -147,7 +159,13 @@ export function fileRows(files: string[], expanded: Set<string>): FileRow[] {
 }
 
 export type SegmentInstance =
-  PressInstance | HoldInstance | NavInstance | SelectionInstance | WaitInstance | FileInstance;
+  | PressInstance
+  | HoldInstance
+  | NavInstance
+  | SelectionInstance
+  | WaitInstance
+  | FileInstance
+  | MashInstance;
 
 export interface StepInstance {
   segments: SegmentInstance[];
@@ -219,6 +237,15 @@ function instantiateSegment(segment: Segment): SegmentInstance {
         segment.minDuration + Math.random() * (segment.maxDuration - segment.minDuration);
       return { type: 'wait', total, elapsed: 0 };
     }
+    case 'mash':
+      return {
+        type: 'mash',
+        keys: segment.keys,
+        label: segment.label,
+        target: randInt(segment.minCount, segment.maxCount),
+        count: 0,
+        expect: 0,
+      };
     case 'file': {
       const allowed = segment.ext
         ? PROJECT_FILES.map((f, i) => (f.endsWith(`.${segment.ext}`) ? i : -1)).filter(
@@ -280,6 +307,8 @@ export function segmentCompleted(seg: SegmentInstance): boolean {
       return seg.elapsed >= seg.total;
     case 'file':
       return seg.committed;
+    case 'mash':
+      return seg.count >= seg.target;
   }
 }
 
@@ -329,6 +358,10 @@ export function resetSegment(seg: SegmentInstance): void {
       seg.wrong = false;
       seg.searching = false;
       seg.query = '';
+      break;
+    case 'mash':
+      seg.count = 0;
+      seg.expect = 0;
       break;
   }
 }

@@ -19,7 +19,7 @@ export type Priority = 'urgente' | 'alta' | 'normal' | 'baixa';
 /** Mapeia a prioridade inteira do Godot (0=urgente … 3=baixa) para o enum daqui. */
 export const PRIORITY_BY_INT: Priority[] = ['urgente', 'alta', 'normal', 'baixa'];
 
-export type SegmentType = 'press' | 'hold' | 'nav' | 'selection' | 'wait';
+export type SegmentType = 'press' | 'hold' | 'nav' | 'selection' | 'wait' | 'file' | 'mash';
 
 /** Uma ação/tecla com rótulo legível (ex.: { key: 'w', label: 'Abrir navegador' }). */
 export interface Action {
@@ -74,8 +74,29 @@ export interface FileSegment {
   ext?: string;
 }
 
+/**
+ * `mash`: alternância/repetição rítmica de teclas com contador (o "esfregar o
+ * prato"). `keys` é o ciclo a percorrer: 1 tecla = repetir; 2+ = alternar em
+ * ordem (ex.: ⬅️➡️ para resolver um conflito de merge). NÃO é tempo morto — cada
+ * batida é uma ação, com feedback que escala. Ver DIRECAO_GAMEPLAY.md §6.
+ */
+export interface MashSegment {
+  type: 'mash';
+  keys: string[];
+  label: string;
+  /** Quantas batidas exigir (sorteia entre min/max). */
+  minCount: number;
+  maxCount: number;
+}
+
 export type Segment =
-  PressSegment | HoldSegment | NavSegment | SelectionSegment | WaitSegment | FileSegment;
+  | PressSegment
+  | HoldSegment
+  | NavSegment
+  | SelectionSegment
+  | WaitSegment
+  | FileSegment
+  | MashSegment;
 
 /** Passo: contém segmentos do mesmo tipo (GDD 3.1). No conteúdo atual, 1 por passo. */
 export interface StepTemplate {

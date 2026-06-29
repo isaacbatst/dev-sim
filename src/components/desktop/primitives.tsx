@@ -39,3 +39,11 @@ export const ARROW_GLYPH: Record<string, string> = {
   left: '←',
   right: '→',
 };
+
+/** Glyph para uma tecla bruta (ex.: 'arrowleft' → '←'); fallback = a própria tecla. */
+export const KEY_GLYPH: Record<string, string> = {
+  arrowup: '↑',
+  arrowdown: '↓',
+  arrowleft: '←',
+  arrowright: '→',
+};
