@@ -2,7 +2,7 @@
 
 Port dos arquivos `.tres` do Godot para objetos TS. **Migração concluída** (Fase 2):
 
-- `segments.ts` — **24 segments** (press, hold, nav, selection, wait). Teclas vindas
+- `segments.ts` — **26 segments** (press, hold, nav, selection, wait, file). Teclas vindas
   do input map do `project.godot`.
 - `tasks.ts` — **9 tasks** compostas de segments.
 - `tickets.ts` — **13 tickets** (9 single-task wrap + 4 multi-task) + `TICKET_POOL`.
