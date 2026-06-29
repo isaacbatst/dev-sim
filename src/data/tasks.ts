@@ -63,35 +63,36 @@ export const TASKS: Record<string, TaskTemplate> = {
       step('press_merge'),
     ],
   },
-  ui_color: {
-    id: 'ui_color',
-    title: 'Atualizar Cor da UI',
-    description: 'Abrir o VSCode, abrir CSS, selecionar elemento/propriedade/cor, push, CR e merge',
-    steps: [
-      step('press_open_vscode'),
-      step('open_css_file'),
-      step('selection_element'),
-      step('selection_property'),
-      step('selection_color'),
-      step('press_push'),
-      step('wait_cr'),
-      step('press_merge'),
-    ],
-  },
-  ui_font: {
-    id: 'ui_font',
-    title: 'Atualizar Fonte da UI',
-    description:
-      'Abrir o VSCode, abrir CSS, selecionar elemento, ajustar fonte e estilo, push, CR e merge',
-    steps: [
-      step('press_open_vscode'),
-      step('open_css_file'),
-      step('selection_element'),
-      step('selection_font_size'),
-      step('selection_font_style'),
-      step('press_push'),
-      step('wait_cr'),
-      step('press_merge'),
+  // Uma só task: a cada vez sorteia uma mudança de COR ou de FONTE (o detalhe
+  // do ticket descreve qual). Ver `variants` (sorteado ao instanciar).
+  ui_update: {
+    id: 'ui_update',
+    title: 'Atualizar UI',
+    description: 'Abrir o VSCode, ajustar o CSS da UI, push, CR e merge',
+    steps: [],
+    variants: [
+      // variante COR
+      [
+        step('press_open_vscode'),
+        step('open_css_file'),
+        step('selection_element'),
+        step('selection_property'),
+        step('selection_color'),
+        step('press_push'),
+        step('wait_cr'),
+        step('press_merge'),
+      ],
+      // variante FONTE
+      [
+        step('press_open_vscode'),
+        step('open_css_file'),
+        step('selection_element'),
+        step('selection_font_size'),
+        step('selection_font_style'),
+        step('press_push'),
+        step('wait_cr'),
+        step('press_merge'),
+      ],
     ],
   },
 };

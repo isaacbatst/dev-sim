@@ -126,8 +126,7 @@ function Cue({ seg }: { seg: SegmentView }) {
     case 'file':
       return seg.searching ? (
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-          <span className="text-sm text-ink-dim">buscar:</span>
-          <span className="font-mono text-sm text-amber">{seg.query || '…'}</span>
+          {/* A query aparece no overlay do Quick Open; aqui só as ações. */}
           <span className="flex items-center gap-1.5">
             <KeyCap state="current">Enter</KeyCap>
             <span className="text-sm text-ink-dim">abrir</span>

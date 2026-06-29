@@ -200,10 +200,19 @@ function QuickOpen({ seg }: { seg: FileView }) {
       <div className="elev-3 w-full max-w-md overflow-hidden rounded-lg border border-edge bg-surface-2">
         <div className="flex items-center gap-2 border-b border-line px-3 py-2.5 font-code text-sm">
           <span className="text-ink-dim">›</span>
-          {/* Query + caret juntos (sem gap) pro cursor "colar" no texto. */}
+          {/* Caret = barrinha fina de 1px. Vazio → caret no início + placeholder. */}
           <span className="min-w-0 flex-1 truncate text-ink">
-            {seg.query || <span className="text-ink-dim">buscar arquivo…</span>}
-            <span className="animate-edgepulse ml-px text-amber">▏</span>
+            {seg.query ? (
+              <>
+                {seg.query}
+                <span className="animate-edgepulse ml-px inline-block h-[1.05em] w-px translate-y-[0.15em] bg-amber" />
+              </>
+            ) : (
+              <>
+                <span className="animate-edgepulse mr-px inline-block h-[1.05em] w-px translate-y-[0.15em] bg-amber" />
+                <span className="text-ink-dim">buscar arquivo…</span>
+              </>
+            )}
           </span>
           <span className="shrink-0 text-[10px] uppercase tracking-wider text-ink-dim">
             Quick Open

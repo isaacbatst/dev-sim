@@ -250,7 +250,11 @@ export function instantiateTicket(template: TicketTemplate): TicketInstance {
   return {
     id: nextTicketId++,
     template,
-    tasks: template.tasks.map((t) => ({ template: t, steps: t.steps.map(instantiateStep) })),
+    tasks: template.tasks.map((t) => {
+      // Se a task tem variantes (ex.: UI = cor|fonte), sorteia uma.
+      const chosen = t.variants ? t.variants[randInt(0, t.variants.length - 1)] : t.steps;
+      return { template: t, steps: chosen.map(instantiateStep) };
+    }),
     taskIndex: 0,
     stepIndex: 0,
     errors: 0,

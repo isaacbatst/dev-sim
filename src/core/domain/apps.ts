@@ -12,8 +12,7 @@ const APP_BY_TASK: Record<string, AppId> = {
   email: 'browser',
   document: 'editor',
   fix_typo: 'editor',
-  ui_color: 'editor',
-  ui_font: 'editor',
+  ui_update: 'editor',
 };
 
 const APP_NAME: Record<AppId, string> = {

@@ -697,10 +697,14 @@ export class Game {
         return `Documente a função no VSCode; faça push, aguarde o CR e o merge.`;
       case 'fix_typo':
         return `No VSCode, corrija o typo na linha ${(nav[0] ?? 0) + 1} de ${this.fileTarget(t) ?? 'login.ts'}; faça push, aguarde o CR e o merge.`;
-      case 'ui_color':
-        return `Em ${this.fileTarget(t) ?? 'styles.css'}, mude a ${sel[1]} do ${sel[0]} para ${sel[2]}; faça push, aguarde o CR e o merge.`;
-      case 'ui_font':
-        return `Em ${this.fileTarget(t) ?? 'styles.css'}, deixe a fonte do ${sel[0]} em ${sel[1]} e o estilo ${sel[2]}; faça push, aguarde o CR e o merge.`;
+      case 'ui_update': {
+        // A variante (cor|fonte) é detectada pelas seleções da instância.
+        const file = this.fileTarget(t) ?? 'styles.css';
+        const isColor = sel.some((l) => /vermelho|verde|azul/i.test(l));
+        return isColor
+          ? `Em ${file}, mude a ${sel[1]} do ${sel[0]} para ${sel[2]}; faça push, aguarde o CR e o merge.`
+          : `Em ${file}, deixe a fonte do ${sel[0]} em ${sel[1]} e o estilo ${sel[2]}; faça push, aguarde o CR e o merge.`;
+      }
       default:
         return t.template.description;
     }

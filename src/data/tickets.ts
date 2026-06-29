@@ -38,7 +38,7 @@ const MULTI: TicketTemplate[] = [
   multi(
     'new_ui_feature',
     'Nova Feature de UI',
-    [TASKS.study, TASKS.ui_color],
+    [TASKS.study, TASKS.ui_update],
     'normal',
     'Pesquisar e implementar mudança visual',
   ),

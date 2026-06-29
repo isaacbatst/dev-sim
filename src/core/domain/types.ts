@@ -85,7 +85,10 @@ export interface StepTemplate {
 export interface TaskTemplate {
   id: string;
   title: string;
+  /** Passos fixos. Se `variants` existir, ele é sorteado e tem prioridade. */
   steps: StepTemplate[];
+  /** Conjuntos alternativos de passos; a instância sorteia um (ex.: UI = cor|fonte). */
+  variants?: StepTemplate[][];
   description: string;
 }
 
