@@ -47,7 +47,7 @@ export function InboxPanel({
               {slot.active && (
                 <span
                   aria-hidden
-                  className="absolute inset-y-1.5 left-0 w-[3px] rounded-full bg-amber"
+                  className="absolute inset-y-1.5 left-0 w-[3px] rounded-full bg-ink"
                 />
               )}
               <span className="mt-0.5">
@@ -71,7 +71,7 @@ export function InboxPanel({
                 <kbd
                   className={`flex size-5 items-center justify-center rounded border font-mono text-[11px] font-semibold transition-colors ${
                     slot.active
-                      ? 'border-amber/60 bg-amber/15 text-amber'
+                      ? 'border-transparent bg-ink text-bg'
                       : 'border-line bg-surface-2 text-ink-dim group-hover:text-ink'
                   }`}
                 >

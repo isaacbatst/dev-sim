@@ -322,13 +322,19 @@ function CodeArea({
   focus,
   file,
   targetLine,
+  fixedLine,
 }: {
   focus?: SegmentView;
   file: string;
   targetLine: number;
+  fixedLine: number;
 }) {
   const nav = focus?.type === 'nav' ? focus : null;
   const cursorWrong = nav?.committed && nav.wrong;
+  // Passo "Corrigir" (F): a nav já foi commitada (push/merge são roteados p/ GitView,
+  // então aqui um press só pode ser o fix). A linha escolhida fica "confirmada".
+  const fixing = focus?.type === 'press';
+  const confirmedLine = fixing && fixedLine > 0 ? fixedLine - 1 : -1;
   // O typo já fica sublinhado (warn/erro) desde o início — é a própria pista de
   // onde navegar, em vez de só aparecer depois de marcar a linha.
   const bugLine = targetLine > 0 ? targetLine - 1 : -1;
@@ -341,15 +347,23 @@ function CodeArea({
       <pre className="m-0 flex-1 overflow-y-auto p-3 leading-6">
         {lines.map((line, i) => {
           const isCursor = nav && i === nav.cursor;
+          const isConfirmed = i === confirmedLine;
           const isBug = i === bugLine;
           return (
             <div
               key={i}
-              className={`flex items-center gap-3 ${
-                isCursor ? (cursorWrong ? 'bg-fail/20' : 'bg-amber/15') : ''
+              className={`relative flex items-center gap-3 ${
+                isCursor ? (cursorWrong ? 'bg-fail/20' : 'bg-amber/15') : isConfirmed ? 'bg-amber/10' : ''
               }`}
             >
-              <span className="w-6 select-none text-right text-ink-dim">{i + 1}</span>
+              {/* Linha confirmada (cursor "fixado" antes de corrigir): rail + caret
+                  no gutter — sinaliza "é essa linha que vou editar". */}
+              {isConfirmed && (
+                <span aria-hidden className="absolute inset-y-0 left-0 w-0.5 bg-amber" />
+              )}
+              <span className="w-6 select-none text-right text-ink-dim">
+                {isConfirmed ? <span className="text-amber">▸</span> : i + 1}
+              </span>
               {/* Linha do typo: sublinha só o código, pulando a indentação. */}
               {isBug ? (
                 <span>
@@ -583,7 +597,15 @@ export function EditorScene({ active }: { active: ActiveTicketSnapshot }) {
   else if (focus?.type === 'wait') main = <PrPanel active={active} />;
   else if (focus?.type === 'press' && /push|merge/i.test(focus.tokens[0]?.label ?? ''))
     main = <GitView focus={focus} file={active.editorFile} targetLine={active.editorFixedLine} />;
-  else main = <CodeArea focus={focus} file={active.editorFile} targetLine={active.editorLine} />;
+  else
+    main = (
+      <CodeArea
+        focus={focus}
+        file={active.editorFile}
+        targetLine={active.editorLine}
+        fixedLine={active.editorFixedLine}
+      />
+    );
 
   return (
     <div className="flex h-[24rem] w-full overflow-hidden">
