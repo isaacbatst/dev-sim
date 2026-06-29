@@ -59,7 +59,9 @@ export function Desktop({
             // Estado vazio diegético: "tela de login" do devOS — sem caixa, faz
             // parte da área de trabalho (não um card de página web).
             <div className="flex max-w-md flex-col items-center gap-5 px-6 text-center">
-              <p className="font-grotesk text-4xl font-bold text-ink">
+              {/* Hero diegético (OS te recebendo) → mono, como o "17:00 — fim do
+                  expediente" e o relógio (DESIGN_SYSTEM: token hero = 700 mono). */}
+              <p className="font-code text-4xl font-bold tracking-tight text-ink">
                 {greeting}, dev <span aria-hidden>☕</span>
               </p>
               <p className="font-code text-sm">
