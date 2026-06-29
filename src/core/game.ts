@@ -68,10 +68,14 @@ export class Game {
   /** Fila de eventos sonoros desde o último `drainSounds()` (a UI sintetiza). */
   private sounds: SoundEvent[] = [];
 
-  constructor(pool: TicketTemplate[] = TICKET_POOL) {
+  constructor(pool: TicketTemplate[] = TICKET_POOL, forceId?: string) {
     this.pool = pool;
-    this.spawnTicket();
-    this.spawnTicket();
+    // Teste: força um ticket específico no 1º slot (id de single = id da task).
+    if (forceId) {
+      const t = pool.find((p) => p.id === forceId);
+      if (t) this.slots[0] = instantiateTicket(t);
+    }
+    while (this.slots.filter(Boolean).length < 2) this.spawnTicket();
   }
 
   tick(dtMs: number): void {

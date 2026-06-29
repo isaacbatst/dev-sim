@@ -80,7 +80,7 @@ function Cue({ seg }: { seg: SegmentView }) {
       return (
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <span className="flex items-center gap-1.5">
-            <KeyCap state="current">{ARROW_GLYPH[seg.direction] ?? seg.symbol}</KeyCap>
+            <KeyCap state="idle">{ARROW_GLYPH[seg.direction] ?? seg.symbol}</KeyCap>
             <KeyCap state="idle">
               {seg.direction === 'up' ? '↓' : seg.direction === 'down' ? '↑' : '↔'}
             </KeyCap>
@@ -139,8 +139,8 @@ function Cue({ seg }: { seg: SegmentView }) {
       ) : (
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <span className="flex items-center gap-1.5">
-            <KeyCap state="current">↑</KeyCap>
-            <KeyCap state="current">↓</KeyCap>
+            <KeyCap state="idle">↑</KeyCap>
+            <KeyCap state="idle">↓</KeyCap>
             <span className="text-sm text-ink-dim">navegar</span>
           </span>
           <span className="flex items-center gap-1.5">

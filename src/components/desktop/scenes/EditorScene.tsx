@@ -22,23 +22,38 @@ function extColor(file: string): string {
   return EXT_COLOR[ext(file)] ?? 'var(--ink-dim)';
 }
 
-/** Conteúdo por extensão, para o editor mostrar o código certo de cada arquivo. */
+/** Conteúdo POR ARQUIVO (cada um tem o seu). Sem linhas vazias nas primeiras 6
+ *  (o typo cai nas linhas 2–6, então evita "linha vazia"). */
 const CONTENT: Record<string, string[]> = {
-  html: [
+  'index.html': [
     '<!doctype html>',
     '<html lang="pt-br">',
     '  <head>',
     '    <meta charset="utf-8" />',
-    '    <title>App</title>',
+    '    <title>Dashboard</title>',
+    '    <link rel="stylesheet" href="styles.css" />',
     '  </head>',
     '  <body>',
-    '    <button id="cta">Entrar</button>',
-    '    <h1 class="title">Olá</h1>',
-    '    <input name="email" />',
+    '    <main id="app"></main>',
+    '    <script src="app.js"></script>',
     '  </body>',
     '</html>',
   ],
-  css: [
+  'about.html': [
+    '<!doctype html>',
+    '<html lang="pt-br">',
+    '  <head>',
+    '    <meta charset="utf-8" />',
+    '    <title>Sobre</title>',
+    '  </head>',
+    '  <body>',
+    '    <h1 class="title">Sobre nós</h1>',
+    '    <p>Ferramentas para devs.</p>',
+    '    <a href="index.html">Voltar</a>',
+    '  </body>',
+    '</html>',
+  ],
+  'styles.css': [
     ':root {',
     '  --primary: #3b82f6;',
     '}',
@@ -52,30 +67,88 @@ const CONTENT: Record<string, string[]> = {
     '}',
     '.input { border: 1px solid #ccc; }',
   ],
-  js: [
-    "import { api } from './api'",
-    'export function login(user) {',
-    '  const token = createSession(user)',
-    "  if (!token) throw new Error('auth')",
-    '  return persist(token)',
-    '  return api.ok(token)',
+  'theme.css': [
+    ':root {',
+    '  --bg: #0e1016;',
+    '  --text: #e7e4dd;',
     '}',
-    'function createSession(u) {',
-    '  return signJwt({ sub: u.id })',
+    'body {',
+    '  background: var(--bg);',
+    '  color: var(--text);',
+    '}',
+    '.card {',
+    '  border-radius: 8px;',
+    '  padding: 16px;',
     '}',
   ],
-  ts: [
+  'reset.css': [
+    '* {',
+    '  margin: 0;',
+    '  padding: 0;',
+    '  box-sizing: border-box;',
+    '}',
+    'ul, ol {',
+    '  list-style: none;',
+    '}',
+    'a {',
+    '  text-decoration: none;',
+    '}',
+  ],
+  'app.js': [
+    "import { api } from './api'",
+    'export function start() {',
+    '  const data = api.load()',
+    '  render(data)',
+    "  console.log('ok')",
+    '  return data',
+    '}',
+    'function render(d) {',
+    '  document.body.dataset.ready = d',
+    '}',
+  ],
+  'utils.js': [
+    'export function render(data) {',
+    "  const el = document.querySelector('#app')",
+    '  el.textContent = String(data)',
+    '  return el',
+    '}',
+    'export function clamp(n, lo, hi) {',
+    '  return Math.max(lo, Math.min(hi, n))',
+    '}',
+  ],
+  'api.js': [
+    "const BASE = '/api/v1'",
+    'export const api = {',
+    '  load() {',
+    "    return fetch(BASE + '/me')",
+    '  },',
+    '  save(p) {',
+    "    return fetch(BASE + '/save', { method: 'POST', body: p })",
+    '  },',
+    '}',
+  ],
+  'login.ts': [
+    "import { signJwt } from './auth'",
     'export function login(user: User) {',
     '  const token = createSession(user)',
     '  if (!token) throw new AuthError()',
     '  return persist(token)',
-    '  return token',
     '}',
     'function createSession(user: User) {',
     '  return signJwt({ sub: user.id })',
     '}',
   ],
-  md: [
+  'auth.ts': [
+    'export function signJwt(payload: Claims) {',
+    "  const header = encode({ alg: 'HS256' })",
+    '  const body = encode(payload)',
+    '  return sign(header, body, SECRET)',
+    '}',
+    'export function verify(token: string) {',
+    '  return decode(token).valid',
+    '}',
+  ],
+  'README.md': [
     '# Projeto',
     '## Setup',
     '1. npm install',
@@ -85,8 +158,9 @@ const CONTENT: Record<string, string[]> = {
     'Veja o guia de contribuição.',
   ],
 };
+const FALLBACK = CONTENT['login.ts'];
 function linesFor(file: string): string[] {
-  return CONTENT[ext(file)] ?? CONTENT.ts;
+  return CONTENT[file] ?? FALLBACK;
 }
 
 /** Explorer em árvore (estilo VS Code): pastas expandem/colapsam; cursor navega. */
@@ -297,7 +371,7 @@ function CodeArea({
   );
 }
 
-/** Editor com terminal integrado (push/merge). A linha corrigida aparece em verde. */
+/** Editor com terminal integrado (push/merge). A linha alterada aparece como diff. */
 function GitView({
   focus,
   file,
@@ -316,14 +390,21 @@ function GitView({
         </div>
         <pre className="m-0 flex-1 overflow-y-auto p-3 leading-6">
           {linesFor(file).map((line, i) => {
-            const fixed = targetLine > 0 && i === targetLine - 1;
+            // "alterada" (diff), não "corrigida" — pode ser a linha errada.
+            const changed = targetLine > 0 && i === targetLine - 1;
             return (
-              <div key={i} className={`flex items-center gap-3 ${fixed ? 'bg-pass/10' : ''}`}>
-                <span className="w-6 select-none text-right text-ink-dim">{i + 1}</span>
+              <div
+                key={i}
+                className={`relative flex items-center gap-3 ${changed ? 'bg-amber/[0.08]' : ''}`}
+              >
+                {changed && <span className="absolute inset-y-0 left-0 w-0.5 bg-amber/70" />}
+                <span className="w-6 select-none text-right text-ink-dim">
+                  {changed ? '~' : i + 1}
+                </span>
                 <span>
                   <Code line={line} ext={ext(file)} />
                 </span>
-                {fixed && <span className="ml-auto pr-2 text-[10px] text-pass">✓ corrigido</span>}
+                {changed && <span className="ml-auto pr-2 text-[10px] text-ink-dim">alterada</span>}
               </div>
             );
           })}

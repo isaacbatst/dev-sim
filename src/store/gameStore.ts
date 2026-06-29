@@ -1,7 +1,20 @@
 import { create } from 'zustand';
 import { GameLoop } from '@/core/loop';
+import { Game } from '@/core/game';
 import type { ProgramId, Snapshot } from '@/core/snapshot';
 import { playSound } from './sound';
+
+/**
+ * Teste: força um ticket no 1º slot. Por env (`NEXT_PUBLIC_FORCE_TASK=fix_typo
+ * npm run dev`) ou query (`?force=fix_typo`, sem reiniciar). Ids: das tasks
+ * (fix_typo, ui_update, study, meeting, test_feature, slack, email, document) ou
+ * dos multis (fix_login_bug, new_ui_feature, refactor_module, deploy_hotfix).
+ */
+function forcedTask(): string | undefined {
+  const fromUrl =
+    typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('force') : null;
+  return fromUrl || process.env.NEXT_PUBLIC_FORCE_TASK || undefined;
+}
 
 /**
  * Bridge entre o `core` (loop em RAF) e a UI React. Substitui o EventBus do Godot.
@@ -28,7 +41,11 @@ let loop: GameLoop | null = null;
 export const useGameStore = create<GameState>((set) => {
   const spawn = () => {
     loop?.stop();
-    loop = new GameLoop((snapshot) => set({ snapshot }), playSound);
+    loop = new GameLoop(
+      (snapshot) => set({ snapshot }),
+      playSound,
+      new Game(undefined, forcedTask()),
+    );
     loop.start();
   };
 
