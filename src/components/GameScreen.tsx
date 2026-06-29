@@ -33,11 +33,17 @@ export function GameScreen() {
         return quickOpen();
       }
       // Atalhos do jogo (combo): Ctrl/Cmd+C e Ctrl/Cmd+V → "ctrl+c"/"ctrl+v".
-      if ((e.ctrlKey || e.metaKey) && (e.code === 'KeyC' || e.code === 'KeyV')) {
-        if (e.repeat) return;
-        e.preventDefault();
-        e.stopPropagation();
-        return keyDown(`ctrl+${e.code === 'KeyC' ? 'c' : 'v'}`);
+      // Casa por `code` E por `key` (robusto a layout/IME que reportem diferente).
+      if (e.ctrlKey || e.metaKey) {
+        const k = e.key.toLowerCase();
+        const isCopy = e.code === 'KeyC' || k === 'c';
+        const isPaste = e.code === 'KeyV' || k === 'v';
+        if (isCopy || isPaste) {
+          if (e.repeat) return;
+          e.preventDefault();
+          e.stopPropagation();
+          return keyDown(`ctrl+${isCopy ? 'c' : 'v'}`);
+        }
       }
       if (e.ctrlKey || e.metaKey) return; // não capturar outros atalhos do SO
       if (e.key.startsWith('Arrow') || e.key === 'Tab' || e.key === 'Backspace') e.preventDefault();
