@@ -102,7 +102,7 @@ function ExplorerSidebar({ pick, currentFile }: { pick: FileView | null; current
         fileIndex: r.fileIndex,
       }));
   return (
-    <div className="hidden w-52 shrink-0 flex-col overflow-auto border-r border-line bg-surface/60 py-2 font-mono text-xs sm:flex">
+    <div className="hidden w-52 shrink-0 flex-col overflow-auto border-r border-line bg-surface/60 py-2 font-code text-xs sm:flex">
       <p className="px-3 pb-1.5 uppercase tracking-wider text-ink-dim">explorer</p>
       {rows.map((row, ri) => {
         const onCursor = pick && ri === pick.cursor;
@@ -153,9 +153,9 @@ function ExplorerSidebar({ pick, currentFile }: { pick: FileView | null; current
 function FolderPreview({ name, open }: { name: string; open: boolean }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-1.5 text-ink-dim">
-      <span className="font-mono text-2xl text-ink-dim/70">{open ? '▾' : '▸'}</span>
+      <span className="font-code text-2xl text-ink-dim/70">{open ? '▾' : '▸'}</span>
       <p className="text-xs">
-        pasta <span className="font-mono text-ink">{name}/</span>
+        pasta <span className="font-code text-ink">{name}/</span>
       </p>
       <p className="text-[11px]">Enter {open ? 'colapsa' : 'expande'}</p>
     </div>
@@ -165,7 +165,7 @@ function FolderPreview({ name, open }: { name: string; open: boolean }) {
 /** Prévia (somente leitura) do arquivo sob o cursor, na área principal. */
 function Preview({ file }: { file: string }) {
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden font-mono text-sm">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden font-code text-sm">
       <div className="flex shrink-0 items-center gap-2 border-b border-line bg-surface px-3 py-1 text-xs text-ink-dim">
         <span className="size-2.5 rounded-[2px]" style={{ background: extColor(file) }} />
         {file}
@@ -194,7 +194,7 @@ function QuickOpen({ seg }: { seg: FileView }) {
   return (
     <div className="absolute inset-x-0 top-0 z-10 flex justify-center px-4 pt-3">
       <div className="w-full max-w-md overflow-hidden rounded-md border border-amber bg-surface-2 shadow-2xl shadow-black/60">
-        <div className="flex items-center gap-2 border-b border-line px-3 py-2 font-mono text-sm">
+        <div className="flex items-center gap-2 border-b border-line px-3 py-2 font-code text-sm">
           <span className="text-ink-dim">›</span>
           <span className="text-ink">{seg.query}</span>
           <span className="animate-edgepulse text-amber">▌</span>
@@ -210,7 +210,7 @@ function QuickOpen({ seg }: { seg: FileView }) {
             return (
               <div
                 key={f}
-                className={`flex items-center gap-2 px-3 py-1 font-mono text-sm ${
+                className={`flex items-center gap-2 px-3 py-1 font-code text-sm ${
                   activePath === f ? 'bg-amber/15 text-ink' : 'text-ink-dim'
                 }`}
               >
@@ -242,7 +242,7 @@ function CodeArea({
   const bugLine = targetLine > 0 ? targetLine - 1 : -1;
   const lines = linesFor(file);
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden font-mono text-sm">
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden font-code text-sm">
       <div className="flex shrink-0 border-b border-line bg-surface px-3 py-1 text-xs text-ink-dim">
         <span className="border-b-2 border-amber px-2 py-1 text-ink">{file}</span>
       </div>
@@ -292,7 +292,7 @@ function GitView({
   const merge = /merge/i.test(focus.tokens[0]?.label ?? '');
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden font-mono text-sm">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden font-code text-sm">
         <div className="flex shrink-0 border-b border-line bg-surface px-3 py-1 text-xs text-ink-dim">
           <span className="border-b-2 border-amber px-2 py-1 text-ink">{file}</span>
         </div>
@@ -311,7 +311,7 @@ function GitView({
       </div>
       {/* Terminal é SEMPRE escuro (qualquer tema) → cores fixas claras, não
           tokens (que no tema claro virariam texto escuro sobre fundo escuro). */}
-      <div className="shrink-0 border-t border-white/10 bg-[#0c0e14] p-2.5 font-mono text-xs">
+      <div className="shrink-0 border-t border-white/10 bg-[#0c0e14] p-2.5 font-code text-xs">
         <p className="text-[10px] uppercase tracking-wider text-zinc-500">terminal</p>
         <p className="mt-1 text-zinc-400">desenvolvedor@devOS:~/projeto$</p>
         <p className="text-emerald-400">
@@ -361,7 +361,7 @@ function CssSelect({
     style: 'estilo',
   }[kind];
   return (
-    <div className="flex flex-1 flex-col font-mono text-sm">
+    <div className="flex flex-1 flex-col font-code text-sm">
       <div className="flex border-b border-line bg-surface px-3 py-1 text-xs text-ink-dim">
         <span className="border-b-2 border-amber px-2 py-1 text-ink">{file}</span>
       </div>
@@ -431,7 +431,7 @@ function CssSelect({
 function PrPanel({ active }: { active: ActiveTicketSnapshot }) {
   const reReview = !!active.reviewComment;
   return (
-    <div className="flex-1 p-4 font-mono text-sm">
+    <div className="flex-1 p-4 font-code text-sm">
       <p className="text-ink">Pull Request #482</p>
       <p className="mt-1 text-ink-dim">
         {reReview

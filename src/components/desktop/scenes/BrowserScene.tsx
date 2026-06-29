@@ -99,7 +99,7 @@ function Page({
             </div>
             <div className="flex-1">
               <Bar rows={['90%', '100%', '70%']} />
-              <pre className="mt-2 rounded bg-zinc-100 p-2 font-mono text-[11px] text-zinc-600">
+              <pre className="mt-2 rounded bg-zinc-100 p-2 font-code text-[11px] text-zinc-600">
                 const token = jwt.verify(t, SECRET)
               </pre>
             </div>
@@ -336,7 +336,7 @@ export function BrowserScene({ active, slots }: { active: ActiveTicketSnapshot; 
       <div className="flex items-center gap-2 border-b border-zinc-200 bg-white px-3 py-2">
         <span className="text-zinc-400">←</span>
         <span className="text-zinc-400">→</span>
-        <span className="flex-1 truncate rounded-full bg-zinc-100 px-3 py-1 font-mono text-xs text-zinc-500">
+        <span className="flex-1 truncate rounded-full bg-zinc-100 px-3 py-1 font-code text-xs text-zinc-500">
           {site.url ? `🔒 ${site.url}` : 'Buscar ou digitar URL'}
         </span>
       </div>

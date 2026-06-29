@@ -7,8 +7,7 @@
 /* Compartilhado entre identidades (profundidade não muda por tema). */
 :root {
   --elev-1:
-    0 1px 2px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04); /* casca: fill + realce no topo    */
+    0 1px 2px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.04); /* casca: fill + realce no topo    */
   --elev-2:
     0 24px 60px -18px rgba(0, 0, 0, 0.7), 0 4px 12px rgba(0, 0, 0, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.06); /* janela em foco (flutua)        */
@@ -102,6 +101,12 @@ body {
 }
 .elev-3 {
   box-shadow: var(--elev-3);
+}
+
+/* Apps diegéticos (VS Code, Chrome) usam SEMPRE o mesmo code font (JetBrains),
+   independente do tema — são "apps de verdade", não a casca da marca. */
+.font-code {
+  font-family: var(--font-jetbrains), ui-monospace, monospace;
 }
 
 /* ── Grão: textura orgânica sobre o wallpaper (anti "AI-flat") ─ */

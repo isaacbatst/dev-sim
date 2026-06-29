@@ -94,27 +94,24 @@ export function InboxPanel({
         )}
       </div>
 
-      {/* Lembrete de 2º plano: só quando NÃO se está na aba Ticket */}
+      {/* Lembrete de 2º plano: só quando NÃO se está na aba Ticket. Rodapé
+          recuado (fill, não stroke); o ícone "em andamento" já diz o que é. */}
       {active && sub && active.focused !== 'details' && (
-        <div className="mt-auto border-t-2 border-amber/40 bg-amber/[0.07] p-3.5">
-          <div className="mb-2 flex items-center gap-2">
-            <span className="size-1.5 animate-pulse rounded-full bg-amber shadow-[0_0_6px_1px] shadow-amber/60" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-amber">
-              em foco agora
+        <div className="mt-auto border-t border-line bg-bg/30 p-3">
+          <div className="flex items-start gap-2">
+            <span className="mt-0.5">
+              <StatusIcon status="active" />
             </span>
-            {active.taskCount > 1 && (
-              <span className="ml-auto rounded bg-amber/15 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-amber">
-                {active.taskIndex + 1}/{active.taskCount}
-              </span>
-            )}
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[13px] font-semibold text-ink">{active.name}</p>
+              {active.taskCount > 1 && (
+                <p className="text-[11px] text-ink-dim">
+                  {sub.title} · {active.taskIndex + 1}/{active.taskCount}
+                </p>
+              )}
+              <p className="mt-1.5 text-[13px] leading-relaxed text-ink/80">{sub.prose}</p>
+            </div>
           </div>
-          <p className="text-sm font-semibold leading-snug text-ink">{active.name}</p>
-          {active.taskCount > 1 && (
-            <p className="mt-0.5 text-[11px] font-medium text-ink-dim">{sub.title}</p>
-          )}
-          <p className="mt-2 rounded-md bg-bg/60 p-2.5 text-[13px] leading-relaxed text-ink/90">
-            {sub.prose}
-          </p>
         </div>
       )}
     </aside>
