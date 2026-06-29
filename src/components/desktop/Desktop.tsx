@@ -21,8 +21,6 @@ export function Desktop({
   onRestart: () => void;
 }) {
   const { status, clock, delivered, slots, active } = snapshot;
-  const hour = Number(clock.split(':')[0]);
-  const greeting = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
   const openCount = slots.filter(Boolean).length;
 
   return (
@@ -56,21 +54,15 @@ export function Desktop({
               )}
             </div>
           ) : (
-            // Estado vazio diegético: "tela de login" do devOS — sem caixa, faz
-            // parte da área de trabalho (não um card de página web).
+            // Estado vazio diegético: prompt do devOS — sem caixa, faz parte da
+            // área de trabalho (não um card de página web).
             <div className="flex max-w-md flex-col items-center gap-5 px-6 text-center">
-              {/* Hero diegético (OS te recebendo) → mono, como o "17:00 — fim do
-                  expediente" e o relógio (DESIGN_SYSTEM: token hero = 700 mono). */}
-              <p className="font-code text-4xl font-bold tracking-tight text-ink">
-                {greeting}, dev <span aria-hidden>☕</span>
-              </p>
-              <p className="font-code text-sm">
+              <p className="font-code text-base">
                 <span className="text-pass">desenvolvedor@devOS</span>
                 <span className="text-ink-dim">:</span>
                 <span className="text-sky-400">~</span>
-                <span className="text-ink-dim">$ </span>
-                <span className="text-ink">aguardando demanda</span>
-                <span className="animate-edgepulse ml-0.5 inline-block h-[1.05em] w-[0.55em] translate-y-[0.15em] bg-ink/80" />
+                <span className="text-ink-dim">$</span>
+                <span className="animate-edgepulse ml-1 inline-block h-[1.05em] w-[0.55em] translate-y-[0.15em] bg-ink/80" />
               </p>
               <p className="text-sm text-ink-dim">
                 {openCount} no backlog à esquerda — abra com <KeyHintInline /> e entregue até as
