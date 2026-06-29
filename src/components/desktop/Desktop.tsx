@@ -21,6 +21,9 @@ export function Desktop({
   onRestart: () => void;
 }) {
   const { status, clock, delivered, slots, active } = snapshot;
+  const hour = Number(clock.split(':')[0]);
+  const greeting = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
+  const openCount = slots.filter(Boolean).length;
 
   return (
     <div className="relative flex h-full flex-col overflow-hidden">
@@ -53,11 +56,23 @@ export function Desktop({
               )}
             </div>
           ) : (
-            <div className="elev-2 max-w-sm rounded-lg border border-edge bg-surface p-6 text-center">
-              <p className="font-grotesk text-lg font-semibold text-ink">09:00 — bom dia ☕</p>
-              <p className="mt-2 text-sm text-ink-dim">
-                As demandas do dia estão no backlog à esquerda. Abra uma com as teclas{' '}
-                <KeyHintInline /> e entregue o máximo até as 17:00.
+            // Estado vazio diegético: "tela de login" do devOS — sem caixa, faz
+            // parte da área de trabalho (não um card de página web).
+            <div className="flex max-w-md flex-col items-center gap-5 px-6 text-center">
+              <p className="font-grotesk text-4xl font-bold text-ink">
+                {greeting}, dev <span aria-hidden>☕</span>
+              </p>
+              <p className="font-code text-sm">
+                <span className="text-pass">desenvolvedor@devOS</span>
+                <span className="text-ink-dim">:</span>
+                <span className="text-sky-400">~</span>
+                <span className="text-ink-dim">$ </span>
+                <span className="text-ink">aguardando demanda</span>
+                <span className="animate-edgepulse ml-0.5 inline-block h-[1.05em] w-[0.55em] translate-y-[0.15em] bg-ink/80" />
+              </p>
+              <p className="text-sm text-ink-dim">
+                {openCount} no backlog à esquerda — abra com <KeyHintInline /> e entregue até as
+                17:00.
               </p>
             </div>
           )}
