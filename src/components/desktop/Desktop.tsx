@@ -63,7 +63,10 @@ export function Desktop({
           )}
         </section>
 
-        <Dock activeApp={active?.app ?? null} />
+        <Dock
+          open={active?.openPrograms ?? []}
+          focused={active && active.focused !== 'details' ? active.focused : null}
+        />
       </main>
 
       {status !== 'playing' && (

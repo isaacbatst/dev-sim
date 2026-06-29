@@ -17,11 +17,13 @@ const PRIORITY_LABEL: Record<Priority, string> = {
   baixa: 'BAIXA',
 };
 
+// Pill com FILL sutil (sem borda colorida). Cor só onde importa (urgente/alta);
+// normal/baixa neutros — não competem com o âmbar.
 const PRIORITY_CLASS: Record<Priority, string> = {
-  urgente: 'text-fail border-fail',
-  alta: 'text-amber border-amber',
-  normal: 'text-teal border-teal',
-  baixa: 'text-ink-dim border-line',
+  urgente: 'bg-fail/15 text-fail',
+  alta: 'bg-amber/15 text-amber',
+  normal: 'bg-ink/10 text-ink-dim',
+  baixa: 'bg-ink/10 text-ink-dim',
 };
 
 function statusMark(s: PlanStatus) {
@@ -37,14 +39,7 @@ function DetailsPanel({ active }: { active: ActiveTicketSnapshot }) {
   return (
     <div className="flex min-h-[22rem] flex-1 flex-col gap-4 overflow-auto p-6">
       <div>
-        <div className="mb-1 flex items-center gap-2">
-          <span
-            className={`rounded border px-1.5 py-0.5 text-[10px] font-semibold ${PRIORITY_CLASS[active.priority]}`}
-          >
-            {PRIORITY_LABEL[active.priority]}
-          </span>
-          <h2 className="font-grotesk text-lg font-semibold text-ink">{active.name}</h2>
-        </div>
+        <h2 className="font-grotesk text-lg font-semibold text-ink">{active.name}</h2>
       </div>
 
       <div>
@@ -180,7 +175,7 @@ export function AppWindow({
         </span>
         <span className="truncate font-mono text-xs text-ink-dim">{title}</span>
         <span
-          className={`ml-auto rounded border px-1.5 py-0.5 text-[10px] font-semibold ${PRIORITY_CLASS[active.priority]}`}
+          className={`ml-auto rounded px-1.5 py-0.5 text-[10px] font-semibold ${PRIORITY_CLASS[active.priority]}`}
         >
           {PRIORITY_LABEL[active.priority]}
         </span>

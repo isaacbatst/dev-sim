@@ -40,10 +40,16 @@ export function InboxPanel({
               key={i}
               onClick={() => onSelect(i)}
               aria-label={`Selecionar ${slot.name}`}
-              className={`group flex items-start gap-2 rounded-md px-2 py-1.5 text-left transition-colors ${
-                slot.active ? 'bg-amber/[0.07]' : 'hover:bg-white/[0.03]'
+              className={`group relative flex items-start gap-2 rounded-md py-1.5 pl-3 pr-2 text-left transition-colors ${
+                slot.active ? '' : 'hover:bg-white/[0.03]'
               }`}
             >
+              {slot.active && (
+                <span
+                  aria-hidden
+                  className="absolute inset-y-1.5 left-0 w-[3px] rounded-full bg-amber"
+                />
+              )}
               <span className="mt-0.5">
                 <StatusIcon status={statusOf(slot)} />
               </span>
