@@ -329,6 +329,10 @@ function linesFor(file: string): string[] {
   return CONTENT[file] ?? FALLBACK;
 }
 
+/** Trecho "da resposta do Stack Overflow" — copiado no browser, colado no editor.
+ *  Compartilhado entre a BrowserScene (cópia) e a ComboFix (colagem). */
+export const FIX_SNIPPET = 'const token = jwt.verify(t, SECRET)';
+
 // ── Conflito de merge dinâmico ──────────────────────────────────────────────
 // Geração determinística por ticket (semeada pelo id) — quantidade num range,
 // locais aleatórios e distintos, e o lado "feature" DIFERENTE do "HEAD". É
@@ -788,37 +792,26 @@ function ComboFix({
   file: string;
   fixedLine: number;
 }) {
-  const copied = seg.tokens[0]?.done ?? false;
-  const pasted = seg.tokens[1]?.done ?? false;
+  // No editor é só COLAR (a cópia foi no browser). O último passo é o Ctrl+V.
+  const pasted = seg.tokens[seg.tokens.length - 1]?.done ?? false;
   const lines = linesFor(file);
   const target = fixedLine > 0 ? fixedLine - 1 : -1;
-  const SNIPPET = 'return value ?? fallback';
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden font-code text-sm">
-      {/* Resposta do Stack Overflow: o trecho a copiar e colar. */}
-      <div className="shrink-0 border-b border-line bg-surface/60 px-3 py-2">
-        <div className="flex items-center gap-2 text-[11px] text-ink-dim">
-          <span className="rounded bg-[#f48024] px-1.5 py-0.5 text-[10px] font-bold text-black">
-            stack overflow
-          </span>
-          <span>correção sugerida</span>
-          <span className="ml-auto text-[10px]">
-            {pasted ? (
-              <span className="text-pass">colado ✓</span>
-            ) : copied ? (
-              <span className="text-teal">copiado ✓ — Ctrl+V para colar</span>
-            ) : (
-              <span className="text-ink-dim">Ctrl+C para copiar</span>
-            )}
-          </span>
-        </div>
-        <pre
-          className={`mt-1.5 rounded border px-2 py-1 leading-6 ${
-            copied ? 'border-teal/50 bg-teal/5' : 'border-line bg-bg/40'
-          }`}
-        >
-          <Code line={SNIPPET} ext={ext(file)} />
+      {/* Área de transferência: o que você copiou do Stack Overflow. */}
+      <div className="flex shrink-0 items-center gap-2 border-b border-line bg-surface/60 px-3 py-2 text-[11px] text-ink-dim">
+        <span aria-hidden>📋</span>
+        <span>área de transferência</span>
+        <pre className="ml-1 rounded border border-line bg-bg/40 px-2 py-0.5 leading-5">
+          <Code line={FIX_SNIPPET} ext={ext(file)} />
         </pre>
+        <span className="ml-auto text-[10px]">
+          {pasted ? (
+            <span className="text-pass">colado ✓</span>
+          ) : (
+            <span className="text-amber">Ctrl+V na linha {fixedLine}</span>
+          )}
+        </span>
       </div>
       <div className="flex shrink-0 border-b border-line bg-surface px-3 py-1 text-xs text-ink-dim">
         <span className="border-b-2 border-amber px-2 py-1 text-ink">{file}</span>
@@ -844,7 +837,7 @@ function ComboFix({
                 {isTarget ? <span className={pasted ? 'text-pass' : 'text-amber'}>▸</span> : i + 1}
               </span>
               <span>
-                <Code line={showPasted ? SNIPPET : line} ext={ext(file)} />
+                <Code line={showPasted ? FIX_SNIPPET : line} ext={ext(file)} />
               </span>
               {showPasted && <span className="ml-auto pr-2 text-[10px] text-pass">colado</span>}
             </div>

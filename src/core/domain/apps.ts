@@ -43,8 +43,7 @@ export function appForTask(taskId: string): AppId {
   return APP_BY_TASK[taskId] ?? 'editor';
 }
 
-export function windowTitle(taskId: string, taskTitle: string): string {
-  const app = appForTask(taskId);
+export function windowTitle(app: AppId, taskTitle: string): string {
   if (app === 'slack') return 'Slack — #geral';
   if (app === 'mail') return 'Mail — Caixa de entrada';
   if (app === 'meet') return 'Meet — Daily';

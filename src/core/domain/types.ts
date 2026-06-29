@@ -34,6 +34,9 @@ export interface PressSegment {
   actions: Action[];
   /** Quantas ações exigir (sorteia 1..maxItems dentre `actions`). 1 = sempre todas as listadas. */
   maxItems: number;
+  /** Se este passo ABRE um app (lança o programa). Permite app por passo (uma task
+   *  pode abrir o Chrome e depois o VS Code). Sem isto, é um press de trabalho. */
+  opens?: import('../snapshot').AppId;
 }
 
 /** `hold`: segurar a tecla por `minDuration` segundos. AUDITORIA: tempo morto. */

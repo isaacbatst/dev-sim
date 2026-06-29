@@ -1,5 +1,6 @@
 import type { ActiveTicketSnapshot, Priority, SegmentView, SlotSnapshot } from '@/core/snapshot';
 import { Meter } from '../primitives';
+import { FIX_SNIPPET } from './EditorScene';
 
 type Slots = (SlotSnapshot | null)[];
 
@@ -43,6 +44,7 @@ function siteKey(focus: SegmentView | undefined, browserSite: string): string {
   // "Abrir/Entrar ..." mostra a tela inicial (carregando); demais ações (Ler,
   // Arquivar, Falar…) acontecem sobre a página/app já carregado.
   if (focus?.type === 'hold') return browserSite;
+  if (focus?.type === 'combo') return browserSite; // copiar acontece sobre a página
   if (focus?.type === 'press') {
     const t = focus.tokens.find((x) => !x.done) ?? focus.tokens[0];
     const l = (t?.label ?? '').toLowerCase();
@@ -78,11 +80,13 @@ function Page({
   holding,
   progress,
   slots,
+  copy,
 }: {
   site: Site;
   holding: boolean;
   progress: number;
   slots: Slots;
+  copy?: { active: boolean; copied: boolean };
 }) {
   switch (site.kind) {
     case 'qa':
@@ -99,9 +103,27 @@ function Page({
             </div>
             <div className="flex-1">
               <Bar rows={['90%', '100%', '70%']} />
-              <pre className="mt-2 rounded bg-zinc-100 p-2 font-code text-[11px] text-zinc-600">
-                const token = jwt.verify(t, SECRET)
+              {/* Bloco de código da resposta aceita — alvo do Ctrl+C. */}
+              <pre
+                className={`mt-2 rounded p-2 font-code text-[11px] leading-5 ring-1 transition-colors ${
+                  copy?.copied
+                    ? 'bg-emerald-50 text-zinc-700 ring-emerald-300'
+                    : copy?.active
+                      ? 'bg-amber-50 text-zinc-700 ring-amber-300'
+                      : 'bg-zinc-100 text-zinc-600 ring-transparent'
+                }`}
+              >
+                {FIX_SNIPPET}
               </pre>
+              {copy && (
+                <p className="mt-1.5 text-[11px]">
+                  {copy.copied ? (
+                    <span className="text-emerald-700">copiado ✓</span>
+                  ) : (
+                    <span className="text-amber-700">Ctrl+C para copiar a resposta</span>
+                  )}
+                </p>
+              )}
             </div>
           </div>
           <p className="text-xs text-emerald-700">✓ 1 resposta aceita</p>
@@ -322,6 +344,11 @@ export function BrowserScene({ active, slots }: { active: ActiveTicketSnapshot; 
   const site = SITES[siteKey(focus, active.browserSite)];
   const holding = focus?.type === 'hold' ? focus.holding : false;
   const progress = focus?.type === 'hold' ? focus.progress : 0;
+  // Copiar a resposta (combo Ctrl+C no browser): destaca o bloco de código.
+  const copy =
+    focus?.type === 'combo'
+      ? { active: true, copied: focus.tokens.every((t) => t.done) }
+      : undefined;
 
   return (
     <div className="flex min-h-[22rem] flex-1 flex-col bg-[#fbfbfd] text-zinc-800">
@@ -342,7 +369,7 @@ export function BrowserScene({ active, slots }: { active: ActiveTicketSnapshot; 
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col">
-        <Page site={site} holding={holding} progress={progress} slots={slots} />
+        <Page site={site} holding={holding} progress={progress} slots={slots} copy={copy} />
       </div>
     </div>
   );

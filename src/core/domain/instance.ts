@@ -38,6 +38,8 @@ export interface PressInstance {
   /** Distratores: teclas válidas no template mas não exigidas (erro se pressionadas). */
   distractors: Action[];
   pressed: boolean[];
+  /** App que este passo abre (se for um passo de "abrir programa"). */
+  opens?: AppId;
 }
 
 export interface HoldInstance {
@@ -213,7 +215,13 @@ function instantiateSegment(segment: Segment): SegmentInstance {
       const count = randInt(1, Math.max(1, segment.maxItems));
       const chosen = shuffleTake(segment.actions, count);
       const distractors = segment.actions.filter((a) => !chosen.includes(a));
-      return { type: 'press', actions: chosen, distractors, pressed: chosen.map(() => false) };
+      return {
+        type: 'press',
+        actions: chosen,
+        distractors,
+        pressed: chosen.map(() => false),
+        opens: segment.opens,
+      };
     }
     case 'hold':
       return {

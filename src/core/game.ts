@@ -139,13 +139,12 @@ export class Game {
     const inst = this.activeInstance();
     if (!inst || inst.ready) return;
 
-    const taskApp = this.currentApp(inst);
-    const launchedBefore = this.isLaunched(inst);
+    const opening = this.pendingOpenApp(inst); // app a abrir agora (passo de abrir), ou null
     const key = raw.toLowerCase();
 
     // Subjogo de abrir: no passo de abrir, pode-se abrir o programa ERRADO e é
     // preciso fechá-lo com X antes de tentar de novo. (Sem foco exigido aqui.)
-    if (!launchedBefore) {
+    if (opening) {
       if (inst.wrongApp) {
         if (key === CLOSE_KEY) {
           inst.wrongApp = null;
@@ -155,7 +154,7 @@ export class Game {
         }
         return;
       }
-      if (key !== LAUNCH_KEY[taskApp]) {
+      if (key !== LAUNCH_KEY[opening]) {
         const wrong = APP_BY_LAUNCH_KEY[key];
         if (wrong) {
           inst.wrongApp = wrong;
@@ -165,7 +164,7 @@ export class Game {
         return; // tecla errada (app ou não): não abre o programa certo
       }
       // key === abrir correto → segue para o fluxo normal (o press abre o app)
-    } else if (inst.focused !== taskApp) {
+    } else if (inst.focused !== this.currentApp(inst)) {
       // Ações de trabalho exigem o programa aberto E em foco.
       return;
     }
@@ -273,8 +272,8 @@ export class Game {
     if (stepCompleted(this.currentStep(inst)!)) this.advance(inst);
 
     // Ação de "abrir" recém-concluída → foca o programa que abriu.
-    const launched = !launchedBefore && this.isLaunched(inst);
-    if (launched) inst.focused = taskApp;
+    const launched = !!opening && this.openPrograms(inst).includes(opening);
+    if (launched) inst.focused = opening;
 
     // Abrir um programa soa só como "abrir" (clique neutro) — sem o blip de tecla
     // por cima, que delataria a ação como acerto.
@@ -551,24 +550,48 @@ export class Game {
     return inst.tasks[inst.taskIndex]?.steps[inst.stepIndex];
   }
 
-  /** O app já abriu? (1º passo "Abrir X" concluído.) */
-  private isLaunched(inst: TicketInstance): boolean {
-    return inst.ready || inst.stepIndex > 0;
+  /** App que um passo ABRE (se for um passo de "abrir programa"); senão null. */
+  private stepOpensApp(step: StepInstance | undefined): AppId | null {
+    if (!step) return null;
+    for (const seg of step.segments) if (seg.type === 'press' && seg.opens) return seg.opens;
+    return null;
   }
 
-  /** App da tarefa atual. */
+  /** App de trabalho do passo atual = app aberto mais recente (≤ passo atual) na
+   *  task corrente. Permite uma task abrir Chrome e depois VS Code (app por passo). */
   private currentApp(inst: TicketInstance): AppId {
-    return appForTask(inst.tasks[Math.min(inst.taskIndex, inst.tasks.length - 1)].template.id);
+    const task = inst.tasks[Math.min(inst.taskIndex, inst.tasks.length - 1)];
+    let app: AppId | null = null;
+    for (let si = 0; si <= inst.stepIndex && si < task.steps.length; si++) {
+      const opened = this.stepOpensApp(task.steps[si]);
+      if (opened) app = opened;
+    }
+    return app ?? appForTask(task.template.id);
   }
 
-  /** Apps abertos desta demanda (tarefas cujo 1º passo "Abrir" já foi feito). */
+  /** Se o passo ATUAL é um "abrir programa" ainda não concluído, o app a abrir. */
+  private pendingOpenApp(inst: TicketInstance): AppId | null {
+    const step = this.currentStep(inst);
+    const app = this.stepOpensApp(step);
+    return app && step && !stepCompleted(step) ? app : null;
+  }
+
+  /** O app de trabalho atual já está aberto? (passo de abrir já concluído.) */
+  private isLaunched(inst: TicketInstance): boolean {
+    return inst.ready || this.openPrograms(inst).includes(this.currentApp(inst));
+  }
+
+  /** Apps abertos desta demanda (passos de "abrir" já concluídos, em todas as tasks). */
   private openPrograms(inst: TicketInstance): AppId[] {
     const out: AppId[] = [];
     for (let ti = 0; ti <= inst.taskIndex && ti < inst.tasks.length; ti++) {
-      const opened = ti < inst.taskIndex || inst.ready || inst.stepIndex > 0;
-      if (!opened) continue;
-      const app = appForTask(inst.tasks[ti].template.id);
-      if (!out.includes(app)) out.push(app);
+      const task = inst.tasks[ti];
+      for (let si = 0; si < task.steps.length; si++) {
+        const app = this.stepOpensApp(task.steps[si]);
+        if (!app) continue;
+        const opened = inst.ready || ti < inst.taskIndex || si < inst.stepIndex;
+        if (opened && !out.includes(app)) out.push(app);
+      }
     }
     return out;
   }
@@ -646,8 +669,8 @@ export class Game {
       reviewRejected: inst.reviewRejected,
       reviewComment: inst.reviewComment,
       wrongApp: inst.wrongApp,
-      app: appForTask(task.id),
-      windowTitle: windowTitle(task.id, task.title),
+      app: this.currentApp(inst),
+      windowTitle: windowTitle(this.currentApp(inst), task.title),
       plan: this.buildPlan(inst),
     };
   }
@@ -770,7 +793,7 @@ export class Game {
         const line = (nav[0] ?? 0) + 1;
         const file = this.fileTarget(t) ?? 'login.ts';
         return this.isPasteFix(t)
-          ? `No VSCode, vá até a linha ${line} de ${file}, copie a correção e cole (Ctrl+C / Ctrl+V); faça push, aguarde o CR e o merge.`
+          ? `Pesquise no Chrome e copie a correção do Stack Overflow (Ctrl+C); no VSCode, vá até a linha ${line} de ${file} e cole (Ctrl+V); faça push, aguarde o CR e o merge.`
           : `No VSCode, corrija o typo na linha ${line} de ${file}; faça push, aguarde o CR e o merge.`;
       }
       case 'ui_update': {

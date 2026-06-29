@@ -67,8 +67,13 @@ export const TASKS: Record<string, TaskTemplate> = {
         step('wait_cr'),
         step('mash_merge'),
       ],
-      // variante PASTE (copiar a correção e colar, Ctrl+C/Ctrl+V)
+      // variante PASTE: pesquisar no Chrome (ler o Stack Overflow), copiar lá,
+      // e colar no VS Code — fluxo de 2 apps, como no real.
       [
+        step('press_open_browser'),
+        step('press_open_so'),
+        step('press_read'),
+        step('combo_copy'),
         step('press_open_vscode'),
         step('open_file'),
         step('nav_find_line'),

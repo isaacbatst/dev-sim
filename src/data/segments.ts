@@ -11,6 +11,7 @@ export const SEGMENTS: Record<string, Segment> = {
   press_open_browser: {
     type: 'press',
     maxItems: 1,
+    opens: 'browser',
     actions: [{ key: 'c', label: 'Abrir Chrome' }],
   },
   // Estudar: 1) abrir a página da fonte, 2) ler a página (duas ações).
@@ -42,10 +43,26 @@ export const SEGMENTS: Record<string, Segment> = {
     maxItems: 1,
     actions: [{ key: 's', label: 'Abrir Staging' }],
   },
-  press_open_slack: { type: 'press', maxItems: 1, actions: [{ key: 's', label: 'Abrir Slack' }] },
+  // Stack Overflow como destino único (p/ a variante "colar correção" do bug fix).
+  press_open_so: {
+    type: 'press',
+    maxItems: 1,
+    actions: [{ key: 's', label: 'Abrir Stack Overflow' }],
+  },
+  press_open_slack: {
+    type: 'press',
+    maxItems: 1,
+    opens: 'slack',
+    actions: [{ key: 's', label: 'Abrir Slack' }],
+  },
   press_reply: { type: 'press', maxItems: 1, actions: [{ key: 'r', label: 'Responder' }] },
   press_archive: { type: 'press', maxItems: 1, actions: [{ key: 'a', label: 'Arquivar' }] },
-  press_open_vscode: { type: 'press', maxItems: 1, actions: [{ key: 'v', label: 'Abrir VSCode' }] },
+  press_open_vscode: {
+    type: 'press',
+    maxItems: 1,
+    opens: 'editor',
+    actions: [{ key: 'v', label: 'Abrir VSCode' }],
+  },
   press_write_doc: {
     type: 'press',
     maxItems: 1,
@@ -55,13 +72,15 @@ export const SEGMENTS: Record<string, Segment> = {
   press_fix: { type: 'press', maxItems: 1, actions: [{ key: 'f', label: 'Corrigir' }] },
 
   // --- combo (atalho modificador+tecla; mimético) ---
-  // Variante "colar correção": copiar o patch do Stack Overflow e colar no código.
+  // Copiar do Stack Overflow (no browser) e colar no VS Code — passos separados,
+  // em apps diferentes, como no fluxo real.
+  combo_copy: {
+    type: 'combo',
+    steps: [{ mod: 'ctrl', key: 'c', label: 'Copiar a correção' }],
+  },
   combo_paste: {
     type: 'combo',
-    steps: [
-      { mod: 'ctrl', key: 'c', label: 'Copiar a correção' },
-      { mod: 'ctrl', key: 'v', label: 'Colar no código' },
-    ],
+    steps: [{ mod: 'ctrl', key: 'v', label: 'Colar no código' }],
   },
 
   // --- mash (suco por tecla — DIRECAO_GAMEPLAY.md §6) ---
