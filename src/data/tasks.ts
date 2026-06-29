@@ -43,7 +43,7 @@ export const TASKS: Record<string, TaskTemplate> = {
     description: 'Abrir o VSCode, escrever documentação, fazer push, aguardar CR e merge',
     steps: [
       step('press_open_vscode'),
-      step('press_write_doc'),
+      step('mash_write_doc'),
       step('press_push'),
       step('wait_cr'),
       step('mash_merge'),

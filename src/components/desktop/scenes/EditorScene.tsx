@@ -848,6 +848,47 @@ function ComboFix({
   );
 }
 
+/** Texto que vai sendo "digitado" (revelado) conforme o mash de digitar avança. */
+const DOC_TEXT =
+  '/**\n * Autentica o usuário e retorna o token de sessão.\n * @param user credenciais já validadas\n * @returns token persistido\n */';
+const DOC_TARGET = 'export function login(user: User) {';
+
+/** Mash de digitar: martelar o teclado e a documentação (JSDoc) sai char a char,
+ *  acima da função, com caret piscando. "A tela mostra a ação real acontecendo." */
+function TypeScene({ seg, file }: { seg: Extract<SegmentView, { type: 'mash' }>; file: string }) {
+  const revealed = DOC_TEXT.slice(0, Math.ceil(DOC_TEXT.length * seg.progress));
+  const done = seg.progress >= 1;
+  return (
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden font-code text-sm">
+      <div className="flex shrink-0 border-b border-line bg-surface px-3 py-1 text-xs text-ink-dim">
+        <span className="border-b-2 border-amber px-2 py-1 text-ink">{file}</span>
+      </div>
+      <pre className="m-0 flex-1 overflow-y-auto p-3 leading-6">
+        <span className="syn-com">{revealed}</span>
+        {!done && (
+          <span className="animate-edgepulse ml-px inline-block h-[1.05em] w-[0.5em] translate-y-[0.15em] bg-ink/80" />
+        )}
+        {'\n'}
+        <span className="opacity-80">
+          <Code line={DOC_TARGET} ext="ts" />
+        </span>
+        {'\n'}
+        <span className="opacity-80">
+          <Code line={'  const token = createSession(user)'} ext="ts" />
+        </span>
+        {'\n'}
+        <span className="opacity-80">
+          <Code line={'  return persist(token)'} ext="ts" />
+        </span>
+        {'\n'}
+        <span className="opacity-80">
+          <Code line={'}'} ext="ts" />
+        </span>
+      </pre>
+    </div>
+  );
+}
+
 const COMPONENTS = ['Button', 'Title', 'Input'];
 const PROPERTIES = ['Texto', 'Fundo'];
 const PROP_CSS: Record<string, string> = { Texto: 'color', Fundo: 'background' };
@@ -1066,6 +1107,8 @@ export function EditorScene({ active }: { active: ActiveTicketSnapshot }) {
   else if (focus?.type === 'wait') main = <PrPanel active={active} />;
   else if (focus?.type === 'combo')
     main = <ComboFix seg={focus} file={active.editorFile} fixedLine={active.editorFixedLine} />;
+  else if (focus?.type === 'mash' && focus.anyKey)
+    main = <TypeScene seg={focus} file={active.editorFile} />;
   else if (
     focus?.type === 'mash' ||
     (focus?.type === 'press' && /push/i.test(focus.tokens[0]?.label ?? ''))

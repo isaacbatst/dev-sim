@@ -89,6 +89,8 @@ export interface MashInstance {
   count: number;
   /** Índice (em `keys`) da próxima tecla esperada no ciclo. */
   expect: number;
+  /** "Digitar": qualquer letra avança (martelar) em vez do ciclo. */
+  anyKey: boolean;
 }
 
 export interface ComboInstance {
@@ -278,6 +280,7 @@ function instantiateSegment(segment: Segment): SegmentInstance {
         target: groups * perGroup,
         count: 0,
         expect: 0,
+        anyKey: segment.anyKey ?? false,
       };
     }
     case 'combo':

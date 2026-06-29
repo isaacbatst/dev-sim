@@ -63,11 +63,6 @@ export const SEGMENTS: Record<string, Segment> = {
     opens: 'editor',
     actions: [{ key: 'v', label: 'Abrir VSCode' }],
   },
-  press_write_doc: {
-    type: 'press',
-    maxItems: 1,
-    actions: [{ key: 'w', label: 'Escrever Documentação' }],
-  },
   press_push: { type: 'press', maxItems: 1, actions: [{ key: 'p', label: 'Push' }] },
   press_fix: { type: 'press', maxItems: 1, actions: [{ key: 'f', label: 'Corrigir' }] },
 
@@ -95,6 +90,15 @@ export const SEGMENTS: Record<string, Segment> = {
     maxCount: 5,
     minGroups: 1,
     maxGroups: 3,
+  },
+  // "Digitar": martelar o teclado e o texto sai (qualquer letra avança).
+  mash_write_doc: {
+    type: 'mash',
+    keys: [],
+    label: 'Escrever a documentação',
+    anyKey: true,
+    minCount: 14,
+    maxCount: 20,
   },
 
   // --- hold (AUDITORIA: tempo morto) ---

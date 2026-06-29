@@ -88,6 +88,8 @@ export type SegmentView =
       activeGroup: number;
       /** Progresso (0..1) DENTRO do grupo atual. */
       groupProgress: number;
+      /** "Digitar" (martelar): qualquer letra avança. */
+      anyKey: boolean;
     }
   | {
       type: 'combo';
