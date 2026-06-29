@@ -11,11 +11,10 @@ import { KeyCap, Meter, ARROW_GLYPH } from './primitives';
 function OpenPicker() {
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-      <span className="text-sm text-ink-dim">abrir o programa da tarefa:</span>
       {DOCK_APPS.map((id) => (
         <span key={id} className="flex items-center gap-1.5">
           <KeyCap state="idle">{LAUNCH_KEY[id]}</KeyCap>
-          <span className="text-xs text-ink-dim">{APPS[id].name}</span>
+          <span className="text-sm text-ink-dim">{APPS[id].name}</span>
         </span>
       ))}
     </div>
@@ -38,11 +37,10 @@ function Cue({ seg }: { seg: SegmentView }) {
         ].sort((a, b) => a.key.localeCompare(b.key));
         return (
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-            <span className="text-sm text-ink-dim">acessar:</span>
             {opts.map((o) => (
               <span key={o.key} className="flex items-center gap-1.5">
                 <KeyCap state={o.done ? 'done' : 'idle'}>{o.key}</KeyCap>
-                <span className={`text-xs text-ink-dim ${o.done ? 'line-through' : ''}`}>
+                <span className={`text-sm text-ink-dim ${o.done ? 'line-through' : ''}`}>
                   {o.label.replace(/^Abrir /, '')}
                 </span>
               </span>
@@ -100,13 +98,12 @@ function Cue({ seg }: { seg: SegmentView }) {
     case 'selection':
       return (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <span className="text-sm text-ink-dim">selecionar:</span>
           {seg.options.map((o) => (
             <span key={o.key} className="flex items-center gap-1.5">
               <KeyCap state={seg.chosenKey === o.key ? (seg.wrong ? 'wrong' : 'done') : 'idle'}>
                 {o.key}
               </KeyCap>
-              <span className="text-xs text-ink-dim">{o.label}</span>
+              <span className="text-sm text-ink-dim">{o.label}</span>
             </span>
           ))}
         </div>
@@ -163,7 +160,12 @@ export function ActionBar({ active }: { active: ActiveTicketSnapshot }) {
   const wrong = active.wrongApp ? APPS[active.wrongApp] : null;
   const opening = !active.ready && !active.appLaunched && !wrong;
   return (
-    <div className="flex min-h-14 items-center gap-3 border-t border-line bg-bg/40 px-4 py-2.5">
+    <div
+      className="flex min-h-16 items-center gap-3 border-t border-line bg-surface-2 px-4 py-3"
+      // Toolbar elevada (estilo macOS): fill sólido + realce de 1px no topo →
+      // ganha peso e separa da janela sem borda colorida/glow.
+      style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)' }}
+    >
       <div className="flex-1">
         {wrong ? (
           <span className="flex items-center gap-2 text-ink-dim">
