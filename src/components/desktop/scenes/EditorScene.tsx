@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import type { ActiveTicketSnapshot, SegmentView } from '@/core/snapshot';
 import { PROJECT_FILES } from '@/data/files';
 import { fileRows, allFolderPaths, fileBasename } from '@/core/domain/instance';
@@ -30,11 +31,17 @@ const CONTENT: Record<string, string[]> = {
     '<html lang="pt-br">',
     '  <head>',
     '    <meta charset="utf-8" />',
+    '    <meta name="viewport" content="width=device-width" />',
     '    <title>Dashboard</title>',
     '    <link rel="stylesheet" href="styles.css" />',
     '  </head>',
     '  <body>',
+    '    <header class="topbar">',
+    '      <h1>Painel</h1>',
+    '      <nav><a href="about.html">Sobre</a></nav>',
+    '    </header>',
     '    <main id="app"></main>',
+    '    <footer class="foot">© 2026 devOS</footer>',
     '    <script src="app.js"></script>',
     '  </body>',
     '</html>',
@@ -45,10 +52,15 @@ const CONTENT: Record<string, string[]> = {
     '  <head>',
     '    <meta charset="utf-8" />',
     '    <title>Sobre</title>',
+    '    <link rel="stylesheet" href="styles.css" />',
     '  </head>',
     '  <body>',
     '    <h1 class="title">Sobre nós</h1>',
     '    <p>Ferramentas para devs.</p>',
+    '    <section class="team">',
+    '      <p>Time pequeno, foco grande.</p>',
+    '      <ul><li>Engenharia</li><li>Design</li></ul>',
+    '    </section>',
     '    <a href="index.html">Voltar</a>',
     '  </body>',
     '</html>',
@@ -56,30 +68,41 @@ const CONTENT: Record<string, string[]> = {
   'styles.css': [
     ':root {',
     '  --primary: #3b82f6;',
+    '  --radius: 8px;',
     '}',
     '.button {',
     '  background: var(--primary);',
     '  color: #ffffff;',
+    '  padding: 8px 14px;',
+    '  border-radius: var(--radius);',
     '}',
     '.title {',
     '  font-size: 18px;',
     '  font-weight: 600;',
     '}',
-    '.input { border: 1px solid #ccc; }',
+    '.input {',
+    '  border: 1px solid #cccccc;',
+    '  padding: 6px;',
+    '}',
+    '.card { box-shadow: 0 1px 3px #0000001f; }',
   ],
   'theme.css': [
     ':root {',
     '  --bg: #0e1016;',
     '  --text: #e7e4dd;',
+    '  --accent: #c792ea;',
     '}',
     'body {',
     '  background: var(--bg);',
     '  color: var(--text);',
+    '  margin: 0;',
     '}',
     '.card {',
     '  border-radius: 8px;',
     '  padding: 16px;',
+    '  background: #161922;',
     '}',
+    '.muted { color: #7e8597; }',
   ],
   'reset.css': [
     '* {',
@@ -91,20 +114,30 @@ const CONTENT: Record<string, string[]> = {
     '  list-style: none;',
     '}',
     'a {',
+    '  color: inherit;',
     '  text-decoration: none;',
+    '}',
+    'button {',
+    '  font: inherit;',
+    '  cursor: pointer;',
     '}',
   ],
   'app.js': [
     "import { api } from './api'",
+    "import { render } from './utils'",
     'export function start() {',
     '  const data = api.load()',
     '  render(data)',
     "  console.log('ok')",
     '  return data',
     '}',
-    'function render(d) {',
-    '  document.body.dataset.ready = d',
+    'export function reload() {',
+    '  return start()',
     '}',
+    'function track(event) {',
+    '  api.save({ event })',
+    '}',
+    "window.addEventListener('load', start)",
   ],
   'utils.js': [
     'export function render(data) {',
@@ -114,6 +147,13 @@ const CONTENT: Record<string, string[]> = {
     '}',
     'export function clamp(n, lo, hi) {',
     '  return Math.max(lo, Math.min(hi, n))',
+    '}',
+    'export function debounce(fn, ms) {',
+    '  let timer',
+    '  return (...args) => {',
+    '    clearTimeout(timer)',
+    '    timer = setTimeout(() => fn(...args), ms)',
+    '  }',
     '}',
   ],
   'api.js': [
@@ -125,6 +165,12 @@ const CONTENT: Record<string, string[]> = {
     '  save(p) {',
     "    return fetch(BASE + '/save', { method: 'POST', body: p })",
     '  },',
+    '  remove(id) {',
+    "    return fetch(BASE + '/item/' + id, { method: 'DELETE' })",
+    '  },',
+    '}',
+    'export function authHeader(token) {',
+    "  return { Authorization: 'Bearer ' + token }",
     '}',
   ],
   'login.ts': [
@@ -137,6 +183,13 @@ const CONTENT: Record<string, string[]> = {
     'function createSession(user: User) {',
     '  return signJwt({ sub: user.id })',
     '}',
+    'export function logout(token: string) {',
+    '  return revoke(token)',
+    '}',
+    'function persist(token: string) {',
+    "  localStorage.setItem('jwt', token)",
+    '  return token',
+    '}',
   ],
   'auth.ts': [
     'export function signJwt(payload: Claims) {',
@@ -147,6 +200,12 @@ const CONTENT: Record<string, string[]> = {
     'export function verify(token: string) {',
     '  return decode(token).valid',
     '}',
+    'function encode(o: object) {',
+    '  return btoa(JSON.stringify(o))',
+    '}',
+    'function decode(token: string) {',
+    '  return JSON.parse(atob(token))',
+    '}',
   ],
   'README.md': [
     '# Projeto',
@@ -156,11 +215,91 @@ const CONTENT: Record<string, string[]> = {
     '## Deploy',
     'Push para a main dispara o CI.',
     'Veja o guia de contribuição.',
+    '## Scripts',
+    '- build: compila para produção',
+    '- test: roda a suíte',
+    '## Licença',
+    'MIT.',
   ],
 };
 const FALLBACK = CONTENT['login.ts'];
 function linesFor(file: string): string[] {
   return CONTENT[file] ?? FALLBACK;
+}
+
+// ── Conflito de merge dinâmico ──────────────────────────────────────────────
+// Geração determinística por ticket (semeada pelo id) — quantidade num range,
+// locais aleatórios e distintos, e o lado "feature" DIFERENTE do "HEAD". É
+// presentational (não afeta o resultado; resolver é o mash), então mora aqui.
+// PRNG determinístico = já pronto pro seed do dia depois.
+function mulberry32(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function hashStr(s: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+interface Conflict {
+  line: number;
+  head: string;
+  feature: string;
+}
+
+/** Versão "do outro branch": muda valor/identificador da linha (head ≠ feature). */
+function mutateLine(line: string, rng: () => number): string {
+  const pick = <T,>(arr: T[]): T => arr[Math.floor(rng() * arr.length)];
+  if (/#[0-9a-fA-F]{3,8}\b/.test(line)) {
+    return line.replace(
+      /#[0-9a-fA-F]{3,8}\b/,
+      pick(['#2563eb', '#ef4444', '#22c55e', '#f59e0b', '#0ea5e9', '#9333ea']),
+    );
+  }
+  if (/\d/.test(line)) {
+    return line.replace(/\d+/, (m) => String(Math.max(1, Number(m) + pick([-8, -4, -2, 2, 4, 8]))));
+  }
+  if (/(['"]).*?\1/.test(line)) {
+    return line.replace(
+      /(['"])(.*?)\1/,
+      (_m, q) => `${q}${pick(['draft', 'v2', 'legacy', 'beta'])}${q}`,
+    );
+  }
+  if (/\b[a-z][a-zA-Z0-9]*\(/.test(line)) {
+    return line.replace(
+      /\b[a-z][a-zA-Z0-9]*\(/,
+      `${pick(['handle', 'process', 'resolve', 'apply', 'build'])}(`,
+    );
+  }
+  return `${line} // hotfix`;
+}
+
+/** Monta os conflitos do merge: 1–3 em linhas de conteúdo distintas, semeado. */
+function buildConflicts(file: string, lines: string[], id: number): Conflict[] {
+  const rng = mulberry32((Math.imul(id, 2654435761) ^ hashStr(file)) >>> 0);
+  const candidates = lines
+    .map((l, i) => ({ l, i }))
+    .filter((x) => x.l.trim().length > 4 && !/^[{}()[\]<>/]+$/.test(x.l.trim()));
+  if (candidates.length === 0) return [];
+  const count = Math.min(candidates.length, 1 + Math.floor(rng() * 3)); // 1..3
+  const pool = [...candidates];
+  const picked: { l: string; i: number }[] = [];
+  for (let k = 0; k < count && pool.length > 0; k++) {
+    picked.push(pool.splice(Math.floor(rng() * pool.length), 1)[0]);
+  }
+  return picked
+    .sort((a, b) => a.i - b.i)
+    .map((p) => ({ line: p.i, head: p.l, feature: mutateLine(p.l, rng) }));
 }
 
 /** Explorer em árvore (estilo VS Code): pastas expandem/colapsam; cursor navega. */
@@ -391,70 +530,55 @@ function CodeArea({
   );
 }
 
-/** A linha em conflito mostrada com os marcadores reais do git (HEAD × feature),
- *  que vão "fechando" conforme o conflito é resolvido (progress → 1). */
-function ConflictBlock({
-  line,
-  ext: e,
-  progress,
-}: {
-  line: string;
-  ext: string;
-  progress: number;
-}) {
-  // Marcadores desbotam à medida que o conflito some.
-  const markerOpacity = Math.max(0.15, 1 - progress);
+/** Um conflito: marcadores reais do git com HEAD × feature DIFERENTES. */
+function ConflictBlock({ head, feature, ext: e }: { head: string; feature: string; ext: string }) {
   return (
-    <div className="relative">
+    <div className="relative bg-fail/[0.07] py-0.5">
       <span aria-hidden className="absolute inset-y-0 left-0 w-0.5 bg-fail/70" />
-      <div className="bg-fail/[0.07] py-0.5">
-        <pre className="m-0 px-3 leading-6 text-fail" style={{ opacity: markerOpacity }}>
-          {'<<<<<<< HEAD'}
-        </pre>
-        <pre className="m-0 px-3 leading-6">
-          <span className="pl-3">
-            <Code line={line} ext={e} />
-          </span>
-        </pre>
-        <pre className="m-0 px-3 leading-6 text-ink-dim" style={{ opacity: markerOpacity }}>
-          {'======='}
-        </pre>
-        <pre className="m-0 px-3 leading-6">
-          <span className="pl-3">
-            <Code line={line} ext={e} />
-          </span>
-        </pre>
-        <pre className="m-0 px-3 leading-6 text-fail" style={{ opacity: markerOpacity }}>
-          {'>>>>>>> feature'}
-        </pre>
-      </div>
+      <pre className="m-0 px-3 leading-6 text-fail">{'<<<<<<< HEAD'}</pre>
+      <pre className="m-0 px-3 leading-6">
+        <Code line={head} ext={e} />
+      </pre>
+      <pre className="m-0 px-3 leading-6 text-ink-dim">{'======='}</pre>
+      <pre className="m-0 px-3 leading-6">
+        <Code line={feature} ext={e} />
+      </pre>
+      <pre className="m-0 px-3 leading-6 text-fail">{'>>>>>>> feature'}</pre>
     </div>
   );
 }
 
-/** Editor com terminal integrado. Push = diff "alterada"; merge = resolver o
- *  conflito esfregando ⬅️➡️ (mash), com os marcadores fechando ao vivo. */
+/** Editor com terminal integrado. Push = diff "alterada"; merge = resolver os
+ *  conflitos esfregando ⬅️➡️ (mash) — fecham um a um, de cima pra baixo. */
 function GitView({
   focus,
   file,
   targetLine,
+  seed,
 }: {
   focus: Extract<SegmentView, { type: 'press' | 'mash' }>;
   file: string;
   targetLine: number;
+  seed: number;
 }) {
   const mash = focus.type === 'mash' ? focus : null;
   const merge = !!mash;
   const progress = mash?.progress ?? 0;
   const lines = linesFor(file);
-  // Tarefas sem "linha alterada" explícita (document, ui_update) não têm alvo de
-  // nav → cai num fallback determinístico: a 1ª linha "de conteúdo" (não só
-  // chave/brace). Assim o diff/conflito sempre tem onde aparecer no editor.
+  // Conflitos do merge: quantidade/locais/conteúdo determinísticos pelo ticket.
+  const conflicts = useMemo(
+    () => (merge ? buildConflicts(file, lines, seed) : []),
+    [merge, file, lines, seed],
+  );
+  const byLine = new Map(conflicts.map((c, k) => [c.line, k]));
+  const resolved = (k: number) => progress >= (k + 1) / conflicts.length;
+  // No push (sem conflitos), a linha alterada usa um fallback de conteúdo.
   const fallback = Math.max(
     0,
     lines.findIndex((l) => l.trim().length > 3 && !/^[{}()[\]]+$/.test(l.trim())),
   );
   const changedLine = targetLine > 0 ? targetLine - 1 : fallback;
+  const open = conflicts.filter((_, k) => !resolved(k)).length;
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden font-code text-sm">
@@ -463,11 +587,21 @@ function GitView({
         </div>
         <pre className="m-0 flex-1 overflow-y-auto p-3 leading-6">
           {lines.map((line, i) => {
-            const changed = i === changedLine;
-            // No merge, a linha alterada está em CONFLITO → bloco com marcadores.
-            if (changed && merge) {
-              return <ConflictBlock key={i} line={line} ext={ext(file)} progress={progress} />;
+            // Linha em conflito ainda não resolvida → bloco com marcadores.
+            const k = byLine.get(i);
+            if (merge && k !== undefined && !resolved(k)) {
+              return (
+                <ConflictBlock
+                  key={i}
+                  head={conflicts[k].head}
+                  feature={conflicts[k].feature}
+                  ext={ext(file)}
+                />
+              );
             }
+            // Push: diff "alterada" na linha alterada. Merge: linha normal
+            // (conflitos já resolvidos viram código comum).
+            const changed = !merge && i === changedLine;
             return (
               <div
                 key={i}
@@ -495,10 +629,10 @@ function GitView({
           $ {merge ? 'git merge --no-ff feature' : 'git push origin HEAD'}
         </p>
         {merge ? (
-          <p className={progress >= 1 ? 'text-emerald-400' : 'text-amber-400'}>
-            {progress >= 1
-              ? 'Conflito resolvido. Merge made by recursive.'
-              : `CONFLICT (content): Merge conflict in ${file}`}
+          <p className={open === 0 ? 'text-emerald-400' : 'text-amber-400'}>
+            {open === 0
+              ? 'Conflitos resolvidos. Merge made by recursive.'
+              : `CONFLICT (content): ${open} conflito(s) em ${file}`}
           </p>
         ) : (
           <p className="text-zinc-400">Enumerating objects: 12, done.</p>
@@ -650,7 +784,14 @@ export function EditorScene({ active }: { active: ActiveTicketSnapshot }) {
     focus?.type === 'mash' ||
     (focus?.type === 'press' && /push/i.test(focus.tokens[0]?.label ?? ''))
   )
-    main = <GitView focus={focus} file={active.editorFile} targetLine={active.editorFixedLine} />;
+    main = (
+      <GitView
+        focus={focus}
+        file={active.editorFile}
+        targetLine={active.editorFixedLine}
+        seed={active.id}
+      />
+    );
   else
     main = (
       <CodeArea

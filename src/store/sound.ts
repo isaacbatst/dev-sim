@@ -244,9 +244,11 @@ export function playSound(event: SoundEvent): void {
       tone(300, 0.06, { type: 'sine', gain: 0.08, delay: 0.045 });
       break;
     case 'deliver':
-      // Entrega (recorrente): um lift curto e quente de duas notas — satisfação
-      // contida, no mesmo registro do merge, não uma fanfarra.
-      arpeggio([523, 784], 0.07, 0.2, 'triangle', 0.12, 2400);
+      // Fechar a demanda: "carimbo" macio que ASSENTA (resolve pra baixo) — uma
+      // confirmação quente e contida, não o sino agudo de notificação que era.
+      noiseBurst(0.022, 760, 0.05);
+      tone(392, 0.13, { type: 'triangle', gain: 0.13, slideTo: 294, cutoff: 1500 });
+      tone(196, 0.17, { type: 'sine', gain: 0.085, delay: 0.02 });
       break;
     case 'win':
       arpeggio([523, 659, 784, 1046, 1318], 0.13, 0.5, 'triangle', 0.17);
