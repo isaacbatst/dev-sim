@@ -33,10 +33,10 @@ Claro / Escuro / Sistema; `data-theme` no `<html>`; tudo via tokens, o app
 re-skina sozinho). Exploramos uma 3ª ("Overclock", arcade neon) e descartamos —
 ficamos com o par dark/light, que cobre melhor o uso real.
 
-| Aparência (`data-theme`) | Conceito                  | Paleta                              | Fontes (UI / mono)        |
-| ------------------------ | ------------------------- | ----------------------------------- | ------------------------- |
-| **Escuro** (`graveyard`) | terminal phosphor, 2am    | índigo near-black + **âmbar**; teal | Geist / JetBrains Mono    |
-| **Claro** (`daybreak`)   | paper IDE, estúdio diurno | papel quente + **tinta** + vermelho | Schibsted / IBM Plex Mono |
+| Aparência (`data-theme`) | Conceito                  | Paleta                              | Fontes (UI / mono)         |
+| ------------------------ | ------------------------- | ----------------------------------- | -------------------------- |
+| **Escuro** (`graveyard`) | terminal phosphor, 2am    | índigo near-black + **âmbar**; teal | Geist / JetBrains Mono     |
+| **Claro** (`daybreak`)   | paper IDE, estúdio diurno | papel quente + **tinta** + vermelho | Schibsted / JetBrains Mono |
 
 > As seções abaixo descrevem o **Escuro** (padrão). Regras de _Spacing_, _Shape_,
 > _Layout_ e _Do Not Use_ valem para os dois; só paleta/fontes mudam por tema.

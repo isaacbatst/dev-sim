@@ -59,7 +59,7 @@
   --fail: #c0392b;
   --shell: #d9d3c6;
   --font-grotesk: var(--font-schibsted);
-  --font-mono: var(--font-plex);
+  --font-mono: var(--font-jetbrains); /* mesmo mono nos 2 temas (sem Plex) */
   --window-bg: linear-gradient(180deg, #ffffff 0%, var(--surface) 55%);
   --wall:
     radial-gradient(

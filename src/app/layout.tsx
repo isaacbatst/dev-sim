@@ -1,15 +1,10 @@
 import type { Metadata } from 'next';
-import { JetBrains_Mono, IBM_Plex_Mono, Geist, Schibsted_Grotesk } from 'next/font/google';
+import { JetBrains_Mono, Geist, Schibsted_Grotesk } from 'next/font/google';
 import './globals.css';
 
-// Fontes das duas aparências. Cada tema (globals) mapeia --font-mono e
-// --font-grotesk: Escuro/Graveyard = Geist+JetBrains; Claro/Daybreak = Schibsted+Plex.
+// Fontes das duas aparências. Mono = JetBrains nos dois temas (code font único).
+// UI: Escuro/Graveyard = Geist; Claro/Daybreak = Schibsted.
 const jetbrains = JetBrains_Mono({ variable: '--font-jetbrains', subsets: ['latin'] });
-const plex = IBM_Plex_Mono({
-  variable: '--font-plex',
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-});
 const geist = Geist({ variable: '--font-geist', subsets: ['latin'] });
 const schibsted = Schibsted_Grotesk({ variable: '--font-schibsted', subsets: ['latin'] });
 
@@ -30,7 +25,7 @@ export default function RootLayout({
     <html
       lang="pt-BR"
       suppressHydrationWarning
-      className={`${jetbrains.variable} ${plex.variable} ${geist.variable} ${schibsted.variable} h-full antialiased`}
+      className={`${jetbrains.variable} ${geist.variable} ${schibsted.variable} h-full antialiased`}
     >
       <body className="min-h-full">
         <script dangerouslySetInnerHTML={{ __html: APPEARANCE_SCRIPT }} />
