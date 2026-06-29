@@ -44,7 +44,6 @@ const SLOT_COUNT = 5;
 const DAY_START_MIN = 9 * 60;
 const DAY_END_MIN = 17 * 60;
 const DAY_REAL_SECONDS = 180;
-const GAME_MIN_PER_SEC = (DAY_END_MIN - DAY_START_MIN) / DAY_REAL_SECONDS;
 
 const SPAWN_INTERVAL = 8;
 const CLOSE_KEY = 'x'; // fecha um programa aberto por engano (subjogo de abrir)
@@ -65,11 +64,18 @@ export class Game {
   private activeSlot: number | null = null;
   private spawnTimer = 0;
   private pool: TicketTemplate[];
+  /** Minutos de jogo por segundo real (deriva da duração do dia). */
+  private minPerSec: number;
   /** Fila de eventos sonoros desde o último `drainSounds()` (a UI sintetiza). */
   private sounds: SoundEvent[] = [];
 
-  constructor(pool: TicketTemplate[] = TICKET_POOL, forceId?: string) {
+  constructor(
+    pool: TicketTemplate[] = TICKET_POOL,
+    forceId?: string,
+    daySeconds: number = DAY_REAL_SECONDS,
+  ) {
     this.pool = pool;
+    this.minPerSec = (DAY_END_MIN - DAY_START_MIN) / daySeconds;
     // Teste: força um ticket específico no 1º slot (id de single = id da task).
     if (forceId) {
       const t = pool.find((p) => p.id === forceId);
@@ -649,7 +655,7 @@ export class Game {
   }
 
   private gameMinutes(): number {
-    return DAY_START_MIN + this.elapsed * GAME_MIN_PER_SEC;
+    return DAY_START_MIN + this.elapsed * this.minPerSec;
   }
 
   private formatClock(): string {
@@ -699,6 +705,7 @@ export class Game {
       description: inst.template.description,
       priority: inst.template.priority,
       taskTitle: task.title,
+      taskId: task.id,
       taskIndex: Math.min(inst.taskIndex, inst.tasks.length - 1),
       taskCount: inst.tasks.length,
       segments: inst.ready || !step ? [] : step.segments.map((s) => this.segmentView(s)),
@@ -828,6 +835,11 @@ export class Game {
         return `Abra o Chrome, abra o webmail e arquive a mensagem do chefe.`;
       case 'document':
         return `Documente a função no VSCode; faça push, aguarde o CR e o merge.`;
+      case 'debug': {
+        const line = (nav[0] ?? 0) + 1;
+        const file = this.fileTarget(t) ?? 'login.ts';
+        return `Bug em ${file}: ponha um breakpoint na linha ${line} (F9), rode (F5) e veja o valor errado; corrija; faça push, aguarde o CR e o merge.`;
+      }
       case 'fix_typo': {
         const line = (nav[0] ?? 0) + 1;
         const file = this.fileTarget(t) ?? 'login.ts';

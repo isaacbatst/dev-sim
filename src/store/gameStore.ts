@@ -16,6 +16,13 @@ function forcedTask(): string | undefined {
   return fromUrl || process.env.NEXT_PUBLIC_FORCE_TASK || undefined;
 }
 
+/** Teste: estende a duração do dia (segundos) via `?day=600`. Default = 180. */
+function daySeconds(): number | undefined {
+  if (typeof window === 'undefined') return undefined;
+  const v = Number(new URLSearchParams(window.location.search).get('day'));
+  return Number.isFinite(v) && v > 0 ? v : undefined;
+}
+
 /**
  * Bridge entre o `core` (loop em RAF) e a UI React. Substitui o EventBus do Godot.
  *
@@ -44,7 +51,7 @@ export const useGameStore = create<GameState>((set) => {
     loop = new GameLoop(
       (snapshot) => set({ snapshot }),
       playSound,
-      new Game(undefined, forcedTask()),
+      new Game(undefined, forcedTask(), daySeconds()),
     );
     loop.start();
   };
