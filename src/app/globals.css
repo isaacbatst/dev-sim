@@ -35,6 +35,14 @@
   --font-mono: var(--font-jetbrains);
   /* Sheen sutil no topo (luz de tela), não um painel "glassy". */
   --window-bg: linear-gradient(180deg, #1d2130 0%, var(--surface) 48%);
+  /* Syntax highlight (escuro) */
+  --syn-key: #c792ea;
+  --syn-str: #c3e88d;
+  --syn-num: #f78c6c;
+  --syn-fn: #82aaff;
+  --syn-tag: #f07178;
+  --syn-attr: #ffcb6b;
+  --syn-com: #5f6678;
   --wall:
     radial-gradient(
       120% 80% at 50% -10%,
@@ -61,6 +69,14 @@
   --font-grotesk: var(--font-schibsted);
   --font-mono: var(--font-jetbrains); /* mesmo mono nos 2 temas (sem Plex) */
   --window-bg: linear-gradient(180deg, #ffffff 0%, var(--surface) 55%);
+  /* Syntax highlight (claro) */
+  --syn-key: #9333a8;
+  --syn-str: #3f7d34;
+  --syn-num: #b05a17;
+  --syn-fn: #2762c2;
+  --syn-tag: #b23a48;
+  --syn-attr: #8a6d00;
+  --syn-com: #a39b86;
   --wall:
     radial-gradient(
       120% 80% at 50% -10%,
@@ -107,6 +123,29 @@ body {
    independente do tema — são "apps de verdade", não a casca da marca. */
 .font-code {
   font-family: var(--font-jetbrains), ui-monospace, monospace;
+}
+
+/* Syntax highlight (cores por tema; ver --syn-* nos temas). */
+.syn-key {
+  color: var(--syn-key);
+}
+.syn-str {
+  color: var(--syn-str);
+}
+.syn-num {
+  color: var(--syn-num);
+}
+.syn-fn {
+  color: var(--syn-fn);
+}
+.syn-tag {
+  color: var(--syn-tag);
+}
+.syn-attr {
+  color: var(--syn-attr);
+}
+.syn-com {
+  color: var(--syn-com);
 }
 
 /* ── Grão: textura orgânica sobre o wallpaper (anti "AI-flat") ─ */

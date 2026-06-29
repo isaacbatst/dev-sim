@@ -1,6 +1,7 @@
 import type { ActiveTicketSnapshot, SegmentView } from '@/core/snapshot';
 import { PROJECT_FILES } from '@/data/files';
 import { fileRows, allFolderPaths, fileBasename } from '@/core/domain/instance';
+import { Code } from './highlight';
 
 type FileView = Extract<SegmentView, { type: 'file' }>;
 
@@ -171,11 +172,13 @@ function Preview({ file }: { file: string }) {
         {file}
         <span className="text-ink-dim/70">— prévia</span>
       </div>
-      <pre className="m-0 flex-1 overflow-y-auto p-3 leading-6 text-ink-dim opacity-70">
+      <pre className="m-0 flex-1 overflow-y-auto p-3 leading-6 opacity-80">
         {linesFor(file).map((line, i) => (
           <div key={i} className="flex gap-3">
-            <span className="w-6 select-none text-right">{i + 1}</span>
-            <span>{line || ' '}</span>
+            <span className="w-6 select-none text-right text-ink-dim">{i + 1}</span>
+            <span>
+              <Code line={line} ext={ext(file)} />
+            </span>
           </div>
         ))}
       </pre>
@@ -258,12 +261,15 @@ function CodeArea({
               } ${isBug ? 'bg-amber/10' : ''}`}
             >
               <span className="w-6 select-none text-right text-ink-dim">{i + 1}</span>
+              {/* Highlight normal; na linha do typo mantém o squiggle âmbar por cima. */}
               <span
                 className={
-                  isBug ? 'text-amber underline decoration-amber decoration-wavy' : 'text-ink'
+                  isBug
+                    ? 'underline decoration-amber decoration-wavy decoration-2 underline-offset-2'
+                    : ''
                 }
               >
-                {line || ' '}
+                <Code line={line} ext={ext(file)} />
               </span>
               {isCursor && (
                 <span className={`animate-edgepulse ${cursorWrong ? 'text-fail' : 'text-amber'}`}>
@@ -302,7 +308,9 @@ function GitView({
             return (
               <div key={i} className={`flex items-center gap-3 ${fixed ? 'bg-pass/10' : ''}`}>
                 <span className="w-6 select-none text-right text-ink-dim">{i + 1}</span>
-                <span className={fixed ? 'text-pass' : 'text-ink'}>{line || ' '}</span>
+                <span>
+                  <Code line={line} ext={ext(file)} />
+                </span>
                 {fixed && <span className="ml-auto pr-2 text-[10px] text-pass">✓ corrigido</span>}
               </div>
             );
