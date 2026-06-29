@@ -53,7 +53,7 @@ export function Desktop({
               )}
             </div>
           ) : (
-            <div className="max-w-sm rounded-lg border border-line bg-surface/80 p-6 text-center shadow-xl">
+            <div className="elev-2 max-w-sm rounded-lg border border-edge bg-surface p-6 text-center">
               <p className="font-grotesk text-lg font-semibold text-ink">09:00 — bom dia ☕</p>
               <p className="mt-2 text-sm text-ink-dim">
                 As demandas do dia estão no backlog à esquerda. Abra uma com as teclas{' '}
