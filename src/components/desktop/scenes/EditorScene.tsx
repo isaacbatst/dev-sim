@@ -196,12 +196,18 @@ function QuickOpen({ seg }: { seg: FileView }) {
   const activePath = seg.matchIndex >= 0 ? seg.files[seg.matchIndex] : null;
   return (
     <div className="absolute inset-x-0 top-0 z-10 flex justify-center px-4 pt-3">
-      <div className="w-full max-w-md overflow-hidden rounded-md border border-amber bg-surface-2 shadow-2xl shadow-black/60">
-        <div className="flex items-center gap-2 border-b border-line px-3 py-2 font-code text-sm">
+      {/* Overlay como painel: sem borda colorida; separa por sombra (elev-3). */}
+      <div className="elev-3 w-full max-w-md overflow-hidden rounded-lg border border-edge bg-surface-2">
+        <div className="flex items-center gap-2 border-b border-line px-3 py-2.5 font-code text-sm">
           <span className="text-ink-dim">›</span>
-          <span className="text-ink">{seg.query}</span>
-          <span className="animate-edgepulse text-amber">▌</span>
-          <span className="ml-auto text-[10px] text-ink-dim">Quick Open</span>
+          {/* Query + caret juntos (sem gap) pro cursor "colar" no texto. */}
+          <span className="min-w-0 flex-1 truncate text-ink">
+            {seg.query || <span className="text-ink-dim">buscar arquivo…</span>}
+            <span className="animate-edgepulse ml-px text-amber">▏</span>
+          </span>
+          <span className="shrink-0 text-[10px] uppercase tracking-wider text-ink-dim">
+            Quick Open
+          </span>
         </div>
         <div className="max-h-48 overflow-auto py-1">
           {matches.length === 0 && (
