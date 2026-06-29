@@ -83,9 +83,17 @@ function Cue({ seg }: { seg: SegmentView }) {
               </KeyCap>
             ))}
           </span>
-          <span className="text-sm text-ink">{seg.label}</span>
+          <span className="text-sm text-ink">
+            {seg.label}
+            {seg.groups > 1 && (
+              <span className="ml-1.5 text-ink-dim">
+                {Math.min(seg.activeGroup + 1, seg.groups)}/{seg.groups}
+              </span>
+            )}
+          </span>
+          {/* Meter é do CONFLITO ATUAL (não do total) — expõe o progresso daquele. */}
           <span className="w-32">
-            <Meter value={seg.progress} color="var(--amber)" />
+            <Meter value={seg.groupProgress} color="var(--amber)" />
           </span>
         </div>
       );

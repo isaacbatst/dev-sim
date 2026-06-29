@@ -80,7 +80,14 @@ export type SegmentView =
       expectKey: string;
       count: number;
       target: number;
+      /** Progresso global (0..1). */
       progress: number;
+      /** Grupos sequenciais (ex.: conflitos do merge). */
+      groups: number;
+      /** Grupo atual sendo resolvido (0-based). */
+      activeGroup: number;
+      /** Progresso (0..1) DENTRO do grupo atual. */
+      groupProgress: number;
     }
   | {
       type: 'file';

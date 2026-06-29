@@ -818,7 +818,10 @@ export class Game {
           remaining: Math.max(0, seg.total - seg.elapsed),
           progress: Math.min(1, seg.elapsed / seg.total),
         };
-      case 'mash':
+      case 'mash': {
+        const perGroup = seg.target / seg.groups;
+        const activeGroup = Math.min(seg.groups - 1, Math.floor(seg.count / perGroup));
+        const groupProgress = Math.min(1, (seg.count - activeGroup * perGroup) / perGroup);
         return {
           type: 'mash',
           keys: seg.keys,
@@ -827,7 +830,11 @@ export class Game {
           count: seg.count,
           target: seg.target,
           progress: Math.min(1, seg.count / seg.target),
+          groups: seg.groups,
+          activeGroup,
+          groupProgress,
         };
+      }
       case 'file': {
         const expanded = new Set(seg.expanded);
         const rows = fileRows(seg.files, expanded).map((r) => ({

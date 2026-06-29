@@ -79,14 +79,20 @@ export interface FileSegment {
  * prato"). `keys` é o ciclo a percorrer: 1 tecla = repetir; 2+ = alternar em
  * ordem (ex.: ⬅️➡️ para resolver um conflito de merge). NÃO é tempo morto — cada
  * batida é uma ação, com feedback que escala. Ver DIRECAO_GAMEPLAY.md §6.
+ *
+ * `groups` = sub-unidades resolvidas em sequência (ex.: cada conflito do merge).
+ * `minCount`/`maxCount` são batidas POR grupo; o total = grupos × batidas/grupo.
  */
 export interface MashSegment {
   type: 'mash';
   keys: string[];
   label: string;
-  /** Quantas batidas exigir (sorteia entre min/max). */
+  /** Batidas por grupo (sorteia entre min/max). */
   minCount: number;
   maxCount: number;
+  /** Quantos grupos sequenciais (sorteia entre min/max; default 1). */
+  minGroups?: number;
+  maxGroups?: number;
 }
 
 export type Segment =

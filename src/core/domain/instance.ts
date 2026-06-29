@@ -78,8 +78,10 @@ export interface MashInstance {
   type: 'mash';
   keys: string[];
   label: string;
-  /** Batidas exigidas. */
+  /** Batidas exigidas no total (= grupos × batidas/grupo). */
   target: number;
+  /** Grupos sequenciais (ex.: conflitos do merge). */
+  groups: number;
   /** Batidas feitas. */
   count: number;
   /** Índice (em `keys`) da próxima tecla esperada no ciclo. */
@@ -237,15 +239,19 @@ function instantiateSegment(segment: Segment): SegmentInstance {
         segment.minDuration + Math.random() * (segment.maxDuration - segment.minDuration);
       return { type: 'wait', total, elapsed: 0 };
     }
-    case 'mash':
+    case 'mash': {
+      const groups = randInt(segment.minGroups ?? 1, segment.maxGroups ?? 1);
+      const perGroup = randInt(segment.minCount, segment.maxCount);
       return {
         type: 'mash',
         keys: segment.keys,
         label: segment.label,
-        target: randInt(segment.minCount, segment.maxCount),
+        groups,
+        target: groups * perGroup,
         count: 0,
         expect: 0,
       };
+    }
     case 'file': {
       const allowed = segment.ext
         ? PROJECT_FILES.map((f, i) => (f.endsWith(`.${segment.ext}`) ? i : -1)).filter(

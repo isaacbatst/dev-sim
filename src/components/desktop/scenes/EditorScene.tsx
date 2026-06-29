@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import type { ActiveTicketSnapshot, SegmentView } from '@/core/snapshot';
 import { PROJECT_FILES } from '@/data/files';
 import { fileRows, allFolderPaths, fileBasename } from '@/core/domain/instance';
@@ -34,15 +34,26 @@ const CONTENT: Record<string, string[]> = {
     '    <meta name="viewport" content="width=device-width" />',
     '    <title>Dashboard</title>',
     '    <link rel="stylesheet" href="styles.css" />',
+    '    <link rel="stylesheet" href="theme.css" />',
     '  </head>',
     '  <body>',
     '    <header class="topbar">',
     '      <h1>Painel</h1>',
-    '      <nav><a href="about.html">Sobre</a></nav>',
+    '      <nav>',
+    '        <a href="index.html">Início</a>',
+    '        <a href="about.html">Sobre</a>',
+    '      </nav>',
     '    </header>',
-    '    <main id="app"></main>',
+    '    <main id="app">',
+    '      <section class="hero">',
+    '        <h2>Bem-vindo</h2>',
+    '        <button class="button">Começar</button>',
+    '      </section>',
+    '      <section id="list"></section>',
+    '    </main>',
     '    <footer class="foot">© 2026 devOS</footer>',
     '    <script src="app.js"></script>',
+    '    <script src="utils.js"></script>',
     '  </body>',
     '</html>',
   ],
@@ -55,12 +66,23 @@ const CONTENT: Record<string, string[]> = {
     '    <link rel="stylesheet" href="styles.css" />',
     '  </head>',
     '  <body>',
-    '    <h1 class="title">Sobre nós</h1>',
-    '    <p>Ferramentas para devs.</p>',
-    '    <section class="team">',
-    '      <p>Time pequeno, foco grande.</p>',
-    '      <ul><li>Engenharia</li><li>Design</li></ul>',
-    '    </section>',
+    '    <header class="topbar">',
+    '      <h1 class="title">Sobre nós</h1>',
+    '    </header>',
+    '    <main>',
+    '      <p>Ferramentas para devs.</p>',
+    '      <section class="team">',
+    '        <p>Time pequeno, foco grande.</p>',
+    '        <ul>',
+    '          <li>Engenharia</li>',
+    '          <li>Design</li>',
+    '          <li>Produto</li>',
+    '        </ul>',
+    '      </section>',
+    '      <section class="contact">',
+    '        <p>fale@devos.app</p>',
+    '      </section>',
+    '    </main>',
     '    <a href="index.html">Voltar</a>',
     '  </body>',
     '</html>',
@@ -68,13 +90,19 @@ const CONTENT: Record<string, string[]> = {
   'styles.css': [
     ':root {',
     '  --primary: #3b82f6;',
+    '  --danger: #ef4444;',
     '  --radius: 8px;',
+    '  --gap: 12px;',
     '}',
     '.button {',
     '  background: var(--primary);',
     '  color: #ffffff;',
     '  padding: 8px 14px;',
     '  border-radius: var(--radius);',
+    '  cursor: pointer;',
+    '}',
+    '.button:hover {',
+    '  filter: brightness(1.1);',
     '}',
     '.title {',
     '  font-size: 18px;',
@@ -83,32 +111,51 @@ const CONTENT: Record<string, string[]> = {
     '.input {',
     '  border: 1px solid #cccccc;',
     '  padding: 6px;',
+    '  border-radius: 4px;',
     '}',
-    '.card { box-shadow: 0 1px 3px #0000001f; }',
+    '.card {',
+    '  box-shadow: 0 1px 3px #0000001f;',
+    '  padding: 16px;',
+    '}',
+    '.hero { text-align: center; }',
+    '.foot { color: #888888; }',
   ],
   'theme.css': [
     ':root {',
     '  --bg: #0e1016;',
     '  --text: #e7e4dd;',
     '  --accent: #c792ea;',
+    '  --muted: #7e8597;',
     '}',
     'body {',
     '  background: var(--bg);',
     '  color: var(--text);',
     '  margin: 0;',
+    '  font-family: system-ui;',
     '}',
     '.card {',
     '  border-radius: 8px;',
     '  padding: 16px;',
     '  background: #161922;',
     '}',
-    '.muted { color: #7e8597; }',
+    '.badge {',
+    '  color: var(--accent);',
+    '  font-size: 12px;',
+    '}',
+    '.link {',
+    '  color: var(--accent);',
+    '  text-decoration: underline;',
+    '}',
+    '.muted { color: var(--muted); }',
   ],
   'reset.css': [
     '* {',
     '  margin: 0;',
     '  padding: 0;',
     '  box-sizing: border-box;',
+    '}',
+    'html, body {',
+    '  height: 100%;',
     '}',
     'ul, ol {',
     '  list-style: none;',
@@ -120,24 +167,42 @@ const CONTENT: Record<string, string[]> = {
     'button {',
     '  font: inherit;',
     '  cursor: pointer;',
+    '  border: none;',
+    '}',
+    'img {',
+    '  max-width: 100%;',
+    '  display: block;',
+    '}',
+    'input, textarea {',
+    '  font: inherit;',
     '}',
   ],
   'app.js': [
     "import { api } from './api'",
     "import { render } from './utils'",
+    'const state = { ready: false }',
     'export function start() {',
     '  const data = api.load()',
     '  render(data)',
     "  console.log('ok')",
+    '  state.ready = true',
     '  return data',
     '}',
     'export function reload() {',
     '  return start()',
     '}',
+    'export function reset() {',
+    '  state.ready = false',
+    '  return start()',
+    '}',
     'function track(event) {',
     '  api.save({ event })',
     '}',
+    'function onError(err) {',
+    '  console.error(err)',
+    '}',
     "window.addEventListener('load', start)",
+    "window.addEventListener('error', onError)",
   ],
   'utils.js': [
     'export function render(data) {',
@@ -155,9 +220,18 @@ const CONTENT: Record<string, string[]> = {
     '    timer = setTimeout(() => fn(...args), ms)',
     '  }',
     '}',
+    'export function once(fn) {',
+    '  let done = false',
+    '  return (...args) => {',
+    '    if (done) return',
+    '    done = true',
+    '    return fn(...args)',
+    '  }',
+    '}',
   ],
   'api.js': [
     "const BASE = '/api/v1'",
+    'const TIMEOUT = 5000',
     'export const api = {',
     '  load() {',
     "    return fetch(BASE + '/me')",
@@ -168,13 +242,23 @@ const CONTENT: Record<string, string[]> = {
     '  remove(id) {',
     "    return fetch(BASE + '/item/' + id, { method: 'DELETE' })",
     '  },',
+    '  list(page) {',
+    "    return fetch(BASE + '/items?page=' + page)",
+    '  },',
     '}',
     'export function authHeader(token) {',
     "  return { Authorization: 'Bearer ' + token }",
     '}',
+    'export function withTimeout(p) {',
+    '  return Promise.race([p, wait(TIMEOUT)])',
+    '}',
+    'function wait(ms) {',
+    '  return new Promise((r) => setTimeout(r, ms))',
+    '}',
   ],
   'login.ts': [
     "import { signJwt } from './auth'",
+    "import { AuthError } from './errors'",
     'export function login(user: User) {',
     '  const token = createSession(user)',
     '  if (!token) throw new AuthError()',
@@ -184,11 +268,18 @@ const CONTENT: Record<string, string[]> = {
     '  return signJwt({ sub: user.id })',
     '}',
     'export function logout(token: string) {',
-    '  return revoke(token)',
+    '  revoke(token)',
+    '  return clear()',
     '}',
     'function persist(token: string) {',
     "  localStorage.setItem('jwt', token)",
     '  return token',
+    '}',
+    'function revoke(token: string) {',
+    "  return fetch('/logout', { method: 'POST', body: token })",
+    '}',
+    'function clear() {',
+    "  localStorage.removeItem('jwt')",
     '}',
   ],
   'auth.ts': [
@@ -206,18 +297,29 @@ const CONTENT: Record<string, string[]> = {
     'function decode(token: string) {',
     '  return JSON.parse(atob(token))',
     '}',
+    'function sign(h: string, b: string, key: string) {',
+    "  return hmac(h + '.' + b, key)",
+    '}',
+    'function hmac(data: string, key: string) {',
+    "  return data.length + ':' + key.length",
+    '}',
   ],
   'README.md': [
     '# Projeto',
     '## Setup',
     '1. npm install',
     '2. npm run dev',
+    '3. abra localhost:3000',
     '## Deploy',
     'Push para a main dispara o CI.',
     'Veja o guia de contribuição.',
     '## Scripts',
     '- build: compila para produção',
     '- test: roda a suíte',
+    '- lint: checa o estilo',
+    '## Estrutura',
+    '- src/ código-fonte',
+    '- docs/ documentação',
     '## Licença',
     'MIT.',
   ],
@@ -284,17 +386,16 @@ function mutateLine(line: string, rng: () => number): string {
   return `${line} // hotfix`;
 }
 
-/** Monta os conflitos do merge: 1–3 em linhas de conteúdo distintas, semeado. */
-function buildConflicts(file: string, lines: string[], id: number): Conflict[] {
+/** Monta `count` conflitos em linhas de conteúdo distintas, semeado pelo ticket. */
+function buildConflicts(file: string, lines: string[], id: number, count: number): Conflict[] {
   const rng = mulberry32((Math.imul(id, 2654435761) ^ hashStr(file)) >>> 0);
   const candidates = lines
     .map((l, i) => ({ l, i }))
     .filter((x) => x.l.trim().length > 4 && !/^[{}()[\]<>/]+$/.test(x.l.trim()));
   if (candidates.length === 0) return [];
-  const count = Math.min(candidates.length, 1 + Math.floor(rng() * 3)); // 1..3
   const pool = [...candidates];
   const picked: { l: string; i: number }[] = [];
-  for (let k = 0; k < count && pool.length > 0; k++) {
+  for (let k = 0; k < Math.min(count, candidates.length) && pool.length > 0; k++) {
     picked.push(pool.splice(Math.floor(rng() * pool.length), 1)[0]);
   }
   return picked
@@ -530,11 +631,44 @@ function CodeArea({
   );
 }
 
-/** Um conflito: marcadores reais do git com HEAD × feature DIFERENTES. */
-function ConflictBlock({ head, feature, ext: e }: { head: string; feature: string; ext: string }) {
+/** Um conflito: marcadores reais do git com HEAD × feature DIFERENTES.
+ *  `active` = é o que está sendo resolvido agora (destaque + mini progresso);
+ *  os demais conflitos pendentes ficam esmaecidos. */
+function ConflictBlock({
+  head,
+  feature,
+  ext: e,
+  active,
+  progress,
+  blockRef,
+}: {
+  head: string;
+  feature: string;
+  ext: string;
+  active: boolean;
+  progress: number;
+  blockRef?: React.Ref<HTMLDivElement>;
+}) {
   return (
-    <div className="relative bg-fail/[0.07] py-0.5">
-      <span aria-hidden className="absolute inset-y-0 left-0 w-0.5 bg-fail/70" />
+    <div
+      ref={blockRef}
+      className={`relative my-0.5 ${active ? 'bg-fail/[0.12]' : 'bg-fail/[0.05] opacity-50'}`}
+    >
+      <span
+        aria-hidden
+        className={`absolute inset-y-0 left-0 w-0.5 ${active ? 'bg-fail' : 'bg-fail/40'}`}
+      />
+      {active && (
+        <div className="flex items-center gap-2 px-3 pt-0.5 text-[10px] text-fail">
+          <span className="uppercase tracking-wider">resolvendo conflito</span>
+          <span className="h-1 w-16 overflow-hidden rounded-full bg-fail/20">
+            <span
+              className="block h-full rounded-full bg-fail transition-[width] duration-75"
+              style={{ width: `${Math.round(progress * 100)}%` }}
+            />
+          </span>
+        </div>
+      )}
       <pre className="m-0 px-3 leading-6 text-fail">{'<<<<<<< HEAD'}</pre>
       <pre className="m-0 px-3 leading-6">
         <Code line={head} ext={e} />
@@ -549,7 +683,8 @@ function ConflictBlock({ head, feature, ext: e }: { head: string; feature: strin
 }
 
 /** Editor com terminal integrado. Push = diff "alterada"; merge = resolver os
- *  conflitos esfregando ⬅️➡️ (mash) — fecham um a um, de cima pra baixo. */
+ *  conflitos esfregando ⬅️➡️ (mash) — um por vez, de cima pra baixo. O editor
+ *  rola sozinho pro conflito ativo; o progresso é POR conflito. */
 function GitView({
   focus,
   file,
@@ -563,44 +698,59 @@ function GitView({
 }) {
   const mash = focus.type === 'mash' ? focus : null;
   const merge = !!mash;
-  const progress = mash?.progress ?? 0;
+  const groups = mash?.groups ?? 0;
+  const activeGroup = mash?.activeGroup ?? 0;
+  const groupProgress = mash?.groupProgress ?? 0;
   const lines = linesFor(file);
-  // Conflitos do merge: quantidade/locais/conteúdo determinísticos pelo ticket.
+  // Conflitos do merge: quantidade (= grupos do mash), locais e conteúdo
+  // determinísticos pelo ticket — estável entre frames.
   const conflicts = useMemo(
-    () => (merge ? buildConflicts(file, lines, seed) : []),
-    [merge, file, lines, seed],
+    () => (merge ? buildConflicts(file, lines, seed, groups) : []),
+    [merge, file, lines, seed, groups],
   );
   const byLine = new Map(conflicts.map((c, k) => [c.line, k]));
-  const resolved = (k: number) => progress >= (k + 1) / conflicts.length;
+  // Rola pro conflito ativo sempre que ele muda (e na entrada).
+  const activeRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    activeRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }, [activeGroup, merge]);
   // No push (sem conflitos), a linha alterada usa um fallback de conteúdo.
   const fallback = Math.max(
     0,
     lines.findIndex((l) => l.trim().length > 3 && !/^[{}()[\]]+$/.test(l.trim())),
   );
   const changedLine = targetLine > 0 ? targetLine - 1 : fallback;
-  const open = conflicts.filter((_, k) => !resolved(k)).length;
+  const open = Math.max(0, groups - activeGroup);
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden font-code text-sm">
-        <div className="flex shrink-0 border-b border-line bg-surface px-3 py-1 text-xs text-ink-dim">
+        <div className="flex shrink-0 items-center gap-2 border-b border-line bg-surface px-3 py-1 text-xs text-ink-dim">
           <span className="border-b-2 border-amber px-2 py-1 text-ink">{file}</span>
+          {merge && groups > 0 && (
+            <span className="ml-auto text-[11px] text-fail">
+              conflito {Math.min(activeGroup + 1, groups)}/{groups}
+            </span>
+          )}
         </div>
         <pre className="m-0 flex-1 overflow-y-auto p-3 leading-6">
           {lines.map((line, i) => {
-            // Linha em conflito ainda não resolvida → bloco com marcadores.
             const k = byLine.get(i);
-            if (merge && k !== undefined && !resolved(k)) {
+            // Conflito ainda não resolvido (k >= ativo) → bloco com marcadores.
+            if (merge && k !== undefined && k >= activeGroup) {
               return (
                 <ConflictBlock
                   key={i}
+                  blockRef={k === activeGroup ? activeRef : undefined}
+                  active={k === activeGroup}
+                  progress={k === activeGroup ? groupProgress : 0}
                   head={conflicts[k].head}
                   feature={conflicts[k].feature}
                   ext={ext(file)}
                 />
               );
             }
-            // Push: diff "alterada" na linha alterada. Merge: linha normal
-            // (conflitos já resolvidos viram código comum).
+            // Push: diff "alterada". Merge: linha normal (conflito já resolvido
+            // vira código comum — sem marca amarela).
             const changed = !merge && i === changedLine;
             return (
               <div
@@ -797,7 +947,9 @@ export function EditorScene({ active }: { active: ActiveTicketSnapshot }) {
       <CodeArea
         focus={focus}
         file={active.editorFile}
-        targetLine={active.editorLine}
+        // Pronto pra entregar (sem passo ativo) → arquivo limpo, sem o sublinhado
+        // do typo (já foi corrigido e o conflito resolvido).
+        targetLine={active.ready ? 0 : active.editorLine}
         fixedLine={active.editorFixedLine}
       />
     );
