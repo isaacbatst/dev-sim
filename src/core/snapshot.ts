@@ -141,6 +141,8 @@ export interface ActiveTicketSnapshot {
   editorFile: string;
   /** Linha-alvo (1-based) do typo no editor; 0 se não se aplica. */
   editorLine: number;
+  /** Linha (1-based) que o jogador de fato corrigiu (cursor commitado); 0 se n/a. */
+  editorFixedLine: number;
   /** Site/página aberta no navegador (para a cena do browser). */
   browserSite: string;
 }

@@ -484,7 +484,7 @@ export function EditorScene({ active }: { active: ActiveTicketSnapshot }) {
   } else if (focus?.type === 'selection') main = <CssSelect seg={focus} file={active.editorFile} />;
   else if (focus?.type === 'wait') main = <PrPanel active={active} />;
   else if (focus?.type === 'press' && /push|merge/i.test(focus.tokens[0]?.label ?? ''))
-    main = <GitView focus={focus} file={active.editorFile} targetLine={active.editorLine} />;
+    main = <GitView focus={focus} file={active.editorFile} targetLine={active.editorFixedLine} />;
   else main = <CodeArea focus={focus} file={active.editorFile} targetLine={active.editorLine} />;
 
   return (

@@ -255,17 +255,39 @@ export class Game {
     this.progressSound(inst, before, launched);
   }
 
-  /** Ctrl+P: abre/fecha a busca rápida de arquivo (segmento `file`). */
+  /** Ctrl+P: abre/fecha a busca; se o arquivo já foi aberto, REABRE pra trocar. */
   quickOpen(): void {
     if (this.status !== 'playing') return;
     const inst = this.activeInstance();
-    if (!inst || inst.focused !== this.currentApp(inst)) return;
+    if (!inst || inst.wrongApp || inst.focused !== this.currentApp(inst)) return;
     const seg = this.currentSegment(inst);
     if (seg?.type === 'file' && !seg.committed) {
       seg.searching = !seg.searching;
       seg.query = '';
       this.emit('tab');
+      return;
     }
+    // Já passou do passo de abrir: reabre o seletor pra trocar o arquivo
+    // (abrir o errado não deve ser problema — igual abrir o programa errado).
+    this.reopenFile(inst);
+  }
+
+  /** Volta ao passo de abrir arquivo (antes do push), resetando o que vier depois. */
+  private reopenFile(inst: TicketInstance): void {
+    const task = inst.tasks[inst.taskIndex];
+    if (!task) return;
+    const fileStep = task.steps.findIndex((s) => s.segments.some((x) => x.type === 'file'));
+    if (fileStep < 0) return;
+    const pushStep = task.steps.findIndex((s) =>
+      s.segments.some((x) => x.type === 'press' && x.actions.some((a) => /push/i.test(a.label))),
+    );
+    if (pushStep >= 0 && inst.stepIndex >= pushStep) return; // depois do push não reabre
+    for (let si = fileStep; si < task.steps.length; si++)
+      task.steps[si].segments.forEach(resetSegment);
+    const seg = task.steps[fileStep].segments.find((x) => x.type === 'file');
+    if (seg?.type === 'file') seg.searching = true;
+    inst.stepIndex = fileStep;
+    this.emit('tab');
   }
 
   /** Ctrl+P: melhor match por nome do arquivo (em qualquer pasta). -1 se nenhum. */
@@ -577,6 +599,7 @@ export class Game {
       id: inst.id,
       editorFile: this.editorFile(taskInst),
       editorLine: this.editorLine(taskInst),
+      editorFixedLine: this.editorFixedLine(taskInst),
       browserSite: this.browserSite(taskInst),
       // 1º passo de cada tarefa é "Abrir X"; antes disso, o app ainda não abriu.
       appLaunched: this.isLaunched(inst),
@@ -671,6 +694,15 @@ export class Game {
     if (!hasFix) return 0;
     for (const step of t.steps)
       for (const seg of step.segments) if (seg.type === 'nav') return seg.target + 1;
+    return 0;
+  }
+
+  /** Linha que o jogador realmente corrigiu = cursor commitado (pode ser a errada). */
+  private editorFixedLine(t: TaskInstance): number {
+    if (this.editorLine(t) === 0) return 0;
+    for (const step of t.steps)
+      for (const seg of step.segments)
+        if (seg.type === 'nav') return (seg.committed ? seg.cursor : seg.target) + 1;
     return 0;
   }
 
