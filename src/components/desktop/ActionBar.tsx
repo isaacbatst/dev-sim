@@ -88,10 +88,6 @@ function Cue({ seg }: { seg: SegmentView }) {
             <KeyCap state={onTarget ? 'current' : 'idle'}>Enter</KeyCap>
             <span className="text-sm text-ink-dim">confirmar</span>
           </span>
-          <span className="font-mono text-sm">
-            <span className={onTarget ? 'text-pass' : 'text-amber'}>{seg.cursor}</span>
-            <span className="text-ink-dim"> / alvo {seg.target}</span>
-          </span>
         </div>
       );
     }
