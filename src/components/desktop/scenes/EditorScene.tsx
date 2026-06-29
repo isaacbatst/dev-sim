@@ -273,25 +273,22 @@ function CodeArea({
               key={i}
               className={`flex items-center gap-3 ${
                 isCursor ? (cursorWrong ? 'bg-fail/20' : 'bg-amber/15') : ''
-              } ${isBug ? 'bg-amber/10' : ''}`}
+              }`}
             >
               <span className="w-6 select-none text-right text-ink-dim">{i + 1}</span>
-              {/* Highlight normal; na linha do typo mantém o squiggle âmbar por cima. */}
-              <span
-                className={
-                  isBug
-                    ? 'underline decoration-amber decoration-wavy decoration-2 underline-offset-2'
-                    : ''
-                }
-              >
-                <Code line={line} ext={ext(file)} />
-              </span>
-              {isCursor && (
-                <span className={`animate-edgepulse ${cursorWrong ? 'text-fail' : 'text-amber'}`}>
-                  ▎
+              {/* Linha do typo: sublinha só o código, pulando a indentação. */}
+              {isBug ? (
+                <span>
+                  {line.slice(0, line.length - line.trimStart().length)}
+                  <span className="underline decoration-amber decoration-wavy decoration-2 underline-offset-2">
+                    <Code line={line.trimStart()} ext={ext(file)} />
+                  </span>
+                </span>
+              ) : (
+                <span>
+                  <Code line={line} ext={ext(file)} />
                 </span>
               )}
-              {isBug && <span className="ml-auto pr-2 text-[10px] text-amber">🐛 typo aqui</span>}
             </div>
           );
         })}
