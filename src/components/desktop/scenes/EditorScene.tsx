@@ -1092,6 +1092,90 @@ function PrPanel({ active }: { active: ActiveTicketSnapshot }) {
   );
 }
 
+/** Debug: pôr breakpoint (F9), rodar (F5) e ver o valor errado no painel de
+ *  variáveis (pausado). A linha culpada é a que recebe o breakpoint. */
+function DebugScene({ active }: { active: ActiveTicketSnapshot }) {
+  const focus = active.segments[0];
+  const file = active.editorFile;
+  const lines = linesFor(file);
+  const nav = focus?.type === 'nav' ? focus : null;
+  const label = focus?.type === 'press' ? (focus.tokens[0]?.label ?? '') : '';
+  const phase = nav
+    ? 'find'
+    : /breakpoint/i.test(label)
+      ? 'setbp'
+      : /rodar/i.test(label)
+        ? 'run'
+        : 'paused';
+  const marked = nav ? nav.cursor : active.editorFixedLine - 1;
+  const dotSet = phase === 'run' || phase === 'paused';
+  const paused = phase === 'paused';
+  const hint =
+    phase === 'find'
+      ? 'ache a linha suspeita'
+      : phase === 'setbp'
+        ? 'F9 — pôr breakpoint'
+        : phase === 'run'
+          ? 'F5 — rodar até o breakpoint'
+          : 'pausado no breakpoint';
+  return (
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden font-code text-sm">
+      <div className="flex shrink-0 items-center gap-2 border-b border-line bg-surface px-3 py-1 text-xs text-ink-dim">
+        <span className="border-b-2 border-amber px-2 py-1 text-ink">{file}</span>
+        <span className={`ml-auto flex items-center gap-1.5 ${paused ? 'text-amber' : ''}`}>
+          {paused && <span className="size-1.5 rounded-full bg-amber" />}
+          {hint}
+        </span>
+      </div>
+      <pre className="m-0 flex-1 overflow-y-auto p-3 leading-6">
+        {lines.map((line, i) => {
+          const isMarked = i === marked;
+          return (
+            <div
+              key={i}
+              className={`relative flex items-center gap-2 ${
+                isMarked ? (paused ? 'bg-amber/15' : 'bg-amber/[0.08]') : ''
+              }`}
+            >
+              {paused && isMarked && <span className="absolute inset-y-0 left-0 w-0.5 bg-amber" />}
+              <span className="flex w-6 select-none items-center justify-end">
+                {isMarked && (dotSet || phase === 'setbp') ? (
+                  <span className={dotSet ? 'text-fail' : 'text-fail/40'}>●</span>
+                ) : (
+                  <span className="text-ink-dim">{i + 1}</span>
+                )}
+              </span>
+              <span>
+                <Code line={line} ext={ext(file)} />
+              </span>
+            </div>
+          );
+        })}
+      </pre>
+      {paused && (
+        <div className="shrink-0 border-t border-line bg-surface/60 p-3 text-xs">
+          <p className="mb-1.5 uppercase tracking-wider text-ink-dim">variáveis</p>
+          <div className="flex flex-col gap-1">
+            <div className="flex gap-3">
+              <span className="w-20 text-sky-400">user</span>
+              <span className="text-ink-dim">{'{ id: 7, name: "ana" }'}</span>
+            </div>
+            <div className="flex gap-3">
+              <span className="w-20 text-sky-400">session</span>
+              <span className="text-ink-dim">active</span>
+            </div>
+            <div className="flex gap-3">
+              <span className="w-20 text-sky-400">token</span>
+              <span className="font-semibold text-fail">undefined</span>
+              <span className="text-fail/70">← nulo aqui</span>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function EditorScene({ active }: { active: ActiveTicketSnapshot }) {
   const focus = active.segments[0];
   const pick = focus?.type === 'file' ? focus : null;
@@ -1102,7 +1186,13 @@ export function EditorScene({ active }: { active: ActiveTicketSnapshot }) {
     const row = pick.rows[pick.cursor];
     if (row?.kind === 'file') main = <Preview file={fileBasename(pick.files[row.fileIndex])} />;
     else main = <FolderPreview name={row?.name ?? ''} open={row?.open ?? false} />;
-  } else if (focus?.type === 'selection') main = <CssSelect seg={focus} file={active.editorFile} />;
+  } else if (
+    active.taskId === 'debug' &&
+    (focus?.type === 'nav' ||
+      (focus?.type === 'press' && !/push/i.test(focus.tokens[0]?.label ?? '')))
+  )
+    main = <DebugScene active={active} />;
+  else if (focus?.type === 'selection') main = <CssSelect seg={focus} file={active.editorFile} />;
   else if (focus?.type === 'scrub') main = <ScrubDial seg={focus} file={active.editorFile} />;
   else if (focus?.type === 'wait') main = <PrPanel active={active} />;
   else if (focus?.type === 'combo')

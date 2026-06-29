@@ -158,6 +158,8 @@ export interface ActiveTicketSnapshot {
   description: string;
   priority: Priority;
   taskTitle: string;
+  /** Id do template da tarefa atual (ex.: 'debug') — p/ a cena escolher o layout. */
+  taskId: string;
   taskIndex: number;
   taskCount: number;
   segments: SegmentView[];

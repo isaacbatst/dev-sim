@@ -65,6 +65,13 @@ export const SEGMENTS: Record<string, Segment> = {
   },
   press_push: { type: 'press', maxItems: 1, actions: [{ key: 'p', label: 'Push' }] },
   press_fix: { type: 'press', maxItems: 1, actions: [{ key: 'f', label: 'Corrigir' }] },
+  // Debug: F9 põe o breakpoint na linha; F5 roda e pausa nele.
+  press_breakpoint: {
+    type: 'press',
+    maxItems: 1,
+    actions: [{ key: 'f9', label: 'Pôr breakpoint' }],
+  },
+  press_run: { type: 'press', maxItems: 1, actions: [{ key: 'f5', label: 'Rodar' }] },
 
   // --- combo (atalho modificador+tecla; mimético) ---
   // Copiar do Stack Overflow (no browser) e colar no VS Code — passos separados,

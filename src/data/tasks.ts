@@ -13,6 +13,24 @@ export const TASKS: Record<string, TaskTemplate> = {
     description: 'Abrir o Chrome, acessar a página e ler',
     steps: [step('press_open_browser'), step('press_open_source'), step('press_read')],
   },
+  // Debug: ir na linha suspeita, pôr breakpoint (F9), rodar (F5) e ver o valor
+  // errado no painel de variáveis; corrigir; push/CR/merge.
+  debug: {
+    id: 'debug',
+    title: 'Investigar Bug',
+    description: 'Abrir o VSCode, pôr um breakpoint, rodar, achar o valor errado e corrigir',
+    steps: [
+      step('press_open_vscode'),
+      step('open_file'),
+      step('nav_find_line'),
+      step('press_breakpoint'),
+      step('press_run'),
+      step('press_fix'),
+      step('press_push'),
+      step('wait_cr'),
+      step('mash_merge'),
+    ],
+  },
   meeting: {
     id: 'meeting',
     title: 'Participar da Reunião',
