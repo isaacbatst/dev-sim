@@ -1,11 +1,11 @@
 import type {
   ActiveTicketSnapshot,
   AppId,
-  PlanStatus,
   Priority,
   ProgramId,
   SlotSnapshot,
 } from '@/core/snapshot';
+import { LAUNCH_KEY } from '@/core/domain/apps';
 import { APPS } from './apps';
 import { Scene } from './scenes';
 import { ActionBar } from './ActionBar';
@@ -26,46 +26,19 @@ const PRIORITY_CLASS: Record<Priority, string> = {
   baixa: 'bg-ink/10 text-ink-dim',
 };
 
-function statusMark(s: PlanStatus) {
-  return s === 'done' ? '✓' : s === 'current' ? '▸' : '○';
-}
-function statusColor(s: PlanStatus) {
-  return s === 'done' ? 'text-pass' : s === 'current' ? 'text-amber' : 'text-ink-dim';
-}
-
-/** "Comanda" da demanda: o pedido + plano passo a passo (estilo CSD). */
-function DetailsPanel({ active }: { active: ActiveTicketSnapshot }) {
-  const multi = active.plan.length > 1;
+/** Antes de abrir o app: prompt pra lançar o programa da tarefa (a "comanda" /
+ *  objetivo agora vive só no banner acima da janela, fonte única). */
+function LaunchPrompt({ appId }: { appId: AppId }) {
+  const app = APPS[appId];
   return (
-    <div className="flex min-h-[22rem] flex-1 flex-col gap-4 overflow-auto p-6">
-      <div>
-        <h2 className="font-grotesk text-lg font-semibold text-ink">{active.name}</h2>
-      </div>
-
-      <div>
-        <p className="mb-2 text-[11px] uppercase tracking-wider text-ink-dim">o que fazer</p>
-        <div className="flex flex-col gap-3">
-          {active.plan.map((sub, i) => (
-            <div key={i} className="flex gap-2">
-              {multi && (
-                <span className={`mt-0.5 text-sm ${statusColor(sub.status)}`}>
-                  {statusMark(sub.status)}
-                </span>
-              )}
-              <div>
-                {multi && (
-                  <p className={`text-sm font-semibold ${statusColor(sub.status)}`}>{sub.title}</p>
-                )}
-                <p
-                  className={`text-sm leading-relaxed ${sub.status === 'done' ? 'text-ink-dim line-through' : 'text-ink'}`}
-                >
-                  {sub.prose}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+    <div className="flex min-h-[22rem] flex-1 flex-col items-center justify-center gap-3 text-center">
+      <span className="text-5xl opacity-40" aria-hidden>
+        {app.icon}
+      </span>
+      <p className="flex items-center gap-2 text-sm text-ink-dim">
+        abra o <span className="font-medium text-ink">{app.name}</span>
+        <kbd className="keycap !h-6 !min-w-6 !text-xs">{LAUNCH_KEY[appId]}</kbd>
+      </p>
     </div>
   );
 }
@@ -143,20 +116,20 @@ export function AppWindow({
 }) {
   const focusedApp = active.focused !== 'details' ? APPS[active.focused] : null;
   const wrongMeta = active.wrongApp ? APPS[active.wrongApp] : null;
+  const appMeta = APPS[active.app];
 
-  // Título da janela conforme o programa em foco (ou o aberto por engano).
+  // Título da janela conforme o programa em foco (ou o aberto por engano). Sem a
+  // aba Ticket: antes de abrir, mostra o programa-alvo da tarefa.
   const title = wrongMeta
     ? wrongMeta.name
-    : active.focused === 'details'
-      ? `Ticket — ${active.name}`
-      : active.focused === active.app
-        ? active.windowTitle
-        : `${focusedApp?.name}`;
+    : !active.appLaunched || active.focused === active.app
+      ? active.windowTitle
+      : `${focusedApp?.name}`;
 
   return (
     <div
       key={active.id}
-      className={`animate-windowin elev-2 flex w-full flex-col overflow-hidden rounded-lg border border-edge ${
+      className={`animate-windowin elev-2 flex w-full min-h-0 flex-col overflow-hidden rounded-lg border border-edge ${
         shake ? 'animate-shake' : ''
       }`}
       // Material da janela (por identidade): leve gradiente de cima p/ baixo —
@@ -171,7 +144,7 @@ export function AppWindow({
           <span className="size-3 rounded-full bg-[#28c840]" />
         </div>
         <span className="text-sm" aria-hidden>
-          {wrongMeta?.icon ?? focusedApp?.icon ?? '📋'}
+          {wrongMeta?.icon ?? (active.appLaunched ? focusedApp?.icon : appMeta.icon)}
         </span>
         <span className="truncate font-mono text-xs text-ink-dim">{title}</span>
         <span
@@ -181,42 +154,42 @@ export function AppWindow({
         </span>
       </div>
 
-      {/* Abas = Comanda + programas abertos (alterna com Tab) */}
-      <div className="flex items-center gap-1 border-b border-line bg-bg/40 px-2 py-1.5">
-        <ProgramTab
-          label="Ticket"
-          icon="📋"
-          active={active.focused === 'details'}
-          onClick={() => onFocusProgram('details')}
-        />
-        {active.openPrograms.map((id) => (
-          <ProgramTab
-            key={id}
-            label={APPS[id].name}
-            icon={APPS[id].icon}
-            active={active.focused === id}
-            onClick={() => onFocusProgram(id)}
-          />
-        ))}
-        {wrongMeta && (
-          <span className="flex items-center gap-1.5 rounded-md border border-line bg-surface-2 px-2.5 py-1 text-xs font-medium text-ink-dim">
-            <span aria-hidden>{wrongMeta.icon}</span>
-            {wrongMeta.name}
-            <span className="text-ink-dim">✕</span>
-          </span>
-        )}
-        <span className="ml-auto hidden items-center gap-1 pr-1 text-[10px] text-ink-dim sm:flex">
-          <kbd className="keycap !h-5 !min-w-7 !text-[10px]">Tab</kbd> alterna
-        </span>
-      </div>
+      {/* Abas = programas abertos (alterna com Tab). O Ticket saiu da janela: o
+          objetivo vive só no banner acima — um lugar só pra essa informação. */}
+      {(active.openPrograms.length > 0 || wrongMeta) && (
+        <div className="flex items-center gap-1 border-b border-line bg-bg/40 px-2 py-1.5">
+          {active.openPrograms.map((id) => (
+            <ProgramTab
+              key={id}
+              label={APPS[id].name}
+              icon={APPS[id].icon}
+              active={active.focused === id}
+              onClick={() => onFocusProgram(id)}
+            />
+          ))}
+          {wrongMeta && (
+            <span className="flex items-center gap-1.5 rounded-md border border-line bg-surface-2 px-2.5 py-1 text-xs font-medium text-ink-dim">
+              <span aria-hidden>{wrongMeta.icon}</span>
+              {wrongMeta.name}
+              <span className="text-ink-dim">✕</span>
+            </span>
+          )}
+          {active.openPrograms.length > 1 && (
+            <span className="ml-auto hidden items-center gap-1 pr-1 text-[10px] text-ink-dim sm:flex">
+              <kbd className="keycap !h-5 !min-w-7 !text-[10px]">Tab</kbd> alterna
+            </span>
+          )}
+        </div>
+      )}
 
-      {/* corpo: conteúdo do programa em foco (ou o aberto por engano) */}
-      <div className="flex flex-1 flex-col">
+      {/* corpo: conteúdo do programa em foco (ou o aberto por engano). Rola se a
+          janela for espremida (tela baixa) — a ActionBar fica fixa acima do dock. */}
+      <div className="flex min-h-0 flex-1 flex-col overflow-auto">
         {active.wrongApp ? (
           <WrongApp appId={active.wrongApp} />
-        ) : active.focused === 'details' ? (
-          <DetailsPanel active={active} />
-        ) : active.focused === active.app && active.appLaunched ? (
+        ) : !active.appLaunched ? (
+          <LaunchPrompt appId={active.app} />
+        ) : active.focused === active.app ? (
           <Scene active={active} slots={slots} />
         ) : (
           <IdleApp appId={active.focused} target={APPS[active.app].name} />

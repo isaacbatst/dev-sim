@@ -41,10 +41,11 @@ export function Desktop({
 }) {
   const { status, clock, delivered, expired, score, slots, active } = snapshot;
   const openCount = slots.filter(Boolean).length;
-  // Objetivo do passo atual — só enquanto se trabalha num app (na aba Ticket o
-  // plano completo já está visível). Mostrado fora da janela, acima do programa.
+  // Objetivo do passo atual — fonte ÚNICA da info da tarefa (a janela de Ticket
+  // saiu). Banner fora da janela, acima do programa; presente desde que se abre
+  // a demanda (inclusive antes de lançar o app).
   const objective =
-    active && !active.wrongApp && !active.ready && active.focused !== 'details'
+    active && !active.wrongApp && !active.ready
       ? (active.plan.find((p) => p.status === 'current') ?? active.plan[0])
       : null;
 
@@ -63,13 +64,13 @@ export function Desktop({
 
         <InboxPanel slots={slots} onSelect={onSelect} />
 
-        <section className="flex min-w-0 flex-1 items-center justify-center pb-16">
+        <section className="flex min-w-0 flex-1 items-start justify-center pb-16">
           {active ? (
-            <div className="relative w-full max-w-[44rem]">
+            <div className="relative flex max-h-full w-full max-w-[44rem] flex-col">
               {/* Objetivo do passo: banner FORA da janela (na área do OS, acima do
-                  programa) enquanto se trabalha num app. Quebra em várias linhas. */}
+                  programa) — fonte única da info. Quebra em várias linhas. */}
               {objective && (
-                <div className="elev-2 mb-2.5 flex items-start gap-2.5 rounded-lg border border-edge bg-surface px-4 py-3 backdrop-blur-sm">
+                <div className="elev-2 mb-2.5 flex shrink-0 items-start gap-2.5 rounded-lg border border-edge bg-surface px-4 py-3 backdrop-blur-sm">
                   <span aria-hidden className="mt-0.5 text-amber">
                     ▸
                   </span>
@@ -96,7 +97,7 @@ export function Desktop({
           ) : (
             // Estado vazio diegético: prompt do devOS — sem caixa, faz parte da
             // área de trabalho (não um card de página web).
-            <div className="flex max-w-md flex-col items-center gap-5 px-6 text-center">
+            <div className="m-auto flex max-w-md flex-col items-center gap-5 px-6 text-center">
               <p className="font-code text-base">
                 <span className="text-pass">desenvolvedor@devOS</span>
                 <span className="text-ink-dim">:</span>

@@ -391,17 +391,18 @@ export class Game {
   focusProgram(id: ProgramId): void {
     const inst = this.activeInstance();
     if (!inst || inst.wrongApp) return;
-    if (id === 'details' || this.openPrograms(inst).includes(id)) {
+    if (id !== 'details' && this.openPrograms(inst).includes(id)) {
       if (inst.focused !== id) this.emit('tab');
       inst.focused = id;
     }
   }
 
-  /** Alterna o foco entre as abas (Tab → frente; Shift+Tab → trás). */
+  /** Alterna o foco entre as abas (Tab → frente; Shift+Tab → trás). Só entre
+   *  programas abertos — a aba Ticket saiu (objetivo vive no banner). */
   cycleFocus(dir: 1 | -1 = 1): void {
     const inst = this.activeInstance();
     if (!inst || inst.wrongApp) return;
-    const tabs: ProgramId[] = ['details', ...this.openPrograms(inst)];
+    const tabs: ProgramId[] = this.openPrograms(inst);
     if (tabs.length < 2) return;
     const i = tabs.indexOf(inst.focused);
     inst.focused = tabs[(i + dir + tabs.length) % tabs.length];
