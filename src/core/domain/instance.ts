@@ -321,9 +321,9 @@ function instantiateSegment(segment: Segment): SegmentInstance {
         key: segment.key,
         label: segment.label,
         rate: segment.rate,
-        // Zona-alvo sorteada na metade alta da barra; faixa fixa.
+        // Zona-alvo sorteada na metade alta da barra; faixa estreita (precisão).
         target: 0.5 + Math.random() * 0.35,
-        tol: 0.1,
+        tol: 0.06,
         current: 0,
         holding: false,
         committed: false,
