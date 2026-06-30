@@ -294,19 +294,20 @@ body {
   animation: edgepulse 1.1s ease-in-out infinite;
 }
 
-/* Pulso DURO (corte seco, sem ease) — para o ritmo de "martelar" digitando. */
+/* "Chase" de digitação: cada tecla acende ~25% do ciclo (corte seco). Com o
+   stagger = ciclo/4 (ver ActionBar), só UMA fica acesa por vez, andando A→S→D→F. */
 @keyframes keytype {
   0%,
-  49% {
+  24% {
     opacity: 1;
   }
-  50%,
+  25%,
   100% {
-    opacity: 0.25;
+    opacity: 0.22;
   }
 }
 .animate-keytype {
-  animation: keytype 0.8s linear infinite;
+  animation: keytype 1s linear infinite;
 }
 
 /* ── Acessibilidade ─────────────────────────────────────────── */

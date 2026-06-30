@@ -84,7 +84,7 @@ function Cue({ seg }: { seg: SegmentView }) {
                 <kbd
                   key={k}
                   className="keycap animate-keytype !h-7 !min-w-7 !text-xs"
-                  style={{ animationDelay: `${i * 120}ms` }}
+                  style={{ animationDelay: `${i * 250}ms` }}
                 >
                   {k}
                 </kbd>
