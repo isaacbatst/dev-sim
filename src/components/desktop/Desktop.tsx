@@ -20,7 +20,7 @@ export function Desktop({
   onSelect: (index: number) => void;
   onRestart: () => void;
 }) {
-  const { status, clock, delivered, slots, active } = snapshot;
+  const { status, clock, delivered, expired, score, slots, active } = snapshot;
   const openCount = slots.filter(Boolean).length;
   // Objetivo do passo atual — só enquanto se trabalha num app (na aba Ticket o
   // plano completo já está visível). Mostrado fora da janela, acima do programa.
@@ -31,7 +31,7 @@ export function Desktop({
 
   return (
     <div className="relative flex h-full flex-col overflow-hidden">
-      <MenuBar clock={clock} delivered={delivered} />
+      <MenuBar clock={clock} delivered={delivered} expired={expired} score={score} />
 
       {/* Wallpaper: gradiente + grade técnica sutil + brilho do humor */}
       <main className="relative flex flex-1 gap-5 overflow-hidden p-5">

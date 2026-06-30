@@ -153,6 +153,10 @@ export interface SlotSnapshot {
   waitRemaining: number | null;
   /** Review (CR) voltou e falta o merge — pronto pro merge. */
   readyToMerge: boolean;
+  /** Segundos até a demanda expirar (deadline); null se pronta pra entrega. */
+  deadlineRemaining: number | null;
+  /** Fração 0..1 do prazo restante (para a barra de urgência). */
+  deadlineFrac: number;
 }
 
 export interface ActiveTicketSnapshot {
@@ -199,6 +203,10 @@ export interface Snapshot {
   status: GameStatus;
   clock: string;
   delivered: number;
+  /** Demandas expiradas (deadline estourou). */
+  expired: number;
+  /** Nota do dia (moeda única §9). */
+  score: number;
   /** Erros acumulados no ticket ativo (para feedback de erro na UI). */
   activeErrors: number;
   slots: (SlotSnapshot | null)[];

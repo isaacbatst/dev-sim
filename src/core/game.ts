@@ -60,6 +60,10 @@ export class Game {
   private elapsed = 0;
   private status: Snapshot['status'] = 'playing';
   private delivered = 0;
+  /** Demandas que expiraram (deadline estourou sem entrega). */
+  private expired = 0;
+  /** Nota do dia (moeda única, §9): entrega(+veloc.) sobe; expirar/errar desce. */
+  private score = 0;
   private slots: (TicketInstance | null)[] = new Array(SLOT_COUNT).fill(null);
   private activeSlot: number | null = null;
   private spawnTimer = 0;
@@ -100,6 +104,21 @@ export class Game {
       this.spawnTimer -= SPAWN_INTERVAL;
       this.spawnTicket();
     }
+
+    // Deadline por ticket (§9): conta enquanto não está pronto pra entrega.
+    // Expira em 0 → demanda perdida (tombo na nota, sem game-over).
+    this.slots.forEach((inst, i) => {
+      if (!inst || inst.ready) return;
+      inst.remaining -= dt;
+      if (inst.remaining <= 0) {
+        inst.remaining = 0;
+        this.expired += 1;
+        this.score -= 60;
+        this.slots[i] = null;
+        if (this.activeSlot === i) this.activeSlot = null;
+        this.emit('error');
+      }
+    });
 
     // Segmentos por tempo: `wait` progride em qualquer slot; `hold` só no ativo, segurando.
     this.slots.forEach((inst, i) => {
@@ -498,6 +517,10 @@ export class Game {
     if (!inst || !inst.ready) return;
 
     this.delivered += 1;
+    // Nota (§9): base + bônus de velocidade (quanto do prazo sobrou) − precisão (erros).
+    const speed = inst.deadline > 0 ? Math.max(0, inst.remaining / inst.deadline) : 0;
+    const gain = 100 + Math.round(50 * speed) - 15 * inst.errors;
+    this.score += Math.max(10, gain);
     this.slots[this.activeSlot] = null;
     this.activeSlot = null;
     this.emit('deliver');
@@ -508,6 +531,8 @@ export class Game {
       status: this.status,
       clock: this.formatClock(),
       delivered: this.delivered,
+      expired: this.expired,
+      score: this.score,
       activeErrors: this.activeInstance()?.errors ?? 0,
       slots: this.slots.map((inst, i) => this.slotSnapshot(inst, i)),
       active: this.activeSnapshot(),
@@ -717,6 +742,9 @@ export class Game {
       active: index === this.activeSlot,
       waitRemaining: waiting ? Math.ceil(seg.total - seg.elapsed) : null,
       readyToMerge,
+      // Deadline: pronto pra entrega não expira mais (trabalho feito).
+      deadlineRemaining: inst.ready ? null : Math.ceil(inst.remaining),
+      deadlineFrac: inst.ready ? 1 : Math.max(0, Math.min(1, inst.remaining / inst.deadline)),
     };
   }
 

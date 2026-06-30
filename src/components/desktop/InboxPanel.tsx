@@ -61,6 +61,10 @@ export function InboxPanel({
                   )}
                   {slot.readyToMerge && <span className="text-teal">· merge</span>}
                   {slot.ready && <span className="text-pass">· pronto</span>}
+                  {/* Conta regressiva só quando aperta (urgente) — senão a barra basta. */}
+                  {slot.deadlineRemaining !== null && slot.deadlineFrac <= 0.25 && (
+                    <span className="font-semibold text-fail">· {slot.deadlineRemaining}s</span>
+                  )}
                 </span>
               </span>
               <span className="mt-0.5 flex shrink-0 items-center gap-1.5">
@@ -75,6 +79,24 @@ export function InboxPanel({
                   {i + 1}
                 </kbd>
               </span>
+              {/* Barra de prazo (deadline) que esvazia — vira âmbar e depois vermelho. */}
+              {slot.deadlineRemaining !== null && (
+                <span
+                  aria-hidden
+                  className="absolute inset-x-3 bottom-0.5 h-[2px] overflow-hidden rounded-full bg-white/[0.06]"
+                >
+                  <span
+                    className={`block h-full rounded-full ${
+                      slot.deadlineFrac > 0.4
+                        ? 'bg-ink/30'
+                        : slot.deadlineFrac > 0.2
+                          ? 'bg-amber'
+                          : 'bg-fail'
+                    }`}
+                    style={{ width: `${slot.deadlineFrac * 100}%` }}
+                  />
+                </span>
+              )}
             </button>
           ) : (
             <div key={i} className="flex items-start gap-2 rounded-md px-2 py-1.5" aria-hidden>

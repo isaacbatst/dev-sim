@@ -233,7 +233,19 @@ export interface TicketInstance {
   wrongApp: AppId | null;
   /** Programa em foco (aba ativa): a "Comanda" (details) ou um app aberto. */
   focused: ProgramId;
+  /** Prazo da demanda (segundos reais) — por prioridade. */
+  deadline: number;
+  /** Tempo restante (segundos). Expira em 0 se não entregue → custa na nota. */
+  remaining: number;
 }
+
+/** Prazo (s reais) por prioridade — generoso, afinar com playtest (§9/§11). */
+const DEADLINE_BY_PRIORITY: Record<Priority, number> = {
+  urgente: 30,
+  alta: 48,
+  normal: 70,
+  baixa: 95,
+};
 
 let nextTicketId = 1;
 
@@ -370,6 +382,8 @@ export function instantiateTicket(template: TicketTemplate): TicketInstance {
     reviewComment: null,
     wrongApp: null,
     focused: 'details',
+    deadline: DEADLINE_BY_PRIORITY[template.priority],
+    remaining: DEADLINE_BY_PRIORITY[template.priority],
   };
 }
 
