@@ -147,18 +147,9 @@ export class Game {
           this.progressSound(inst, before, false);
         }
       } else if (seg.type === 'gauge' && i === this.activeSlot && seg.holding && !seg.committed) {
-        seg.current += seg.rate * dt;
-        // Passou da zona-alvo segurando demais → exagerou (over-engineer): erro.
-        if (seg.current >= seg.target + seg.tol) {
-          seg.current = Math.min(1, seg.current);
-          seg.committed = true;
-          seg.wrong = true;
-          seg.holding = false;
-          this.emit('error');
-          const before = this.progKey(inst);
-          this.advance(inst);
-          this.progressSound(inst, before, false);
-        }
+        // Enche segurando — PODE passar do alvo (até o fim). O julgamento é só ao
+        // soltar (keyUp): soltou na zona → ok; fora (cedo ou passou) → CR rejeita.
+        seg.current = Math.min(1, seg.current + seg.rate * dt);
       }
     });
   }
@@ -423,18 +414,22 @@ export class Game {
       seg.holding = false;
       this.emit('holdEnd');
       if (!seg.committed) {
+        // Soltar = decisão final. Na zona → ok; fora dela (parou cedo OU passou
+        // do alvo) → erro: o CR vai rejeitar e mandar refazer. Sem retomar.
         const lo = seg.target - seg.tol;
         const hi = seg.target + seg.tol;
+        const before = this.progKey(inst);
+        seg.committed = true;
         if (seg.current >= lo && seg.current <= hi) {
-          // Soltou na zona → sucesso.
-          seg.committed = true;
-          const before = this.progKey(inst);
           this.emit('select');
-          const step = this.currentStep(inst);
-          if (step && stepCompleted(step)) this.advance(inst);
-          this.progressSound(inst, before, false);
+        } else {
+          seg.wrong = true;
+          inst.errors += 1;
+          this.emit('error');
         }
-        // Soltou antes da zona: fica onde está (pode retomar segurando de novo).
+        const step = this.currentStep(inst);
+        if (step && stepCompleted(step)) this.advance(inst);
+        this.progressSound(inst, before, false);
       }
     }
   }
@@ -626,7 +621,9 @@ export class Game {
         return `Esse PR alterou ${chose}, mas era pra ser ${fileBasename(seg.files[seg.targetIndex])}.`;
       }
       case 'gauge':
-        return 'Você simplificou demais e quebrou a abstração. Menos é mais — mas não tanto.';
+        return seg.current > seg.target
+          ? 'Você simplificou demais e quebrou a abstração. Menos é mais — mas não tanto.'
+          : 'Parou cedo: ainda tem código redundante pra limpar. Refatora direito?';
       default:
         return 'Isso ainda não está como o ticket pede.';
     }

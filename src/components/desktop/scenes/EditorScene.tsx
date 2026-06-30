@@ -1104,7 +1104,8 @@ function RefactorScene({
   const lines = linesFor(file);
   const lo = seg.target - seg.tol;
   const hi = seg.target + seg.tol;
-  const over = seg.committed && seg.wrong;
+  const wrong = seg.committed && seg.wrong;
+  const over = wrong && seg.current > seg.target;
   const done = seg.committed && !seg.wrong;
   // Linhas "redundantes" (miolo) desbotam conforme a barra enche (simplificação).
   const redFrom = 2;
@@ -1136,9 +1137,11 @@ function RefactorScene({
       <div className="shrink-0 border-t border-line bg-surface/60 p-3">
         <div className="mb-1.5 flex items-center justify-between text-[11px]">
           <span className="uppercase tracking-wider text-ink-dim">complexidade → simplicidade</span>
-          <span className={over ? 'text-fail' : done ? 'text-pass' : 'text-ink-dim'}>
-            {over
-              ? 'exagerou — quebrou ✕'
+          <span className={wrong ? 'text-fail' : done ? 'text-pass' : 'text-ink-dim'}>
+            {wrong
+              ? over
+                ? 'exagerou — quebrou ✕'
+                : 'parou cedo ✕'
               : done
                 ? 'limpo ✓'
                 : `segure ${seg.key.toUpperCase()} · solte na zona`}
@@ -1153,7 +1156,7 @@ function RefactorScene({
             className="absolute inset-y-0 left-0"
             style={{
               width: `${seg.current * 100}%`,
-              background: over ? 'var(--fail)' : done ? 'var(--pass)' : 'var(--amber)',
+              background: wrong ? 'var(--fail)' : done ? 'var(--pass)' : 'var(--amber)',
             }}
           />
           <span
