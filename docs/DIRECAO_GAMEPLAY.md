@@ -1,227 +1,241 @@
 # Direção de Gameplay e Retenção
 
-> Síntese de uma sessão de consultoria (2026-06-29) sobre **o que faz alguém voltar
-> amanhã** e como o core atual deve evoluir. Não é spec fechada — é direção e
-> sequência. Decisões ainda abertas estão marcadas como tal. Complementa
+> Direção **convergida** após uma consultoria estendida (2026-06). Não é spec fechada —
+> é direção, decisões e sequência. Cada bloco está marcado como **[DECIDIDO]**,
+> **[ABERTO]** ou **[ADIADO]**. Substitui a versão anterior deste doc (que tinha a
+> "seed única" como princípio; a gente convergiu pra **campanha-primeiro**). Complementa
 > `GDD.md` (mecânicas) e `DESIGN_CONSULTORIA.md` (estratégia/migração).
 
 ---
 
 ## 0. A régua
 
-A única métrica que orienta as decisões abaixo é **D1 retention** (voltar no dia
-seguinte). Norte mental: o **Hook Model** (Gatilho → Ação → Recompensa Variável →
-Investimento). Tudo é avaliado por "isso aproxima de um jogador querer voltar amanhã?".
-
-Risco específico do tema: um dev sim pode parecer **trabalho**. A linha entre "humor de
-reconhecimento" e "overtime cansativo" é onde o jogo vive ou morre.
+Métrica-norte: **D1 retention** (voltar no dia seguinte). Modelo mental: **Hook Model**
+(Gatilho → Ação → Recompensa Variável → Investimento). Risco específico do tema: um dev
+sim pode **parecer trabalho** — a linha entre "humor de reconhecimento" e "overtime
+cansativo" é onde o jogo vive ou morre.
 
 ---
 
-## 1. Carreira × seed compartilhada (a tensão central)
+## 1. Motor escolhido: PRENDER, não crescer **[DECIDIDO]**
 
-Conflito aparente: um desafio diário **igual pra todos** (viral, comparável, estilo
-Wordle) parece matar a ideia de **construir a própria carreira**. É um falso dilema —
-resolve-se separando dois sentidos de "carreira":
+Dois motores de retenção possíveis:
 
-- **Carreira-como-CONTEÚDO** (cada um enfrenta desafios diferentes) → **mata** a
-  comparabilidade e a viralização. Atacar isto = atacar o modelo de negócio.
-- **Carreira-como-REGISTRO** (todos jogam o mesmo dia; seu histórico é seu) →
-  **compatível** com a seed única. É o modelo NYT Games / chess.com.
+- **Crescer (aquisição):** daily de calendário estilo Wordle — comparação **exata**
+  (mesmo puzzle → grid comparável), viral, K-factor alto.
+- **Prender (retenção):** investimento/identidade (carreira, progresso, "minha vida de
+  dev") — share de **identidade** (Strava), menos viral, mais grudento.
 
-> **Princípio fixado:** conteúdo é **compartilhado** (seed do dia). A carreira é o
-> **boletim** de como você joga o deck que todos recebem — não o deck.
-
-**Divergência sem quebrar a seed:** com escolhas reais (ex.: triagem sob deadline),
-todos partem do mesmo ponto mas o dia **diverge pela decisão** (modelo roguelike/daily
-do Balatro): _mesmo input, processo divergente, output comparável_. A carreira emerge
-do **estilo** (bombeiro vs. completista), não do conteúdo.
+**Decisão: prender.** Consequência: priorizar ganchos de investimento (progressão,
+identidade, registro) acima do leaderboard viral. Aquisição não é zero — mas é a porta
+de entrada, não o motor.
 
 ---
 
-## 2. Dificuldade por DIA, não por carreira
+## 2. O modelo: CAMPANHA ABERTA (a carreira é a espinha) **[DECIDIDO]**
 
-Escalar dificuldade com o nível de carreira é a mesma armadilha disfarçada (quebra a
-seed) **e** cria uma **esteira**: o jogador sobe e o chão sobe junto, nunca sente que
-melhorou.
+Em vez de um daily de calendário (um puzzle por dia real), o jogo é uma **campanha**:
+os "dias da carreira" são **níveis de uma main quest**, jogados **em sequência**, no
+ritmo do jogador. O átomo de conteúdo é o **dia**, percorrido em ordem.
 
-> **Princípio fixado:** a dificuldade pertence ao **dia** (compartilhada — fases do
-> dia, dias temáticos), não à carreira. A **skill** do jogador sobe contra uma **barra
-> fixa**, registrada no rank. Maestria = barra parada + você melhora.
+- **Aberta/infinita** (sem final) — [DECIDIDO]. Logo, a **progressão é o arco** (ver §6).
+- **Persistência barata:** só lembrar "em que dia você está" (localStorage), não contas
+  + normalização.
 
-**Acessibilidade sem bifurcar conteúdo:** skill se expressa no **teto, não no piso** —
-qualquer um sobrevive ao dia; só o veterano maximiza (modelo Tetris/Wordle: mesmas
-peças, score abre um abismo). Comparação pode ser segmentada por liga; o conteúdo
-continua único.
+**Por que campanha, e não daily de calendário, agora:**
+1. **Todo conteúdo é consumido** — numa sequência linear, quem continua passa por cada dia.
+2. **Aprende mais rápido** — joga vários "dias" numa sessão → sinal de fun na hora (vs.
+   1 dado por usuário por dia real no daily).
+3. **Onboarding + rampa de graça** — a campanha controla a ordem (dia 1 ensina, dia 5
+   aperta); o daily não controla qual é o primeiro dia de um novato.
+4. **Reaproveita a personalidade do dia** (§4) como **level design**.
+5. **Comparabilidade assíncrona** — todos jogam o mesmo "Dia 5" (em datas diferentes) →
+   "seu tempo no Dia 5" (estilo segmento do Strava).
 
----
+**O funil (a tese do daily não morre, vira o endgame):**
 
-## 3. Os três eixos de progressão (não confundir)
-
-| Eixo | Pergunta | Premiado por | Risco se misturar |
-|---|---|---|---|
-| **Streak** | "Eu apareci?" | constância (completar o daily) | virar o rank → "quem joga mais ganha" = grind |
-| **Rank / Título** | "Eu sou bom?" | **skill** (performance relativa) | acumular com volume → esteira |
-| **Badges / Coleção** | "Que histórias vivi?" | variedade (dias temáticos) | virar barra de XP → checklist |
-
-**Rank é um _rating_, não um acumulador** — reflete o quão bom você É agora, pode
-**cair** (Elo/handicap, não "XP da vida"). Travas anti-grind: **uma tentativa pontuada
-por dia** (grátis no formato daily), rating por **forma recente** (média móvel), nada a
-farmar além do daily.
-
-**Decisão em aberto** (precisa de dados, não decidir agora): rebaixamento do rank —
-Elo puro (ansiedade) × piso suave (inflação) × **temporadas** (recomendado como
-hipótese: honesto na season + reset remove ansiedade + motivo recorrente de volta).
+> **Campanha** (agora: onboarding + validação + retenção "mais um dia") →
+> **Daily de calendário + share + carreira-como-registro + seed** (depois: endgame
+> perpétuo + distribuição, com a base que a campanha gerou).
 
 ---
 
-## 4. O estado atual: a virada de design (drift) e o buraco
+## 3. Por que isto agora: o eixo é TIME-TO-LEARN, não custo de build **[DECIDIDO]**
 
-A implementação web migrou o eixo de **"sobreviver ao dreno sob pressão"** →
-**"fazer o trabalho corretamente"**:
+Com IA, o que levava uma semana sai em uma hora — então **custo de construção deixou de
+ser o critério**. O que a IA **não** comprime:
 
-- **Removidos:** barra de satisfação, chefe, medidor de foco.
-- **Adicionados:** Code Review rejeitado (errar a escolha → refazer) e o subjogo de
-  "abrir o app certo".
+- O **design** (carreira sobre dias monótonos = grind; isso não se conserta construindo
+  mais rápido).
+- **Tuning** que precisa de jogadores reais (balanceamento, normalização).
+- O **relógio da retenção**: D1/D7 só se medem em dias de calendário, com gente real. IA
+  não faz ninguém voltar amanhã mais cedo.
 
-Coerente com o modelo de maestria — **mas demoliu o andaime antigo antes de erguer o
-novo**. Hoje o jogo está **sem stakes**: sem derrota, sem dreno, sem deadline,
-dificuldade plana. Um daily sem stakes não gera resultado compartilhável nem "amanhã eu
-ganho disso".
-
-**Risco estratégico observado:** o polish (UI devOS, cenas, navegador como hub, som)
-está correndo na frente do design. É craft no _brinquedo_; o motor de retenção
-(seed/streak/share/score/analytics) segue em zero. A UI diegética é o **fosso** (torna o
-jogo *seu* e compartilhável) **e** um **ralo de tempo** (custo linear por cena). É a
-**pele**, não o jogo.
+Quando build é barato, o gargalo vira **aprendizado** e **foco**. E **barato de construir
+≠ barato de manter ≠ barato de desfazer** (contas/carreiras salvas são caras de reverter).
+Por isso: subir a coisa mais simples que já **começa a ensinar** se as pessoas voltam — a
+campanha — e deixar a máquina cara (daily/seed/normalização) pra quando houver base.
 
 ---
 
-## 5. Provar o core antes de empilhar mecânica
+## 4. Personalidade do dia (o motor de curiosidade) **[DECIDIDO como direção]**
 
-Disciplina correta (= tese da consultoria: "o daily não tem onde se esconder, sem grind
-pra mascarar core fraco"). "Quantas fechou / quão rápido" **já é** um score, e o
-**CR rejeitado já cria a tensão velocidade-vs-precisão**.
+O motor de "voltar" do Wordle é **novidade por dia** (um átomo único de um espaço
+gigante). Pool pequeno de tasks não replica isso crescendo o pool (treadmill de
+conteúdo, inviável). Solução: **o átomo de conteúdo é o DIA**, montado sobre o mesmo pool
+— "mesmos ingredientes, prato do dia diferente". Você autora um **baralho de dias**.
 
-Para **testar** se o core nu basta, não faltam mecânicas — faltam:
+**Anatomia de um cenário de dia:**
 
-1. **Uma meta / linha de chegada** → reenquadrar a vitória como **time-attack** ("limpe
-   o backlog do dia, pontuado por tempo + precisão"). Torna o core existente
-   auto-justificável **sem adicionar nada**.
-2. **Comparabilidade = a seed** → "competição de quantas fechou" só é competição com o
-   **mesmo backlog pra todos**. A seed não é mecânica tardia: é o que permite testar a
-   hipótese.
+```
+Dia = { nome/manchete · abertura (a fala do standup = o reveal) ·
+        viés do mix (que fatia do pool predomina) ·
+        modificador (a regra/twist — a pimenta) ·
+        beat de assinatura (o evento memorável = o que vira share) }
+```
 
-> O que prova o core não é deadline — é **feel (tato) + meta + seed**.
+- **Híbrido (modelo Balatro/StS daily):** conjunto **curado** de TEMAS (nome + assinatura
+  + viés) + variação **procedural** dentro do tema (tasks/valores/intensidade).
+- **O que carrega personalidade** (lembrança/share) = **nome + assinatura + escrita
+  autêntica**. **O que carrega variedade de jogo** = o **modificador**. Dá pra testar a
+  hipótese só com nome + viés de mix + standup, sem modificador.
+- Na campanha, **isto é o level design.**
 
----
+**Cardápio inicial de arquétipos (mesmo pool, viés diferente):**
 
-## 6. O core se prova no tato ("suco por tecla" — CSD)
-
-Para um daily de 3 min **sem stakes**, o que faz repetir é **sensação momento-a-momento
-+ variedade** (Wordle não tem pressão de tempo). Input **mimético** (imitar a ação real)
-é a alavanca nº 1 — acima de deadlines.
-
-### Dois tipos de segmento novos cobrem quase tudo
-
-- **`scrub` (NOVO):** segurar ⬅️➡️ pra **discar um valor com preview ao vivo**.
-  Justificado por `ui_color` (cor) e `ui_font` (tamanho). Substitui escolhas "frias"
-  pelo gesto de afinar.
-- **`mash` (NOVO):** **repetição/alternância rítmica** com contador e feedback que
-  escala. O "esfregar o prato" genérico. O mais reutilizável.
-- **combo** (não é tipo novo): deixar o `press` aceitar **modificador + tecla**
-  (Ctrl+C/Ctrl+V etc.).
-
-### Mapa nas 9 tarefas (onde o orçamento tátil rende)
-
-Concentre o investimento nas tarefas de **VSCode** + na **cauda de merge** comum a
-todas. As de browser/comunicação são "abrir app + 1 ação" — dê **um** beat mimético em
-cada e siga; não tente transformá-las no que não são.
-
-| Tarefa | Upgrade mimético | Tipo |
+| Dia | Caráter | Assinatura |
 |---|---|---|
-| `fix_typo` | corrigir → **digitar a correção** | `nav` ✓ + **`mash`** |
-| `ui_color` | cor → **discar valor com preview** | `selection` ✓ + **`scrub`** |
-| `ui_font` | tamanho → **discar px ao vivo** | `selection` ✓ + **`scrub`** |
-| `document` | escrever → **digitar a doc** | **`mash`** |
-| cauda de merge (todas de código) | conflito → **⬅️➡️ resolver** | `press` ✓ + **`mash`** |
-| `study` | **Ctrl+C/Ctrl+V "do Stack Overflow"** | **combo** (enhance `press`) |
-| `slack` | responder → digitada curta | `nav` ✓ + `mash` curto |
-| `meeting` / `test_feature` | falar / rodar testes | `hold` ✓ (curto) |
-| `email` | a mais fraca — manter como a tarefa **mais rápida** | `press` ✓ |
-
-### Top 3 pra provar o core (distinto + autêntico + rítmico, rende screenshot)
-
-1. **Conflito de merge** (`mash` ⬅️➡️) — a assinatura tátil que ninguém mais tem.
-2. **Scrub de valor de CSS** — afinar com preview ao vivo.
-3. **Copy-paste do Stack Overflow** — o gesto que *é* a piada do dev; viral por
-   reconhecimento.
-
-### Régua anti-tempo-morto (Seção 4 do `DESIGN_CONSULTORIA.md`)
-
-Todo gesto, antes de aprovar: **curto** (2–4s) + **feedback que escala** (visual + som
-subindo) + **a tela mostra a ação real acontecendo**. Se não passa nos três, é o
-Hold/Wait morto que deve ser cortado.
+| Segunda do Backlog | volume, normal/baixa, fila lota | "a semana começou" |
+| Incident Day | urgentes de fix, waits tensos | "o alerta às 9h03" |
+| Maratona de Reunião | meeting/slack dominam | "reunião sobre a reunião" |
+| Sexta sem Deploy | calmo + um hotfix proibido | "não se faz deploy na sexta…" |
+| Refactor Day | tasks longas de código, zen | "tocar em código de 2019" |
+| Estagiário quebrou a Main | cascata de fixes | o push fatídico |
+| Demo em 1h | tudo pra um horário (proto-deadline) | "o cliente às 15h" |
+| Code Freeze | CR mais rígido → mais rejeições | "só com aprovação" |
 
 ---
 
-## 7. Interstitials — o ritmo do dia
+## 5. O core tátil — "suco por tecla" (CSD) **[direção; parte é o próximo build]**
 
-Pausas (café, almoço) **não** servem mais pra "recuperar foco/satisfação" (removidos).
-Propósitos válidos hoje: **ritmo**, **identidade** e **arco do dia de graça** (alguns
-beats roteirados dão o arco do GDD §0.1 **sem** o sistema de fases).
+O loop momento-a-momento **tem que ser divertido sozinho** (jogo de skill, não idle). É o
+motor dentro da campanha. Input **mimético** (imitar a ação real) é a alavanca nº1.
 
-**Armadilha:** pausa **passiva** (timer contando) é o pior tempo morto. Regra: ou
-**tátil** (você faz algo) ou **pontuação rápida** (gag/stat que se dispensa com 1 tecla).
+- **`scrub` (NOVO):** segurar ⬅️➡️ pra discar um valor com preview ao vivo (`ui_color`,
+  `ui_font`). Substitui escolhas "frias".
+- **`mash` (NOVO):** repetição/alternância rítmica com feedback que escala. O mais
+  reutilizável (digitar, deletar, **conflito de merge ⬅️➡️**).
+- **combo:** `press` aceitando modificador+tecla (Ctrl+C/Ctrl+V "do Stack Overflow").
 
-### Set fechado (beats agendados)
+**Top 3 pra provar o core:** conflito de merge (`mash`, a assinatura), scrub de CSS,
+copy-paste do SO. **Régua anti-tempo-morto:** todo gesto curto (2–4s) + feedback que
+escala + a tela mostra a ação real. (Seção 4 do `DESIGN_CONSULTORIA.md`.)
 
-| Beat | Quando | Papel | Forma | MVP? |
-|---|---|---|---|---|
-| **Daily standup** | 09:00 | abre o dia + **gancho diário** ("o de hoje é…") | hold "falar" + preview | ✅ |
-| **Café** | 1–2× | palate cleanser tátil; pontua combos | hold servir / mash mexer (~2s) | ✅ |
-| **Almoço** | 12:00 | **halftime**: revela stats da manhã | tela rápida de stats | ✅ |
-| **Reunião inútil** | 1× à tarde | gag de identidade ("o tempo morto é a piada") | hold "parecer engajado" | ⏳ polish |
-| **Fim de expediente** | 17:00 | o close + **resultado do dia** (nota/share) | tela de resultado | ✅ |
-
-**Fronteira (o que fecha a lista):** DENTRO = beats com **horário fixo**. FORA (camada
-2, só com stakes) = interrupções **aleatórias/sob demanda**: ping do Slack (mash
-dispensar), "deploy quebrou" (urgente forçado), café *opcional* como escolha.
-
-**O que o set entrega:** os três âncora (**standup → almoço → fim**) montam
-começo-meio-fim, e carregam o **gancho diário** (standup), a **1ª revelação de score**
-(almoço) e o **resultado compartilhável** (fim). É a espinha da casca daily empacotada
-como "pausa pro café".
+Mapa nas 9 tarefas: investir nas de **VSCode** + na **cauda de merge**; as de
+browser/comunicação ganham **um** beat mimético cada e seguem.
 
 ---
 
-## 8. Sequência recomendada
+## 6. Progressão (a campanha aberta precisa de marcadores) **[direção]**
 
-1. **`mash`** (mais reutilizável) → retrofita `document` (digitar) e o **conflito de
-   merge** (a assinatura).
-2. **`scrub`** → retrofita `ui_color` e `ui_font`.
-3. **combo do Stack Overflow** no `study`.
-4. **Meta pontuada (time-attack) + seed do dia** → **validar o core**: "esfregar o prato
-   dev" é gostoso e repetível?
-5. Se validar → **deadlines** (dá sentido aos níveis de **prioridade**; adiciona a
-   camada de triagem "qual deixo queimar").
-6. → **casca daily completa**: streak + share spoiler-free + gatilho de volta
-   (notificação diegética "issue atribuída").
-7. → **rank/temporadas** — só **com dados** de jogadores reais.
+Sem final, **a progressão é o arco**. Princípio que decide qualquer recompensa:
 
-**Analytics desde o primeiro release** (`DESIGN_CONSULTORIA.md` §9.7): instrumentar
-`daily_start`, `daily_complete`, `share_click`, `return_d1` desde o começo.
+> **Jogo de skill: progressão deixa você mais estiloso / com mais variedade / com
+> histórico maior — NUNCA mecanicamente mais forte.** (NYT/chess: zero poder, só
+> prestígio. Poder persistente é de power-fantasy, outro gênero.)
+
+- **`$` → customizar desk/setup [✅]:** o melhor gancho pro público dev; identidade pura,
+  vira share, não toca em balance.
+- **Título/registro (Junior→Senior) [✅]:** prestígio, **não** portão de poder.
+- **⭐ Desbloquear CONTEÚDO ao subir (novos arquétipos de dia) [✅]:** amarra progressão à
+  personalidade do dia (drip-feed de variedade), sem power creep. O mais forte.
+- **Poder vertical (drena menos / +slot / mais rápido) [❌]:** vira esteira + quebra
+  comparabilidade + corrói o jogo de skill.
+
+**Dificuldade na campanha aberta:** rampa nos primeiros N dias → **platô** numa
+dificuldade justa; daí pra frente progressão = identidade/cosmético/conteúdo, não
+dificuldade. (Evita treadmill infinito.)
+
+**Três eixos (não confundir):** **streak** (hábito) · **rank/título** (skill, é *rating*
+que pode cair, não acumulador) · **badges** (variedade). Temporadas p/ o rank: hipótese
+[ABERTO], decidir com dados.
 
 ---
 
-## 9. Decisões em aberto
+## 7. Perks como *mutators* (horizontais, ÚNICOS) **[ADIADO — dependem de §8/§9]**
 
-- **Stakes / derrota:** sem satisfação e sem deadline, o dia sempre termina em vitória.
-  Fonte pretendida = deadline (§0.2 do GDD). Definir a "moeda" (nota do dia? expirar =
-  falha?).
-- **Foco:** o medidor de concentração saiu. Reintroduzir numa forma compatível com o
-  modelo de ofício, ou aposentar e ajustar o pitch ("trocar de contexto destrói a
-  concentração" hoje não tem suporte mecânico).
-- **Rank:** Elo × piso suave × temporadas — decidir com dados.
-- **Código:** `MeetScene`/`MailScene` ficaram órfãs (nenhuma task abre meet/mail após
-  "navegador como hub") — limpar ou converter em sub-sites do navegador.
+Modos diferentes de jogar **sem overpower**. Não são builds — **perk único por run**
+(estilo *heat* do Hades / daily modifier do StS). Você lê o dia no standup e escolhe um.
+
+- **Matchup perk × dia:** nenhum perk é bom em todo dia → escolha situacional. Isso
+  **alimenta a personalidade do dia**.
+- **Comparação por categoria** (modelo speedrun): cada perk tem seu placar → "qual é o
+  melhor" deixa de importar; mais superfície de share.
+- **Disciplina:** **um** perk ativo por run. Empilhar = virar build (e herdar o imposto de
+  balanceamento). Builds podem ser camada posterior consciente.
+
+**5 perks iniciais (design de papel — equilíbrio só se acerta jogando):**
+
+| Perk | Dá | Tira | Dia ideal / ruim |
+|---|---|---|---|
+| **Fone de ouvido** | calmaria, mergulha no ticket ativo | perde alerta de urgente chegando | Refactor / Incident |
+| **"Eu dou conta"** | relance do próximo input de todos os slots | lê pior detalhes → mais rejeição de CR | Backlog, Reunião / Refactor |
+| **"Funciona na minha máquina"** | pula a espera do CR (push→merge) | erro vai pra prod: sem comentário + cascata de hotfix | calmo/confiante / Code Freeze |
+| **Caderno de bolso** | alvo/plano destacado no início | beat obrigatório de "ler" antes de agir | complexo/Refactor / Demo |
+| **Café duplo** | pula interstitials, fluxo comprimido | sem respiro, tropeço vira bola de neve | Demo/Crunch / maratona longa |
+
+> **#3 e #5 são os mais propensos a vazar pra vertical** (pra quem é bom, "pular CR/breaks"
+> = só ganho de tempo). O contra-peso (catástrofe / bola de neve) tem que doer, ou ficam em
+> categoria própria de placar.
+
+**Por que está adiado:** dependem de **interstitials** (§8) e **deadlines** (§9), que
+ainda não existem.
+
+---
+
+## 8. Interstitials — ritmo do dia **[ADIADO; baratos]**
+
+Set fechado de beats **agendados**: **standup** (09:00 — abre o dia + **é o reveal da
+personalidade**), **café** (palate cleanser tátil), **almoço** (halftime: stats da
+manhã), **reunião inútil** (gag de identidade), **fim de expediente** (resultado/share).
+**Fronteira:** agendados dentro; interrupções aleatórias (ping, "deploy quebrou") fora
+(camada de stakes). Regra: tátil **ou** pontuação rápida — nunca pausa passiva.
+
+---
+
+## 9. Deadlines — stakes + sentido da prioridade **[ADIADO]**
+
+Hoje o jogo está **sem stakes** (satisfação/chefe/foco removidos; ver `GDD.md`). Deadline
+é a fonte de pressão pretendida e o que **dá sentido aos níveis de prioridade** (sem ele,
+prioridade é só cor). Adiciona a camada de triagem ("qual deixo queimar"). A "moeda" de
+penalidade/recompensa precisa ser redefinida (a satisfação saiu).
+
+---
+
+## 10. Sequência / prioridade (a ser refinada)
+
+Escada de baixo (intrínseco/barato/cedo) pra cima (extrínseco/caro/tardio):
+
+1. **Core tátil** — `mash` (conflito de merge, a assinatura) → `scrub` (CSS) → combo do SO.
+2. **Personalidade do dia (mínima)** — tema + viés de mix + standup-reveal.
+3. **Casca de campanha** — sequência de dias + progresso (localStorage) + título leve.
+   → **valida:** as pessoas jogam "mais um dia"?
+4. **Cosméticos (`$`→desk) + desbloqueio de conteúdo** (novos arquétipos).
+5. **Deadlines** (stakes + prioridade) → habilita os modificadores.
+6. **Interstitials** completos + **perks/mutators** (constroem sobre 4–5).
+7. **Daily de calendário + share + carreira-como-registro + seed** — endgame/distribuição.
+
+**Analytics desde o 1º release** (`DESIGN_CONSULTORIA.md` §9.7): `daily_start`,
+`daily_complete`, `return_d1`, e progressão na campanha.
+
+---
+
+## 11. Decisões em aberto
+
+- **Forma dos stakes/derrota** (§9): nota do dia? expirar = falha? (satisfação saiu).
+- **Foco:** reintroduzir numa forma compatível ou aposentar e ajustar o pitch.
+- **Rank:** Elo × piso suave × temporadas — com dados.
+- **Perk:** escolhido por run vs. equipado fixo (muda se o matchup é decisão diária).
+- **Balanceamento dos perks** (esp. #3/#5) — só com playtest.
+- **Código:** `MeetScene`/`MailScene` órfãs (navegador como hub) — limpar ou virar
+  sub-sites.
