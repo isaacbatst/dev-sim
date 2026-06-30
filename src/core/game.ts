@@ -879,9 +879,14 @@ export class Game {
       case 'fix_typo': {
         const line = (nav[0] ?? 0) + 1;
         const file = this.fileTarget(t) ?? 'login.ts';
+        return `No VSCode, corrija o typo na linha ${line} de ${file}; faça push, aguarde o CR e o merge.`;
+      }
+      case 'fix_bug': {
+        const line = (nav[0] ?? 0) + 1;
+        const file = this.fileTarget(t) ?? 'login.ts';
         return this.isPasteFix(t)
           ? `Pesquise no Chrome e copie a correção do Stack Overflow (Ctrl+C); no VSCode, vá até a linha ${line} de ${file} e cole (Ctrl+V); faça push, aguarde o CR e o merge.`
-          : `No VSCode, corrija o typo na linha ${line} de ${file}; faça push, aguarde o CR e o merge.`;
+          : `Corrija o bug na linha ${line} de ${file} no VSCode; faça push, aguarde o CR e o merge.`;
       }
       case 'ui_update': {
         // Variante fonte tem um valor em "px"; senão é a variante cor.

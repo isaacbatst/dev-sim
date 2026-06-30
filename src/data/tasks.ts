@@ -64,15 +64,31 @@ export const TASKS: Record<string, TaskTemplate> = {
       step('mash_merge'),
     ],
   },
-  // Bug fix: a cada vez sorteia COMO corrigir — digitar o fix (typo) ou colar a
-  // correção do Stack Overflow (combo Ctrl+C/Ctrl+V). Ver `variants`.
+  // Corrigir typo: correção DIRETA (você só conserta a linha). Sem pesquisar/colar
+  // — copiar do Stack Overflow só faz sentido pra bug.
   fix_typo: {
     id: 'fix_typo',
     title: 'Corrigir Typo',
     description: 'Abrir o VSCode, abrir o arquivo, navegar até a linha, corrigir, push, CR e merge',
+    steps: [
+      step('press_open_vscode'),
+      step('open_file'),
+      step('nav_find_line'),
+      step('press_fix'),
+      step('press_push'),
+      step('wait_cr'),
+      step('mash_merge'),
+    ],
+  },
+  // Corrigir bug: a cada vez sorteia COMO resolver — você já sabe (digita o fix)
+  // ou pesquisa no Stack Overflow e cola (Ctrl+C/Ctrl+V). Ver `variants`.
+  fix_bug: {
+    id: 'fix_bug',
+    title: 'Corrigir Bug',
+    description: 'Investigar o bug e corrigir no VSCode; push, CR e merge',
     steps: [],
     variants: [
-      // variante TYPO (digitar a correção, F)
+      // variante DIRETA (você sabe a correção, digita)
       [
         step('press_open_vscode'),
         step('open_file'),
@@ -82,8 +98,8 @@ export const TASKS: Record<string, TaskTemplate> = {
         step('wait_cr'),
         step('mash_merge'),
       ],
-      // variante PASTE: pesquisar no Chrome (ler o Stack Overflow), copiar lá,
-      // e colar no VS Code — fluxo de 2 apps, como no real.
+      // variante PESQUISAR: ler o Stack Overflow no Chrome, copiar lá e colar no
+      // VS Code — fluxo de 2 apps, como no real.
       [
         step('press_open_browser'),
         step('press_open_so'),

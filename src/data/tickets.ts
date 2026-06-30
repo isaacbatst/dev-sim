@@ -31,7 +31,7 @@ const MULTI: TicketTemplate[] = [
   multi(
     'fix_login_bug',
     'Bug no Login',
-    [TASKS.study, TASKS.fix_typo],
+    [TASKS.fix_bug],
     'alta',
     'Investigar o problema e corrigir o bug',
   ),
