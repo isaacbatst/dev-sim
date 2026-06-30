@@ -83,8 +83,8 @@ function Cue({ seg }: { seg: SegmentView }) {
               {['A', 'S', 'D', 'F'].map((k, i) => (
                 <kbd
                   key={k}
-                  className="keycap animate-edgepulse !h-7 !min-w-7 !text-xs"
-                  style={{ animationDelay: `${i * 140}ms` }}
+                  className="keycap animate-keytype !h-7 !min-w-7 !text-xs"
+                  style={{ animationDelay: `${i * 120}ms` }}
                 >
                   {k}
                 </kbd>

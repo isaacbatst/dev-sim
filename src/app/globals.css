@@ -294,6 +294,21 @@ body {
   animation: edgepulse 1.1s ease-in-out infinite;
 }
 
+/* Pulso DURO (corte seco, sem ease) — para o ritmo de "martelar" digitando. */
+@keyframes keytype {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0.25;
+  }
+}
+.animate-keytype {
+  animation: keytype 0.8s linear infinite;
+}
+
 /* ── Acessibilidade ─────────────────────────────────────────── */
 :focus-visible {
   outline: 2px solid var(--amber);
