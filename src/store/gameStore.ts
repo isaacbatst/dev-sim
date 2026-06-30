@@ -29,10 +29,19 @@ function daySeconds(): number | undefined {
  * O loop é dono da lógica; a store só guarda o último snapshot e expõe as
  * intenções de input. A UI lê o snapshot de forma reativa e despacha intenções.
  */
+/** Dia atual da campanha (persistido em localStorage — "em que dia você está"). */
+function loadDay(): number {
+  if (typeof window === 'undefined') return 1;
+  return Number(localStorage.getItem('devos-day')) || 1;
+}
+
 interface GameState {
   snapshot: Snapshot | null;
+  /** Dia da campanha (1, 2, …) — a espinha da carreira (§2). */
+  day: number;
   start: () => () => void;
   restart: () => void;
+  nextDay: () => void;
   selectSlot: (index: number) => void;
   keyDown: (key: string) => void;
   keyUp: (key: string) => void;
@@ -45,7 +54,7 @@ interface GameState {
 
 let loop: GameLoop | null = null;
 
-export const useGameStore = create<GameState>((set) => {
+export const useGameStore = create<GameState>((set, get) => {
   const spawn = () => {
     loop?.stop();
     loop = new GameLoop(
@@ -58,9 +67,11 @@ export const useGameStore = create<GameState>((set) => {
 
   return {
     snapshot: null,
+    day: 1,
 
     /** Inicia o loop e devolve uma função de cleanup (para o useEffect). */
     start: () => {
+      set({ day: loadDay() });
       spawn();
       return () => {
         loop?.stop();
@@ -69,6 +80,13 @@ export const useGameStore = create<GameState>((set) => {
     },
 
     restart: () => spawn(),
+    /** Fim de dia → próximo: avança a carreira (persiste) e abre um novo expediente. */
+    nextDay: () => {
+      const next = get().day + 1;
+      if (typeof window !== 'undefined') localStorage.setItem('devos-day', String(next));
+      set({ day: next });
+      spawn();
+    },
     selectSlot: (index) => loop?.selectSlot(index),
     keyDown: (key) => loop?.keyDown(key),
     keyUp: (key) => loop?.keyUp(key),
