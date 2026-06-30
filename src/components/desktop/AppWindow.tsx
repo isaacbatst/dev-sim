@@ -153,11 +153,6 @@ export function AppWindow({
         ? active.windowTitle
         : `${focusedApp?.name}`;
 
-  // Objetivo do passo atual — mostrado numa faixa sob as abas enquanto se trabalha
-  // num app (na aba Ticket o plano já está aberto). Perto da ação, não no backlog.
-  const sub = active.plan.find((p) => p.status === 'current') ?? active.plan[0];
-  const showObjective = !!sub && !active.wrongApp && !active.ready && active.focused !== 'details';
-
   return (
     <div
       key={active.id}
@@ -227,20 +222,6 @@ export function AppWindow({
           <IdleApp appId={active.focused} target={APPS[active.app].name} />
         )}
       </div>
-
-      {/* Objetivo do passo atual: faixa fina logo ACIMA da action bar — objetivo
-          colado em "o que apertar". */}
-      {showObjective && (
-        <div className="flex items-center gap-2 border-t border-line bg-surface-2/50 px-4 py-1.5">
-          <span aria-hidden className="text-amber">
-            ▸
-          </span>
-          <p className="truncate text-xs text-ink">
-            {active.taskCount > 1 && <span className="text-ink-dim">{sub.title}: </span>}
-            {sub.prose}
-          </p>
-        </div>
-      )}
 
       {/* hint padronizada */}
       <ActionBar active={active} />

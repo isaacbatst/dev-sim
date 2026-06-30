@@ -22,6 +22,12 @@ export function Desktop({
 }) {
   const { status, clock, delivered, slots, active } = snapshot;
   const openCount = slots.filter(Boolean).length;
+  // Objetivo do passo atual — só enquanto se trabalha num app (na aba Ticket o
+  // plano completo já está visível). Mostrado fora da janela, acima do programa.
+  const objective =
+    active && !active.wrongApp && !active.ready && active.focused !== 'details'
+      ? (active.plan.find((p) => p.status === 'current') ?? active.plan[0])
+      : null;
 
   return (
     <div className="relative flex h-full flex-col overflow-hidden">
@@ -41,6 +47,21 @@ export function Desktop({
         <section className="flex min-w-0 flex-1 items-center justify-center pb-16">
           {active ? (
             <div className="relative w-full max-w-[44rem]">
+              {/* Objetivo do passo: banner FORA da janela (na área do OS, acima do
+                  programa) enquanto se trabalha num app — não no chrome nem no backlog. */}
+              {objective && (
+                <div className="elev-1 mb-2 flex items-center gap-2 rounded-lg border border-edge bg-surface/85 px-4 py-2 backdrop-blur-sm">
+                  <span aria-hidden className="text-amber">
+                    ▸
+                  </span>
+                  <p className="truncate text-sm text-ink">
+                    {active.taskCount > 1 && (
+                      <span className="text-ink-dim">{objective.title}: </span>
+                    )}
+                    {objective.prose}
+                  </p>
+                </div>
+              )}
               <AppWindow
                 active={active}
                 slots={slots}
