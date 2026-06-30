@@ -85,9 +85,9 @@ export const SEGMENTS: Record<string, Segment> = {
     type: 'mash',
     keys: ['arrowleft', 'arrowright'],
     label: 'Resolver conflito',
-    // Cada conflito = 3–5 alternâncias ⬅️➡️; 1–3 conflitos por merge.
-    minCount: 3,
-    maxCount: 5,
+    // Cada conflito = 2 alternâncias ⬅️➡️; 1–3 conflitos por merge.
+    minCount: 2,
+    maxCount: 2,
     minGroups: 1,
     maxGroups: 3,
   },
