@@ -1,4 +1,4 @@
-import type { ActiveTicketSnapshot, SlotSnapshot } from '@/core/snapshot';
+import type { SlotSnapshot } from '@/core/snapshot';
 import { StatusIcon, PriorityIcon, type IssueStatus } from './issueIcons';
 
 function statusOf(slot: SlotSnapshot): IssueStatus {
@@ -12,15 +12,12 @@ function statusOf(slot: SlotSnapshot): IssueStatus {
 /** A fila de demandas como um issue tracker (estilo Linear). */
 export function InboxPanel({
   slots,
-  active,
   onSelect,
 }: {
   slots: (SlotSnapshot | null)[];
-  active: ActiveTicketSnapshot | null;
   onSelect: (index: number) => void;
 }) {
   const open = slots.filter(Boolean).length;
-  const sub = active?.plan.find((p) => p.status === 'current') ?? active?.plan[0];
 
   return (
     <aside className="elev-1 flex w-72 shrink-0 flex-col overflow-hidden rounded-xl border border-edge bg-surface">
@@ -99,31 +96,6 @@ export function InboxPanel({
           ),
         )}
       </div>
-
-      {/* Lembrete de 2º plano: só quando NÃO se está na aba Ticket. Rodapé com
-          PESO (toolbar elevada, como a action bar): fill surface-2 + realce de 1px
-          no topo — destaca a task atual sem stroke colorido/glow. */}
-      {active && sub && active.focused !== 'details' && (
-        <div
-          className="mt-auto border-t border-line bg-surface-2 p-3"
-          style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)' }}
-        >
-          <div className="flex items-start gap-2">
-            <span className="mt-0.5">
-              <StatusIcon status="active" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-[13px] font-semibold text-ink">{active.name}</p>
-              {active.taskCount > 1 && (
-                <p className="text-[11px] text-ink-dim">
-                  {sub.title} · {active.taskIndex + 1}/{active.taskCount}
-                </p>
-              )}
-              <p className="mt-1.5 text-[13px] leading-relaxed text-ink/80">{sub.prose}</p>
-            </div>
-          </div>
-        </div>
-      )}
     </aside>
   );
 }

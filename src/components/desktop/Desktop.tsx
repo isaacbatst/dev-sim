@@ -36,7 +36,7 @@ export function Desktop({
           className="bg-noise pointer-events-none absolute inset-0 -z-10 opacity-[0.05] mix-blend-soft-light"
         />
 
-        <InboxPanel slots={slots} active={active} onSelect={onSelect} />
+        <InboxPanel slots={slots} onSelect={onSelect} />
 
         <section className="flex min-w-0 flex-1 items-center justify-center pb-16">
           {active ? (
