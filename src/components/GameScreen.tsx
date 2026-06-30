@@ -46,12 +46,6 @@ export function GameScreen() {
         }
       }
       if (e.ctrlKey || e.metaKey) return; // não capturar outros atalhos do SO
-      // Teclas de debug (F9 breakpoint, F5 rodar): F5 recarregaria a página.
-      if (e.key === 'F5' || e.key === 'F9') {
-        if (e.repeat) return;
-        e.preventDefault();
-        return keyDown(e.key.toLowerCase());
-      }
       if (e.key.startsWith('Arrow') || e.key === 'Tab' || e.key === 'Backspace') e.preventDefault();
       if (e.repeat) return;
       if (e.key === 'Tab') return cycleFocus(e.shiftKey ? -1 : 1);
