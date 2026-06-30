@@ -67,15 +67,15 @@ export function Desktop({
           {active ? (
             <div className="relative w-full max-w-[44rem]">
               {/* Objetivo do passo: banner FORA da janela (na área do OS, acima do
-                  programa) enquanto se trabalha num app — não no chrome nem no backlog. */}
+                  programa) enquanto se trabalha num app. Quebra em várias linhas. */}
               {objective && (
-                <div className="elev-1 mb-2 flex items-center gap-2 rounded-lg border border-edge bg-surface/85 px-4 py-2 backdrop-blur-sm">
-                  <span aria-hidden className="text-amber">
+                <div className="elev-2 mb-2.5 flex items-start gap-2.5 rounded-lg border border-edge bg-surface px-4 py-3 backdrop-blur-sm">
+                  <span aria-hidden className="mt-0.5 text-amber">
                     ▸
                   </span>
-                  <p className="truncate text-sm text-ink">
+                  <p className="text-sm leading-relaxed text-ink">
                     {active.taskCount > 1 && (
-                      <span className="text-ink-dim">{objective.title}: </span>
+                      <span className="font-semibold text-amber">{objective.title}: </span>
                     )}
                     {objective.prose}
                   </p>
