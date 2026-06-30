@@ -73,9 +73,10 @@ function Cue({ seg }: { seg: SegmentView }) {
           </span>
         </div>
       );
-    case 'mash':
-      // Ciclo: mostra as teclas com a PRÓXIMA esperada destacada (ela "anda"
-      // conforme você acerta a ordem — ⬅️➡️ no merge, A S D J K L no digitar).
+    case 'mash': {
+      // Ciclo: teclas com a PRÓXIMA esperada destacada (anda ao acertar a ordem).
+      // Digitar (letras) = só teclas + meter; merge (⬅️➡️) mantém o rótulo + N/M.
+      const isType = !seg.keys.some((k) => k.startsWith('arrow'));
       return (
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1.5">
@@ -85,20 +86,22 @@ function Cue({ seg }: { seg: SegmentView }) {
               </KeyCap>
             ))}
           </span>
-          <span className="text-sm text-ink">
-            {seg.label}
-            {seg.groups > 1 && (
-              <span className="ml-1.5 text-ink-dim">
-                {Math.min(seg.activeGroup + 1, seg.groups)}/{seg.groups}
-              </span>
-            )}
-          </span>
-          {/* Meter é do CONFLITO ATUAL (não do total) — expõe o progresso daquele. */}
+          {!isType && (
+            <span className="text-sm text-ink">
+              {seg.label}
+              {seg.groups > 1 && (
+                <span className="ml-1.5 text-ink-dim">
+                  {Math.min(seg.activeGroup + 1, seg.groups)}/{seg.groups}
+                </span>
+              )}
+            </span>
+          )}
           <span className="w-32">
             <Meter value={seg.groupProgress} color="var(--amber)" />
           </span>
         </div>
       );
+    }
     case 'combo':
       return (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
