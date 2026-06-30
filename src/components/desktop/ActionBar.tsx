@@ -14,7 +14,7 @@ function OpenPicker() {
       {DOCK_APPS.map((id) => (
         <span key={id} className="flex items-center gap-1.5">
           <KeyCap state="idle">{LAUNCH_KEY[id]}</KeyCap>
-          <span className="text-sm text-ink-dim">{APPS[id].name}</span>
+          <span className="text-sm text-ink">{APPS[id].name}</span>
         </span>
       ))}
     </div>
@@ -40,7 +40,7 @@ function Cue({ seg }: { seg: SegmentView }) {
             {opts.map((o) => (
               <span key={o.key} className="flex items-center gap-1.5">
                 <KeyCap state={o.done ? 'done' : 'idle'}>{o.key}</KeyCap>
-                <span className={`text-sm text-ink-dim ${o.done ? 'line-through' : ''}`}>
+                <span className={`text-sm text-ink ${o.done ? 'line-through' : ''}`}>
                   {o.label.replace(/^Abrir /, '')}
                 </span>
               </span>
@@ -152,11 +152,11 @@ function Cue({ seg }: { seg: SegmentView }) {
           <span className="flex items-center gap-1.5">
             <KeyCap state="idle">←</KeyCap>
             <KeyCap state="idle">→</KeyCap>
-            <span className="text-sm text-ink-dim">discar</span>
+            <span className="text-sm text-ink">discar</span>
           </span>
           <span className="flex items-center gap-1.5">
             <KeyCap state="idle">Enter</KeyCap>
-            <span className="text-sm text-ink-dim">confirmar</span>
+            <span className="text-sm text-ink">confirmar</span>
           </span>
           <span className="text-sm text-amber">{current}</span>
         </div>
@@ -171,11 +171,11 @@ function Cue({ seg }: { seg: SegmentView }) {
             <KeyCap state="idle">
               {seg.direction === 'up' ? '↓' : seg.direction === 'down' ? '↑' : '↔'}
             </KeyCap>
-            <span className="text-sm text-ink-dim">mover</span>
+            <span className="text-sm text-ink">mover</span>
           </span>
           <span className="flex items-center gap-1.5">
             <KeyCap state={onTarget ? 'current' : 'idle'}>Enter</KeyCap>
-            <span className="text-sm text-ink-dim">confirmar</span>
+            <span className="text-sm text-ink">confirmar</span>
           </span>
         </div>
       );
@@ -188,7 +188,7 @@ function Cue({ seg }: { seg: SegmentView }) {
               <KeyCap state={seg.chosenKey === o.key ? (seg.wrong ? 'wrong' : 'done') : 'idle'}>
                 {o.key}
               </KeyCap>
-              <span className="text-sm text-ink-dim">{o.label}</span>
+              <span className="text-sm text-ink">{o.label}</span>
             </span>
           ))}
         </div>
@@ -211,11 +211,11 @@ function Cue({ seg }: { seg: SegmentView }) {
           {/* A query aparece no overlay do Quick Open; aqui só as ações. */}
           <span className="flex items-center gap-1.5">
             <KeyCap state="current">Enter</KeyCap>
-            <span className="text-sm text-ink-dim">abrir</span>
+            <span className="text-sm text-ink">abrir</span>
           </span>
           <span className="flex items-center gap-1.5">
             <KeyCap state="idle">Ctrl+P</KeyCap>
-            <span className="text-sm text-ink-dim">fechar</span>
+            <span className="text-sm text-ink">fechar</span>
           </span>
         </div>
       ) : (
@@ -223,15 +223,15 @@ function Cue({ seg }: { seg: SegmentView }) {
           <span className="flex items-center gap-1.5">
             <KeyCap state="idle">↑</KeyCap>
             <KeyCap state="idle">↓</KeyCap>
-            <span className="text-sm text-ink-dim">navegar</span>
+            <span className="text-sm text-ink">navegar</span>
           </span>
           <span className="flex items-center gap-1.5">
             <KeyCap state="idle">Enter</KeyCap>
-            <span className="text-sm text-ink-dim">abrir / expandir</span>
+            <span className="text-sm text-ink">abrir / expandir</span>
           </span>
           <span className="flex items-center gap-1.5">
             <KeyCap state="idle">Ctrl+P</KeyCap>
-            <span className="text-sm text-ink-dim">buscar</span>
+            <span className="text-sm text-ink">buscar</span>
           </span>
         </div>
       );
