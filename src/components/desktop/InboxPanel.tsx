@@ -100,10 +100,14 @@ export function InboxPanel({
         )}
       </div>
 
-      {/* Lembrete de 2º plano: só quando NÃO se está na aba Ticket. Rodapé
-          recuado (fill, não stroke); o ícone "em andamento" já diz o que é. */}
+      {/* Lembrete de 2º plano: só quando NÃO se está na aba Ticket. Rodapé com
+          PESO (toolbar elevada, como a action bar): fill surface-2 + realce de 1px
+          no topo — destaca a task atual sem stroke colorido/glow. */}
       {active && sub && active.focused !== 'details' && (
-        <div className="mt-auto border-t border-line bg-bg/30 p-3">
+        <div
+          className="mt-auto border-t border-line bg-surface-2 p-3"
+          style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)' }}
+        >
           <div className="flex items-start gap-2">
             <span className="mt-0.5">
               <StatusIcon status="active" />
