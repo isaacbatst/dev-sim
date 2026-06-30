@@ -110,6 +110,22 @@ export interface ScrubInstance {
   wrong: boolean;
 }
 
+export interface GaugeInstance {
+  type: 'gauge';
+  key: string;
+  label: string;
+  rate: number;
+  /** Centro da zona-alvo (0..1) e meia-largura da faixa. */
+  target: number;
+  tol: number;
+  /** Enchimento atual (0..1). */
+  current: number;
+  holding: boolean;
+  committed: boolean;
+  /** Passou da zona (exagerou) — erro. */
+  wrong: boolean;
+}
+
 export interface FileInstance {
   type: 'file';
   files: string[];
@@ -191,7 +207,8 @@ export type SegmentInstance =
   | FileInstance
   | MashInstance
   | ComboInstance
-  | ScrubInstance;
+  | ScrubInstance
+  | GaugeInstance;
 
 export interface StepInstance {
   segments: SegmentInstance[];
@@ -298,6 +315,20 @@ function instantiateSegment(segment: Segment): SegmentInstance {
         wrong: false,
       };
     }
+    case 'gauge':
+      return {
+        type: 'gauge',
+        key: segment.key,
+        label: segment.label,
+        rate: segment.rate,
+        // Zona-alvo sorteada na metade alta da barra; faixa fixa.
+        target: 0.5 + Math.random() * 0.35,
+        tol: 0.1,
+        current: 0,
+        holding: false,
+        committed: false,
+        wrong: false,
+      };
     case 'file': {
       const allowed = segment.ext
         ? PROJECT_FILES.map((f, i) => (f.endsWith(`.${segment.ext}`) ? i : -1)).filter(
@@ -365,6 +396,8 @@ export function segmentCompleted(seg: SegmentInstance): boolean {
       return seg.done.every(Boolean);
     case 'scrub':
       return seg.committed;
+    case 'gauge':
+      return seg.committed;
   }
 }
 
@@ -380,6 +413,7 @@ export function segmentWrong(seg: SegmentInstance): boolean {
     case 'nav':
     case 'file':
     case 'scrub':
+    case 'gauge':
       return seg.committed && seg.wrong;
     default:
       return false;
@@ -425,6 +459,12 @@ export function resetSegment(seg: SegmentInstance): void {
       break;
     case 'scrub':
       seg.cursor = seg.correctIndex === 0 ? seg.options.length - 1 : 0;
+      seg.committed = false;
+      seg.wrong = false;
+      break;
+    case 'gauge':
+      seg.current = 0;
+      seg.holding = false;
       seg.committed = false;
       seg.wrong = false;
       break;

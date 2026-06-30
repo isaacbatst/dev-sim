@@ -37,6 +37,21 @@ export const TASKS: Record<string, TaskTemplate> = {
     description: 'Abrir o Chrome, abrir o webmail e arquivar',
     steps: [step('press_open_browser'), step('press_open_webmail'), step('press_archive')],
   },
+  // Refatorar: simplificar o módulo segurando e soltando na zona certa (gauge);
+  // exagerar (passar do alvo) quebra a abstração → CR rejeita.
+  refactor: {
+    id: 'refactor',
+    title: 'Refatorar',
+    description: 'Abrir o VSCode, simplificar o módulo, push, CR e merge',
+    steps: [
+      step('press_open_vscode'),
+      step('open_file'),
+      step('gauge_simplify'),
+      step('press_push'),
+      step('wait_cr'),
+      step('mash_merge'),
+    ],
+  },
   document: {
     id: 'document',
     title: 'Documentar Classe/Função',

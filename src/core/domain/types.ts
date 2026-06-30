@@ -20,7 +20,7 @@ export type Priority = 'urgente' | 'alta' | 'normal' | 'baixa';
 export const PRIORITY_BY_INT: Priority[] = ['urgente', 'alta', 'normal', 'baixa'];
 
 export type SegmentType =
-  'press' | 'hold' | 'nav' | 'selection' | 'wait' | 'file' | 'mash' | 'combo' | 'scrub';
+  'press' | 'hold' | 'nav' | 'selection' | 'wait' | 'file' | 'mash' | 'combo' | 'scrub' | 'gauge';
 
 /** Uma ação/tecla com rótulo legível (ex.: { key: 'w', label: 'Abrir navegador' }). */
 export interface Action {
@@ -128,6 +128,19 @@ export interface ScrubSegment {
   options: Action[];
 }
 
+/**
+ * `gauge`: segurar pra encher uma barra e SOLTAR na zona-alvo (estilo "encher o
+ * copo até a linha" do CSD). Soltar na faixa = sucesso; passar do alvo = exagerou
+ * (over-engineer) → erro, CR rejeita. Precisão, NÃO tempo morto.
+ */
+export interface GaugeSegment {
+  type: 'gauge';
+  key: string;
+  label: string;
+  /** Enchimento por segundo (0..1). */
+  rate: number;
+}
+
 export type Segment =
   | PressSegment
   | HoldSegment
@@ -137,7 +150,8 @@ export type Segment =
   | FileSegment
   | MashSegment
   | ComboSegment
-  | ScrubSegment;
+  | ScrubSegment
+  | GaugeSegment;
 
 /** Passo: contém segmentos do mesmo tipo (GDD 3.1). No conteúdo atual, 1 por passo. */
 export interface StepTemplate {

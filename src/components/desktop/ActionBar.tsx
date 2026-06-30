@@ -162,6 +162,16 @@ function Cue({ seg }: { seg: SegmentView }) {
         </div>
       );
     }
+    case 'gauge':
+      // Sem barra aqui — o gauge (enchimento + zona) vive na cena.
+      return (
+        <div className="flex items-center gap-3">
+          <KeyCap state={seg.holding ? 'current' : 'idle'}>{seg.key}</KeyCap>
+          <span className="text-sm text-ink">
+            {seg.label} <span className="text-ink-dim">— segure e solte na zona</span>
+          </span>
+        </div>
+      );
     case 'nav': {
       const onTarget = seg.cursor === seg.target;
       return (

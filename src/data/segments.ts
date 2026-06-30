@@ -101,6 +101,10 @@ export const SEGMENTS: Record<string, Segment> = {
     maxCount: 20,
   },
 
+  // --- gauge (segurar e soltar na zona-alvo — "encher até a linha" do CSD) ---
+  // Refatorar: segure pra simplificar e solte na faixa certa; passar = exagerou.
+  gauge_simplify: { type: 'gauge', key: 'r', label: 'Refatorar', rate: 0.42 },
+
   // --- hold (AUDITORIA: tempo morto) ---
   hold_speak: {
     type: 'hold',

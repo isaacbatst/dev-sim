@@ -45,9 +45,9 @@ const MULTI: TicketTemplate[] = [
   multi(
     'refactor_module',
     'Refatorar Módulo',
-    [TASKS.study, TASKS.fix_typo, TASKS.test_feature],
+    [TASKS.study, TASKS.refactor, TASKS.test_feature],
     'normal',
-    'Estudar, corrigir e testar o módulo',
+    'Estudar, simplificar e testar o módulo',
   ),
   multi(
     'deploy_hotfix',

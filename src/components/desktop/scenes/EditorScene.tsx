@@ -1092,6 +1092,80 @@ function PrPanel({ active }: { active: ActiveTicketSnapshot }) {
   );
 }
 
+/** Refatorar: segurar pra simplificar e SOLTAR na zona-alvo (gauge, estilo CSD).
+ *  As linhas redundantes somem conforme simplifica; passar do alvo = quebra. */
+function RefactorScene({
+  seg,
+  file,
+}: {
+  seg: Extract<SegmentView, { type: 'gauge' }>;
+  file: string;
+}) {
+  const lines = linesFor(file);
+  const lo = seg.target - seg.tol;
+  const hi = seg.target + seg.tol;
+  const over = seg.committed && seg.wrong;
+  const done = seg.committed && !seg.wrong;
+  // Linhas "redundantes" (miolo) desbotam conforme a barra enche (simplificação).
+  const redFrom = 2;
+  const redTo = Math.min(lines.length - 2, 6);
+  const fade = Math.max(0, 1 - seg.current * 1.5);
+  return (
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden font-code text-sm">
+      <div className="flex shrink-0 border-b border-line bg-surface px-3 py-1 text-xs text-ink-dim">
+        <span className="border-b-2 border-amber px-2 py-1 text-ink">{file}</span>
+      </div>
+      <pre className="m-0 flex-1 overflow-y-auto p-3 leading-6">
+        {lines.map((line, i) => {
+          const redundant = i >= redFrom && i <= redTo;
+          return (
+            <div
+              key={i}
+              className="flex items-center gap-3"
+              style={redundant ? { opacity: fade } : undefined}
+            >
+              <span className="w-6 select-none text-right text-ink-dim">{i + 1}</span>
+              <span>
+                <Code line={line} ext={ext(file)} />
+              </span>
+            </div>
+          );
+        })}
+      </pre>
+      {/* Gauge: encher segurando, soltar na zona verde. */}
+      <div className="shrink-0 border-t border-line bg-surface/60 p-3">
+        <div className="mb-1.5 flex items-center justify-between text-[11px]">
+          <span className="uppercase tracking-wider text-ink-dim">complexidade → simplicidade</span>
+          <span className={over ? 'text-fail' : done ? 'text-pass' : 'text-ink-dim'}>
+            {over
+              ? 'exagerou — quebrou ✕'
+              : done
+                ? 'limpo ✓'
+                : `segure ${seg.key.toUpperCase()} · solte na zona`}
+          </span>
+        </div>
+        <div className="relative h-3.5 w-full overflow-hidden rounded-full bg-bg/70">
+          <span
+            className="absolute inset-y-0 bg-pass/30"
+            style={{ left: `${lo * 100}%`, width: `${(hi - lo) * 100}%` }}
+          />
+          <span
+            className="absolute inset-y-0 left-0"
+            style={{
+              width: `${seg.current * 100}%`,
+              background: over ? 'var(--fail)' : done ? 'var(--pass)' : 'var(--amber)',
+            }}
+          />
+          <span
+            className="absolute inset-y-0 w-px bg-pass/80"
+            style={{ left: `${seg.target * 100}%` }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function EditorScene({ active }: { active: ActiveTicketSnapshot }) {
   const focus = active.segments[0];
   const pick = focus?.type === 'file' ? focus : null;
@@ -1104,6 +1178,7 @@ export function EditorScene({ active }: { active: ActiveTicketSnapshot }) {
     else main = <FolderPreview name={row?.name ?? ''} open={row?.open ?? false} />;
   } else if (focus?.type === 'selection') main = <CssSelect seg={focus} file={active.editorFile} />;
   else if (focus?.type === 'scrub') main = <ScrubDial seg={focus} file={active.editorFile} />;
+  else if (focus?.type === 'gauge') main = <RefactorScene seg={focus} file={active.editorFile} />;
   else if (focus?.type === 'wait') main = <PrPanel active={active} />;
   else if (focus?.type === 'combo')
     main = <ComboFix seg={focus} file={active.editorFile} fixedLine={active.editorFixedLine} />;

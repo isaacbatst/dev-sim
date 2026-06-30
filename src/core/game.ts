@@ -127,6 +127,19 @@ export class Game {
           this.advance(inst);
           this.progressSound(inst, before, false);
         }
+      } else if (seg.type === 'gauge' && i === this.activeSlot && seg.holding && !seg.committed) {
+        seg.current += seg.rate * dt;
+        // Passou da zona-alvo segurando demais → exagerou (over-engineer): erro.
+        if (seg.current >= seg.target + seg.tol) {
+          seg.current = Math.min(1, seg.current);
+          seg.committed = true;
+          seg.wrong = true;
+          seg.holding = false;
+          this.emit('error');
+          const before = this.progKey(inst);
+          this.advance(inst);
+          this.progressSound(inst, before, false);
+        }
       }
     });
   }
@@ -265,6 +278,14 @@ export class Game {
         if (seg.cursor !== at) incidental = 'nav';
         break;
       }
+      case 'gauge': {
+        // Segurar enche a barra (tick); soltar (keyUp) avalia. Começa a segurar.
+        if (key === seg.key && !seg.committed && !seg.holding) {
+          seg.holding = true;
+          incidental = 'holdStart';
+        }
+        break;
+      }
       case 'file': {
         if (seg.committed) break;
         if (seg.searching) {
@@ -383,6 +404,23 @@ export class Game {
       seg.holding = false;
       this.emit('holdEnd');
       if (seg.held < seg.target) seg.held = 0; // soltou cedo: reinicia (paridade com o PoC)
+    } else if (seg?.type === 'gauge' && raw.toLowerCase() === seg.key && seg.holding) {
+      seg.holding = false;
+      this.emit('holdEnd');
+      if (!seg.committed) {
+        const lo = seg.target - seg.tol;
+        const hi = seg.target + seg.tol;
+        if (seg.current >= lo && seg.current <= hi) {
+          // Soltou na zona → sucesso.
+          seg.committed = true;
+          const before = this.progKey(inst);
+          this.emit('select');
+          const step = this.currentStep(inst);
+          if (step && stepCompleted(step)) this.advance(inst);
+          this.progressSound(inst, before, false);
+        }
+        // Soltou antes da zona: fica onde está (pode retomar segurando de novo).
+      }
     }
   }
 
@@ -566,6 +604,8 @@ export class Game {
         const chose = seg.chosenIndex !== null ? fileBasename(seg.files[seg.chosenIndex]) : '?';
         return `Esse PR alterou ${chose}, mas era pra ser ${fileBasename(seg.files[seg.targetIndex])}.`;
       }
+      case 'gauge':
+        return 'Você simplificou demais e quebrou a abstração. Menos é mais — mas não tanto.';
       default:
         return 'Isso ainda não está como o ticket pede.';
     }
@@ -834,6 +874,8 @@ export class Game {
         return `Abra o Chrome, abra o webmail e arquive a mensagem do chefe.`;
       case 'document':
         return `Documente a função no VSCode; faça push, aguarde o CR e o merge.`;
+      case 'refactor':
+        return `Refatore ${this.fileTarget(t) ?? 'o módulo'}: segure pra simplificar e solte na zona certa (sem exagerar); faça push, aguarde o CR e o merge.`;
       case 'fix_typo': {
         const line = (nav[0] ?? 0) + 1;
         const file = this.fileTarget(t) ?? 'login.ts';
@@ -947,6 +989,18 @@ export class Game {
           type: 'scrub',
           options: seg.options.map((o) => ({ key: o.key, label: o.label })),
           cursor: seg.cursor,
+          committed: seg.committed,
+          wrong: seg.wrong,
+        };
+      case 'gauge':
+        return {
+          type: 'gauge',
+          key: seg.key,
+          label: seg.label,
+          current: Math.min(1, seg.current),
+          target: seg.target,
+          tol: seg.tol,
+          holding: seg.holding,
           committed: seg.committed,
           wrong: seg.wrong,
         };

@@ -107,6 +107,18 @@ export type SegmentView =
       wrong: boolean;
     }
   | {
+      type: 'gauge';
+      key: string;
+      label: string;
+      /** Enchimento atual (0..1) e a zona-alvo [target-tol, target+tol]. */
+      current: number;
+      target: number;
+      tol: number;
+      holding: boolean;
+      committed: boolean;
+      wrong: boolean;
+    }
+  | {
       type: 'file';
       /** Todos os caminhos (para o Ctrl+P buscar em pastas aninhadas). */
       files: string[];
