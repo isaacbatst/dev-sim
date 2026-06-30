@@ -1,6 +1,7 @@
 import type { Snapshot } from '@/core/snapshot';
 import { MenuBar } from './MenuBar';
 import { InboxPanel } from './InboxPanel';
+import { StatusIcon } from './issueIcons';
 import { AppWindow } from './AppWindow';
 import { Dock } from './Dock';
 
@@ -71,8 +72,10 @@ export function Desktop({
                   programa) — fonte única da info. Quebra em várias linhas. */}
               {objective && (
                 <div className="elev-2 mb-2.5 flex shrink-0 items-start gap-2.5 rounded-lg border border-edge bg-surface px-4 py-3 backdrop-blur-sm">
-                  <span aria-hidden className="mt-0.5 text-amber">
-                    ▸
+                  {/* Caixa de uma linha (leading-relaxed = 1.625) centra o ícone
+                      opticamente com a 1ª linha — sem mt mágico, robusto ao wrap. */}
+                  <span className="flex h-[1.625em] shrink-0 items-center text-sm">
+                    <StatusIcon status="active" />
                   </span>
                   <p className="text-sm leading-relaxed text-ink">
                     {active.taskCount > 1 && (

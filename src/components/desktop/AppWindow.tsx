@@ -5,7 +5,6 @@ import type {
   ProgramId,
   SlotSnapshot,
 } from '@/core/snapshot';
-import { LAUNCH_KEY } from '@/core/domain/apps';
 import { APPS } from './apps';
 import { Scene } from './scenes';
 import { ActionBar } from './ActionBar';
@@ -26,18 +25,16 @@ const PRIORITY_CLASS: Record<Priority, string> = {
   baixa: 'bg-ink/10 text-ink-dim',
 };
 
-/** Antes de abrir o app: prompt pra lançar o programa da tarefa (a "comanda" /
- *  objetivo agora vive só no banner acima da janela, fonte única). */
+/** Antes de abrir o app: prompt diegético (mesmo idioma da tela vazia — mono +
+ *  cursor, sem ícone). As teclas já vivem no action bar abaixo; o objetivo, no
+ *  banner acima (fonte única). */
 function LaunchPrompt({ appId }: { appId: AppId }) {
   const app = APPS[appId];
   return (
-    <div className="flex min-h-[22rem] flex-1 flex-col items-center justify-center gap-3 text-center">
-      <span className="text-5xl opacity-40" aria-hidden>
-        {app.icon}
-      </span>
-      <p className="flex items-center gap-2 text-sm text-ink-dim">
-        abra o <span className="font-medium text-ink">{app.name}</span>
-        <kbd className="keycap !h-6 !min-w-6 !text-xs">{LAUNCH_KEY[appId]}</kbd>
+    <div className="flex min-h-[22rem] flex-1 flex-col items-center justify-center text-center">
+      <p className="font-mono text-sm text-ink-dim">
+        abra o <span className="text-ink">{app.name}</span> para começar
+        <span className="animate-edgepulse ml-1 inline-block h-[1em] w-[0.5em] translate-y-[0.12em] bg-ink/70" />
       </p>
     </div>
   );
