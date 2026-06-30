@@ -116,10 +116,13 @@ Dia = { nome/manchete · abertura (a fala do standup = o reveal) ·
 
 ---
 
-## 5. O core tátil — "suco por tecla" (CSD) **[direção; parte é o próximo build]**
+## 5. O core tátil — "suco por tecla" (CSD) **[core base VALIDADO]**
 
-O loop momento-a-momento **tem que ser divertido sozinho** (jogo de skill, não idle). É o
-motor dentro da campanha. Input **mimético** (imitar a ação real) é a alavanca nº1.
+O loop momento-a-momento **tem que ser divertido sozinho** (jogo de skill, não idle) — e
+**o core base já está validado** (joga bem). Logo `scrub`/`mash` abaixo são
+**profundidade/variedade** (e ajudam a repetição a não cansar), **não** gating de
+validação. É o motor dentro da campanha. Input **mimético** (imitar a ação real) é a
+alavanca de profundidade nº1.
 
 - **`scrub` (NOVO):** segurar ⬅️➡️ pra discar um valor com preview ao vivo (`ui_color`,
   `ui_font`). Substitui escolhas "frias".
@@ -127,7 +130,7 @@ motor dentro da campanha. Input **mimético** (imitar a ação real) é a alavan
   reutilizável (digitar, deletar, **conflito de merge ⬅️➡️**).
 - **combo:** `press` aceitando modificador+tecla (Ctrl+C/Ctrl+V "do Stack Overflow").
 
-**Top 3 pra provar o core:** conflito de merge (`mash`, a assinatura), scrub de CSS,
+**Top 3 enhancements:** conflito de merge (`mash`, a assinatura), scrub de CSS,
 copy-paste do SO. **Régua anti-tempo-morto:** todo gesto curto (2–4s) + feedback que
 escala + a tela mostra a ação real. (Seção 4 do `DESIGN_CONSULTORIA.md`.)
 
@@ -162,7 +165,7 @@ que pode cair, não acumulador) · **badges** (variedade). Temporadas p/ o rank:
 
 ---
 
-## 7. Perks como *mutators* (horizontais, ÚNICOS) **[ADIADO — dependem de §8/§9]**
+## 7. Perks como *mutators* (horizontais, ÚNICOS) **[ADIADO]**
 
 Modos diferentes de jogar **sem overpower**. Não são builds — **perk único por run**
 (estilo *heat* do Hades / daily modifier do StS). Você lê o dia no standup e escolhe um.
@@ -188,42 +191,60 @@ Modos diferentes de jogar **sem overpower**. Não são builds — **perk único 
 > = só ganho de tempo). O contra-peso (catástrofe / bola de neve) tem que doer, ou ficam em
 > categoria própria de placar.
 
-**Por que está adiado:** dependem de **interstitials** (§8) e **deadlines** (§9), que
-ainda não existem.
+**Por que está adiado:** dependem de **interstitials** (§8) maduros e do sistema de
+**deadline/nota** (§9) afinado — constroem sobre essas peças, não validam nada sozinhos.
 
 ---
 
-## 8. Interstitials — ritmo do dia **[ADIADO; baratos]**
+## 8. Interstitials — ritmo do dia **[parcial no MVP; resto ADIADO]**
 
 Set fechado de beats **agendados**: **standup** (09:00 — abre o dia + **é o reveal da
 personalidade**), **café** (palate cleanser tátil), **almoço** (halftime: stats da
 manhã), **reunião inútil** (gag de identidade), **fim de expediente** (resultado/share).
+**O standup-reveal e o fim-de-dia já entram no MVP** (§10); o resto é posterior.
 **Fronteira:** agendados dentro; interrupções aleatórias (ping, "deploy quebrou") fora
 (camada de stakes). Regra: tátil **ou** pontuação rápida — nunca pausa passiva.
 
 ---
 
-## 9. Deadlines — stakes + sentido da prioridade **[ADIADO]**
+## 9. Stakes: a nota do dia é a moeda única **[DECIDIDO — entra no MVP]**
 
-Hoje o jogo está **sem stakes** (satisfação/chefe/foco removidos; ver `GDD.md`). Deadline
-é a fonte de pressão pretendida e o que **dá sentido aos níveis de prioridade** (sem ele,
-prioridade é só cor). Adiciona a camada de triagem ("qual deixo queimar"). A "moeda" de
-penalidade/recompensa precisa ser redefinida (a satisfação saiu).
+Hoje o jogo não tem consequência no meio do dia (dá pra ficar com o backlog cheio sem
+fazer nada). Um dia sem consequência **não testa retenção** — então stakes entram já na
+primeira slice. Em vez de reabrir satisfação/HP/derrota, **tudo alimenta uma só
+nota/grade do dia**:
+
+- **velocidade** (time-attack: limpar o backlog) → idle = nota ruim
+- **precisão** (CR rejeitado) → erro custa
+- **expiração** (deadline por ticket) → deixar apodrecer custa
+
+Assim o **deadline entra cedo e barato**: a punição é um tombo na **nota**, não um
+game-over. Ele faz a **prioridade significar algo** (urgente = timer curto) e traz a
+**triagem** ("qual deixo queimar"). Você sempre **termina** o dia — com nota melhor ou pior.
+
+> Resolve a decisão antes em aberto: **a moeda de stakes que sumiu com a satisfação é a
+> nota do dia.**
+
+**Anti-"parece trabalho":** timers generosos no começo + nota-não-morte. A grade, não o
+game-over, mantém a pressão sem virar overtime.
 
 ---
 
-## 10. Sequência / prioridade (a ser refinada)
+## 10. Sequência / prioridade
 
-Escada de baixo (intrínseco/barato/cedo) pra cima (extrínseco/caro/tardio):
+> **Core base já validado** (joga bem). O risco que gateia não é mais "o core é
+> divertido?" — é **"as pessoas voltam?"**. Por isso `mash`/`scrub` descem para
+> enhancement, e os **stakes do dia (§9) sobem para dentro do MVP** (sem consequência no
+> dia, não dá pra medir retenção).
 
-1. **Core tátil** — `mash` (conflito de merge, a assinatura) → `scrub` (CSS) → combo do SO.
-2. **Personalidade do dia (mínima)** — tema + viés de mix + standup-reveal.
-3. **Casca de campanha** — sequência de dias + progresso (localStorage) + título leve.
-   → **valida:** as pessoas jogam "mais um dia"?
-4. **Cosméticos (`$`→desk) + desbloqueio de conteúdo** (novos arquétipos).
-5. **Deadlines** (stakes + prioridade) → habilita os modificadores.
-6. **Interstitials** completos + **perks/mutators** (constroem sobre 4–5).
-7. **Daily de calendário + share + carreira-como-registro + seed** — endgame/distribuição.
+1. **Campanha mínima aprendível (slice vertical):** personalidade do dia (tema + viés de
+   mix + standup-reveal) + **dia finito com deadlines → nota única** (§9) + fim de dia
+   (resultado/nota + título leve) + progresso (localStorage). → **valida "mais um dia".**
+2. **Enhancements táteis:** `mash` (conflito de merge, a assinatura) → `scrub` (CSS) →
+   combo do SO. Profundidade sobre o core validado.
+3. **Cosméticos (`$`→desk) + desbloqueio de conteúdo** (novos arquétipos).
+4. **Interstitials completos + perks/mutators** (constroem sobre 1–3).
+5. **Daily de calendário + share + carreira-como-registro + seed** — endgame/distribuição.
 
 **Analytics desde o 1º release** (`DESIGN_CONSULTORIA.md` §9.7): `daily_start`,
 `daily_complete`, `return_d1`, e progressão na campanha.
@@ -232,10 +253,12 @@ Escada de baixo (intrínseco/barato/cedo) pra cima (extrínseco/caro/tardio):
 
 ## 11. Decisões em aberto
 
-- **Forma dos stakes/derrota** (§9): nota do dia? expirar = falha? (satisfação saiu).
 - **Foco:** reintroduzir numa forma compatível ou aposentar e ajustar o pitch.
 - **Rank:** Elo × piso suave × temporadas — com dados.
 - **Perk:** escolhido por run vs. equipado fixo (muda se o matchup é decisão diária).
-- **Balanceamento dos perks** (esp. #3/#5) — só com playtest.
+- **Balanceamento dos perks** (esp. #3/#5) e dos **timers de deadline** — só com playtest.
 - **Código:** `MeetScene`/`MailScene` órfãs (navegador como hub) — limpar ou virar
   sub-sites.
+
+> **Resolvido nesta rodada:** a forma dos stakes/derrota → **nota do dia como moeda
+> única** (velocidade + precisão + expiração, sem game-over). Ver §9.
