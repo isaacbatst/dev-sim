@@ -97,8 +97,6 @@ export interface MashSegment {
   /** Quantos grupos sequenciais (sorteia entre min/max; default 1). */
   minGroups?: number;
   maxGroups?: number;
-  /** "Digitar": QUALQUER tecla de letra avança (martelar), em vez do ciclo `keys`. */
-  anyKey?: boolean;
 }
 
 /** Um passo de `combo`: tecla com modificador (ex.: Ctrl+C). */

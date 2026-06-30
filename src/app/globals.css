@@ -294,22 +294,6 @@ body {
   animation: edgepulse 1.1s ease-in-out infinite;
 }
 
-/* "Chase" de digitação: cada tecla acende ~25% do ciclo (corte seco). Com o
-   stagger = ciclo/4 (ver ActionBar), só UMA fica acesa por vez, andando A→S→D→F. */
-@keyframes keytype {
-  0%,
-  24% {
-    opacity: 1;
-  }
-  25%,
-  100% {
-    opacity: 0.22;
-  }
-}
-.animate-keytype {
-  animation: keytype 1s linear infinite;
-}
-
 /* ── Acessibilidade ─────────────────────────────────────────── */
 :focus-visible {
   outline: 2px solid var(--amber);

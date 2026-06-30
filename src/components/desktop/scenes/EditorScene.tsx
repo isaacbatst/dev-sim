@@ -1182,10 +1182,10 @@ export function EditorScene({ active }: { active: ActiveTicketSnapshot }) {
   else if (focus?.type === 'wait') main = <PrPanel active={active} />;
   else if (focus?.type === 'combo')
     main = <ComboFix seg={focus} file={active.editorFile} fixedLine={active.editorFixedLine} />;
-  else if (focus?.type === 'mash' && focus.anyKey)
+  else if (focus?.type === 'mash' && !focus.keys.some((k) => k.startsWith('arrow')))
     main = <TypeScene seg={focus} file={active.editorFile} />;
   else if (
-    focus?.type === 'mash' ||
+    focus?.type === 'mash' || // merge (⬅️➡️) → GitView
     (focus?.type === 'press' && /push/i.test(focus.tokens[0]?.label ?? ''))
   )
     main = (

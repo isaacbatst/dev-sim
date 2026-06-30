@@ -91,14 +91,14 @@ export const SEGMENTS: Record<string, Segment> = {
     minGroups: 1,
     maxGroups: 3,
   },
-  // "Digitar": martelar o teclado e o texto sai (qualquer letra avança).
+  // "Digitar": percorrer a home row em ORDEM (A S D J K L, ciclando) — só a
+  // próxima tecla avança; apertar a mesma repetido não conta.
   mash_write_doc: {
     type: 'mash',
-    keys: [],
+    keys: ['a', 's', 'd', 'j', 'k', 'l'],
     label: 'Escrever a documentação',
-    anyKey: true,
-    minCount: 14,
-    maxCount: 20,
+    minCount: 12,
+    maxCount: 18,
   },
 
   // --- gauge (segurar e soltar na zona-alvo — "encher até a linha" do CSD) ---

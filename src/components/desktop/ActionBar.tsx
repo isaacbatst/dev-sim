@@ -74,29 +74,8 @@ function Cue({ seg }: { seg: SegmentView }) {
         </div>
       );
     case 'mash':
-      // "Digitar": qualquer letra; sem ciclo ⬅️➡️. As teclas pulsam em ripple
-      // (onda de digitação) — a própria animação diz "vá teclando".
-      if (seg.anyKey) {
-        return (
-          <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1" aria-hidden>
-              {['A', 'S', 'D', 'F'].map((k, i) => (
-                <kbd
-                  key={k}
-                  className="keycap animate-keytype !h-7 !min-w-7 !text-xs"
-                  style={{ animationDelay: `${i * 250}ms` }}
-                >
-                  {k}
-                </kbd>
-              ))}
-            </span>
-            <span className="text-sm text-ink">{seg.label}</span>
-            <span className="w-32">
-              <Meter value={seg.progress} color="var(--amber)" />
-            </span>
-          </div>
-        );
-      }
+      // Ciclo: mostra as teclas com a PRÓXIMA esperada destacada (ela "anda"
+      // conforme você acerta a ordem — ⬅️➡️ no merge, A S D J K L no digitar).
       return (
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1.5">

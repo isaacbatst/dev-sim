@@ -240,14 +240,9 @@ export class Game {
       }
       case 'mash': {
         if (segmentCompleted(seg)) break;
-        if (seg.anyKey) {
-          // "Digitar": martelar — qualquer letra avança (forgiving).
-          if (/^[a-z0-9]$/.test(key)) {
-            seg.count += 1;
-            incidental = 'mash';
-          }
-        } else if (key === seg.keys[seg.expect]) {
-          // Ciclo (⬅️➡️): só a próxima tecla avança; fora de ordem é ignorada.
+        // Ciclo: só a PRÓXIMA tecla esperada avança; fora de ordem é ignorada
+        // (apertar a mesma repetido não conta).
+        if (key === seg.keys[seg.expect]) {
           seg.count += 1;
           seg.expect = (seg.expect + 1) % seg.keys.length;
           incidental = 'mash';
@@ -974,7 +969,6 @@ export class Game {
           groups: seg.groups,
           activeGroup,
           groupProgress,
-          anyKey: seg.anyKey,
         };
       }
       case 'combo': {
