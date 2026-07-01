@@ -121,10 +121,41 @@ function noise(dur: number, opts: NoiseOpts): void {
 function click(gain: number, when?: number): void {
   noise(0.005, { type: 'highpass', freq: 4200, gain, when });
 }
-/** Platinelas: brilho metálico curtíssimo (sempre acompanha a pele). */
+/**
+ * Brilho metálico dos pratinhos: banco de parciais INARMÔNICOS (metal não é
+ * harmônico) via squares num highpass, com decay curto — o "ching/shimmer" que
+ * ruído puro não dá. Razões estilo hi-hat 808 (inarmônicas).
+ */
+function platinelas(gain: number, dur: number, when?: number): void {
+  const c = ac();
+  if (!c || !master) return;
+  const t0 = when ?? c.currentTime;
+  const base = 3300;
+  const ratios = [1, 1.34, 1.79, 2.31, 2.92, 3.47];
+  const hp = c.createBiquadFilter();
+  hp.type = 'highpass';
+  hp.frequency.value = 5200;
+  const g = c.createGain();
+  g.gain.setValueAtTime(0, t0);
+  g.gain.linearRampToValueAtTime(gain, t0 + 0.002);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  for (const r of ratios) {
+    const o = c.createOscillator();
+    o.type = 'square';
+    o.frequency.value = base * r;
+    o.connect(hp);
+    o.start(t0);
+    o.stop(t0 + dur + 0.02);
+  }
+  hp.connect(g);
+  g.connect(master);
+}
+
+/** Platinelas: shimmer metálico + sizzle + cauda de chocalho (acompanha a pele). */
 export function jingle(gain = 0.06, when?: number): void {
-  noise(0.08, { type: 'highpass', freq: 6500, gain, when });
-  noise(0.05, { type: 'bandpass', freq: 9500, q: 0.7, gain: gain * 0.7, when });
+  platinelas(gain, 0.13, when); // o "ching" metálico (o pratinho)
+  noise(0.09, { type: 'highpass', freq: 7000, gain: gain * 0.5, when }); // sizzle das plaquinhas
+  noise(0.16, { type: 'bandpass', freq: 8500, q: 0.6, gain: gain * 0.28, when }); // cauda que chocalha
 }
 /** Tum do meio (polegar/base no centro) — grave. Ataque seco pra cair no tempo. */
 export function pandeiroTum(when?: number): void {
