@@ -643,9 +643,9 @@ export class Game {
     step.segments.forEach((s) => {
       if (s.type === 'press') s.pressed = s.pressed.map(() => true);
     });
-    // Auto-foca o app reusado — mesma regra do open "fresco" (linha ~331), pra a
-    // transição entre subtasks ser consistente (o app da vez sempre vem à frente).
-    inst.focused = app;
+    // NÃO auto-foca: o app reusado já está aberto, mas o foco fica no app anterior
+    // de propósito → a janela mostra "Tab pra ir pro <app>" (troca explícita, sem
+    // pulo silencioso). Abrir um app novo (C/V/S) é que foca sozinho (linha ~331).
     return true;
   }
 
