@@ -48,7 +48,7 @@ const DAY_REAL_SECONDS = 220;
 // Backlog enche mais devagar: como o deadline corre em TODOS os slots em
 // paralelo (e só dá pra trabalhar um), spawn rápido = perda garantida. Calibrar
 // por feel (§10/§11 — balanceamento fino só com playtest).
-const SPAWN_INTERVAL = 16;
+const SPAWN_INTERVAL = 24;
 const CLOSE_KEY = 'x'; // fecha um programa aberto por engano (subjogo de abrir)
 
 const REVERSE_DIR = { up: 'down', down: 'up', left: 'right', right: 'left' } as const;
