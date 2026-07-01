@@ -1,7 +1,7 @@
 /**
  * Áudio ISOLADO do protótipo de pausas (Web Audio, zero assets). Não toca no
- * `src/store/sound.ts` de produção. Foco: provar o "suco" (som + resposta visual).
- * `latencyHint: 'interactive'` + ataques secos → onset no tempo (ritmo).
+ * `src/store/sound.ts` de produção. Só mecânicas tolerantes a latência (discreto),
+ * sem ritmo preciso (o pandeiro foi aposentado por causa do buffer do navegador).
  */
 
 let ctx: AudioContext | null = null;
@@ -14,7 +14,6 @@ function ac(): AudioContext | null {
       window.AudioContext ??
       (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     if (!AC) return null;
-    // 0 = pede o mínimo absoluto de buffer (menor que 'interactive' em alguns SOs).
     ctx = new AC({ latencyHint: 0 });
     master = ctx.createGain();
     master.gain.value = 0.5;
@@ -24,21 +23,6 @@ function ac(): AudioContext | null {
   return ctx;
 }
 
-/** Instante do relógio de áudio (pra agendar demos sample-accurate). */
-export function now(): number {
-  const c = ac();
-  return c ? c.currentTime : 0;
-}
-
-/** Piso de latência de saída (buffer do navegador/SO), em ms — só pra medir. */
-export function outLatencyMs(): number {
-  const c = ac();
-  if (!c) return 0;
-  const base = (c as unknown as { baseLatency?: number }).baseLatency ?? 0;
-  const out = (c as unknown as { outputLatency?: number }).outputLatency ?? 0;
-  return Math.round((base + out) * 1000);
-}
-
 interface ToneOpts {
   type?: OscillatorType;
   gain?: number;
@@ -46,22 +30,13 @@ interface ToneOpts {
   slideTo?: number;
   attack?: number;
   cutoff?: number;
-  when?: number;
 }
 
 function tone(freq: number, dur: number, opts: ToneOpts = {}): void {
   const c = ac();
   if (!c || !master) return;
-  const {
-    type = 'triangle',
-    gain = 0.16,
-    delay = 0,
-    slideTo,
-    attack = 0.002,
-    cutoff = 2600,
-    when,
-  } = opts;
-  const t0 = when ?? c.currentTime + delay;
+  const { type = 'triangle', gain = 0.16, delay = 0, slideTo, attack = 0.002, cutoff = 2600 } = opts;
+  const t0 = c.currentTime + delay;
   const osc = c.createOscillator();
   const lp = c.createBiquadFilter();
   lp.type = 'lowpass';
@@ -87,14 +62,13 @@ interface NoiseOpts {
   q?: number;
   gain: number;
   slideTo?: number;
-  when?: number;
 }
 
 function noise(dur: number, opts: NoiseOpts): void {
   const c = ac();
   if (!c || !master) return;
-  const { type = 'bandpass', freq, q = 1, gain, slideTo, when } = opts;
-  const t0 = when ?? c.currentTime;
+  const { type = 'bandpass', freq, q = 1, gain, slideTo } = opts;
+  const t0 = c.currentTime;
   const frames = Math.max(1, Math.floor(c.sampleRate * dur));
   const buffer = c.createBuffer(1, frames, c.sampleRate);
   const data = buffer.getChannelData(0);
@@ -116,51 +90,27 @@ function noise(dur: number, opts: NoiseOpts): void {
   src.stop(t0 + dur);
 }
 
-// --- 1 · Pandeiro: chocalho metálico + pele (tum grave / ta agudo) ---
-/** Transiente curtíssimo (1ª frente de onda) — deixa o onset "cair" antes. */
-function click(gain: number, when?: number): void {
-  noise(0.005, { type: 'highpass', freq: 4200, gain, when });
-}
-/** Platinelas: brilho metálico curtíssimo (sempre acompanha a pele). */
-export function jingle(gain = 0.06, when?: number): void {
-  noise(0.08, { type: 'highpass', freq: 6500, gain, when });
-  noise(0.05, { type: 'bandpass', freq: 9500, q: 0.7, gain: gain * 0.7, when });
-}
-/** Tum do meio (polegar/base no centro) — grave. Ataque seco pra cair no tempo. */
-export function pandeiroTum(when?: number): void {
-  click(0.04, when);
-  tone(115, 0.13, { type: 'sine', gain: 0.24, slideTo: 78, attack: 0.0005, when });
-  jingle(0.04, when);
-}
-/** Toque em cima (dedos na borda de cima) — aberto, mais agudo/cristalino. */
-export function pandeiroTop(when?: number): void {
-  click(0.06, when);
-  noise(0.04, { type: 'bandpass', freq: 640, q: 0.9, gain: 0.14, when });
-  tone(360, 0.05, { type: 'triangle', gain: 0.08, attack: 0.0005, when });
-  jingle(0.09, when);
-}
-/** Toque embaixo (dedos na borda de baixo) — mais fechado/redondo que o de cima. */
-export function pandeiroBottom(when?: number): void {
-  click(0.05, when);
-  noise(0.05, { type: 'bandpass', freq: 410, q: 0.9, gain: 0.13, when });
-  tone(240, 0.06, { type: 'triangle', gain: 0.08, attack: 0.0005, when });
-  jingle(0.06, when);
-}
-
-// --- 2 · Girar o pescoço: estalo por direção + alívio na volta completa ---
+// --- Pescoço: estalo por direção + alívio na volta completa ---
 export function neckCrack(): void {
   noise(0.04, { type: 'highpass', freq: 2200, gain: 0.1 });
   tone(150, 0.1, { type: 'sine', gain: 0.09, slideTo: 85 });
   tone(300, 0.22, { type: 'sine', gain: 0.035, slideTo: 240, attack: 0.05 });
 }
-/** Alívio maior (volta completa do pescoço): sopro macio descendente + "ahh". */
+/** Alívio maior (volta completa): sopro macio descendente + "ahh". */
 export function sigh(): void {
   noise(0.5, { type: 'bandpass', freq: 900, q: 2, gain: 0.07, slideTo: 300 });
   tone(340, 0.45, { type: 'sine', gain: 0.06, slideTo: 220, attack: 0.06 });
 }
 
-// --- 3 · Esmagar: pop suculento + esguicho curto (pitch sobe no combo) ---
+// --- Esmagar: pop suculento + esguicho curto (pitch sobe no combo) ---
 export function squash(pitch: number): void {
   tone(pitch, 0.08, { type: 'sine', gain: 0.17, slideTo: pitch * 0.4, attack: 0.001 });
   noise(0.05, { type: 'lowpass', freq: 520, gain: 0.06, slideTo: 150 });
+}
+
+// --- Regar: "plip" aguado (tom curto caindo + esguicho macio na terra) ---
+export function waterDrop(v = 0): void {
+  const pitch = 680 + v * 160;
+  tone(pitch, 0.09, { type: 'sine', gain: 0.11, slideTo: 280, attack: 0.001 });
+  noise(0.07, { type: 'lowpass', freq: 1100, gain: 0.05, slideTo: 380 });
 }
