@@ -115,10 +115,6 @@ export class Game {
     // Expira em 0 → demanda perdida (tombo na nota, sem game-over).
     this.slots.forEach((inst, i) => {
       if (!inst || inst.ready) return;
-      // PAUSA durante o code review: você está bloqueado esperando o revisor —
-      // injusto o prazo correr aí. A urgência é começar/trabalhar, não a fila do CR.
-      const cur = this.currentSegment(inst);
-      if (cur?.type === 'wait' && !segmentCompleted(cur)) return;
       inst.remaining -= dt;
       if (inst.remaining <= 0) {
         inst.remaining = 0;
