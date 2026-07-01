@@ -48,7 +48,7 @@ const DAY_REAL_SECONDS = 220;
 // Backlog enche mais devagar: como o deadline corre em TODOS os slots em
 // paralelo (e só dá pra trabalhar um), spawn rápido = perda garantida. Calibrar
 // por feel (§10/§11 — balanceamento fino só com playtest).
-const SPAWN_INTERVAL = 13;
+const SPAWN_INTERVAL = 16;
 const CLOSE_KEY = 'x'; // fecha um programa aberto por engano (subjogo de abrir)
 
 const REVERSE_DIR = { up: 'down', down: 'up', left: 'right', right: 'left' } as const;
@@ -115,6 +115,10 @@ export class Game {
     // Expira em 0 → demanda perdida (tombo na nota, sem game-over).
     this.slots.forEach((inst, i) => {
       if (!inst || inst.ready) return;
+      // PAUSA durante o code review: você está bloqueado esperando o revisor —
+      // injusto o prazo correr aí. A urgência é começar/trabalhar, não a fila do CR.
+      const cur = this.currentSegment(inst);
+      if (cur?.type === 'wait' && !segmentCompleted(cur)) return;
       inst.remaining -= dt;
       if (inst.remaining <= 0) {
         inst.remaining = 0;
