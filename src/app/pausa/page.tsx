@@ -406,56 +406,84 @@ function Neck() {
     };
   }, [roll]);
 
+  // 1ª pessoa: a VISÃO inclina (não um avatar). Olhar cima/baixo = pitch;
+  // pender pros lados = roll. O mundo se move; você não se vê.
+  const viewTransform = `translate(${off.dx * -18}px, ${off.dy * -26}px) rotate(${off.dx * 7}deg)`;
+
   return (
     <div className="flex flex-col items-center gap-10">
-      <div className="relative flex h-64 w-64 items-end justify-center">
-        {relief > 0 && (
-          <span
-            key={relief}
-            className="proto-relief absolute rounded-full"
-            style={{ bottom: 96, width: 120, height: 120, border: '2px solid var(--pass)' }}
-          />
-        )}
-        {/* ombros */}
-        <div
-          style={{
-            width: 180,
-            height: 70,
-            borderRadius: '40px 40px 16px 16px',
-            background: 'var(--surface-2)',
-            border: '1px solid var(--line)',
-          }}
-        />
-        {/* cabeça */}
+      <div
+        className="relative overflow-hidden"
+        style={{ width: 340, height: 230, borderRadius: 16, border: '1px solid var(--line)' }}
+      >
+        {/* cena em 1ª pessoa: parede/teto + mesa + monitor, tudo rola junto */}
         <div
           className="absolute"
           style={{
-            bottom: 70,
-            width: 92,
-            height: 92,
-            borderRadius: 9999,
-            background: 'var(--surface)',
-            border: '1px solid var(--line)',
-            transform: `translate(${off.dx * 26}px, ${off.dy * 20}px) rotate(${off.dx * 10}deg)`,
-            transition: 'transform .28s cubic-bezier(.2,1.3,.4,1)',
+            inset: -40,
+            transform: viewTransform,
+            transition: 'transform .3s cubic-bezier(.2,1.3,.4,1)',
+            background: 'linear-gradient(var(--surface-2), var(--bg) 62%)',
           }}
-        />
+        >
+          {/* linha do teto */}
+          <div
+            className="absolute inset-x-0"
+            style={{ top: 46, height: 1, background: 'var(--line)', opacity: 0.5 }}
+          />
+          {/* monitor à frente */}
+          <div
+            className="absolute left-1/2 -translate-x-1/2 rounded-md"
+            style={{
+              top: 92,
+              width: 190,
+              height: 118,
+              background: 'var(--bg)',
+              border: '6px solid var(--surface)',
+              boxShadow: 'inset 0 0 0 1px var(--line)',
+            }}
+          />
+          {/* mesa */}
+          <div
+            className="absolute inset-x-0 bottom-0"
+            style={{ height: 66, background: 'var(--surface)', borderTop: '1px solid var(--line)' }}
+          />
+        </div>
+
+        {/* estalo (no eixo do pescoço = base da visão) */}
         {spark > 0 && (
           <span
             key={spark}
-            className="proto-spark absolute"
+            className="proto-spark absolute left-1/2 top-1/2"
             style={{
-              bottom: 78,
-              width: 26,
-              height: 26,
+              width: 30,
+              height: 30,
+              marginLeft: -15,
+              marginTop: -15,
               borderRadius: 9999,
               background: 'var(--amber)',
             }}
           />
         )}
+        {/* alívio da volta completa: respiro que preenche a visão */}
+        {relief > 0 && (
+          <span
+            key={relief}
+            className="proto-relief absolute left-1/2 top-1/2"
+            style={{
+              width: 160,
+              height: 160,
+              marginLeft: -80,
+              marginTop: -80,
+              borderRadius: 9999,
+              border: '2px solid var(--pass)',
+            }}
+          />
+        )}
       </div>
       <p className="text-center text-sm" style={{ color: 'var(--ink-dim)' }}>
-        <b style={{ color: 'var(--ink)' }}>↑ ↓ ← →</b> rolam o pescoço — faça a volta completa.
+        <b style={{ color: 'var(--ink)' }}>↑ ↓ ← →</b> rolam a cabeça (a visão inclina) — faça a
+        volta completa.
       </p>
     </div>
   );

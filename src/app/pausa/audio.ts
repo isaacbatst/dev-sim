@@ -14,7 +14,8 @@ function ac(): AudioContext | null {
       window.AudioContext ??
       (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     if (!AC) return null;
-    ctx = new AC({ latencyHint: 'interactive' });
+    // 0 = pede o mínimo absoluto de buffer (menor que 'interactive' em alguns SOs).
+    ctx = new AC({ latencyHint: 0 });
     master = ctx.createGain();
     master.gain.value = 0.5;
     master.connect(ctx.destination);
