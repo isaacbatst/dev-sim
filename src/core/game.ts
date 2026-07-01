@@ -43,9 +43,12 @@ import type {
 const SLOT_COUNT = 5;
 const DAY_START_MIN = 9 * 60;
 const DAY_END_MIN = 17 * 60;
-const DAY_REAL_SECONDS = 180;
+const DAY_REAL_SECONDS = 220;
 
-const SPAWN_INTERVAL = 8;
+// Backlog enche mais devagar: como o deadline corre em TODOS os slots em
+// paralelo (e só dá pra trabalhar um), spawn rápido = perda garantida. Calibrar
+// por feel (§10/§11 — balanceamento fino só com playtest).
+const SPAWN_INTERVAL = 13;
 const CLOSE_KEY = 'x'; // fecha um programa aberto por engano (subjogo de abrir)
 
 const REVERSE_DIR = { up: 'down', down: 'up', left: 'right', right: 'left' } as const;
@@ -629,10 +632,21 @@ export class Game {
     }
   }
 
+  /** Passo de "abrir" cujo app JÁ está aberto (task anterior da mesma demanda):
+   *  conclui sozinho — não faz reabrir o que já está aberto (basta Tab pra focar). */
+  private skipIfAlreadyOpen(inst: TicketInstance, step: StepInstance): boolean {
+    const app = this.stepOpensApp(step);
+    if (!app || !this.openPrograms(inst).includes(app)) return false;
+    step.segments.forEach((s) => {
+      if (s.type === 'press') s.pressed = s.pressed.map(() => true);
+    });
+    return true;
+  }
+
   /** Avança o cursor enquanto o passo atual estiver completo; marca `ready` ao fim. */
   private advance(inst: TicketInstance): void {
     let step = this.currentStep(inst);
-    while (step && stepCompleted(step)) {
+    while (step && (stepCompleted(step) || this.skipIfAlreadyOpen(inst, step))) {
       inst.stepIndex += 1;
       const task = inst.tasks[inst.taskIndex];
       if (inst.stepIndex >= task.steps.length) {
