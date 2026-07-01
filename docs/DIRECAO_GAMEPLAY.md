@@ -80,6 +80,8 @@ campanha — e deixar a máquina cara (daily/seed/normalização) pra quando hou
 
 ## 4. Personalidade do dia (o motor de curiosidade) **[DECIDIDO como direção]**
 
+> **Baralho concreto + esboço de dados:** `PERSONALIDADE_DO_DIA.md`.
+
 O motor de "voltar" do Wordle é **novidade por dia** (um átomo único de um espaço
 gigante). Pool pequeno de tasks não replica isso crescendo o pool (treadmill de
 conteúdo, inviável). Solução: **o átomo de conteúdo é o DIA**, montado sobre o mesmo pool
