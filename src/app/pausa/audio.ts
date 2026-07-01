@@ -1,7 +1,7 @@
 /**
  * Áudio ISOLADO do protótipo de pausas (Web Audio, zero assets). Não toca no
- * `src/store/sound.ts` de produção — reusa só a filosofia (tom macio filtrado +
- * ruído curto). O foco do protótipo é provar o "suco": som + resposta visual.
+ * `src/store/sound.ts` de produção. Foco: provar o "suco" (som + resposta visual).
+ * `latencyHint: 'interactive'` + ataques secos → onset no tempo (ritmo).
  */
 
 let ctx: AudioContext | null = null;
@@ -14,7 +14,7 @@ function ac(): AudioContext | null {
       window.AudioContext ??
       (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     if (!AC) return null;
-    ctx = new AC();
+    ctx = new AC({ latencyHint: 'interactive' });
     master = ctx.createGain();
     master.gain.value = 0.5;
     master.connect(ctx.destination);
@@ -35,7 +35,7 @@ interface ToneOpts {
 function tone(freq: number, dur: number, opts: ToneOpts = {}): void {
   const c = ac();
   if (!c || !master) return;
-  const { type = 'triangle', gain = 0.16, delay = 0, slideTo, attack = 0.008, cutoff = 2200 } = opts;
+  const { type = 'triangle', gain = 0.16, delay = 0, slideTo, attack = 0.002, cutoff = 2600 } = opts;
   const t0 = c.currentTime + delay;
   const osc = c.createOscillator();
   const lp = c.createBiquadFilter();
@@ -90,40 +90,44 @@ function noise(dur: number, opts: NoiseOpts): void {
   src.stop(t0 + dur);
 }
 
-// --- Tamborilar: nota quente estilo kalimba/marimba (corpo + harmônico + tap) ---
-export function drumNote(freq: number): void {
-  tone(freq, 0.6, { type: 'triangle', gain: 0.2, cutoff: 1700, attack: 0.004 });
-  tone(freq * 2, 0.22, { type: 'sine', gain: 0.05, cutoff: 3200, delay: 0.002 });
-  noise(0.012, { type: 'highpass', freq: 3200, gain: 0.03 });
+// --- 1 · Pandeiro: chocalho metálico + pele (tum grave / ta agudo) ---
+/** Platinelas: brilho metálico curtíssimo (sempre acompanha a pele). */
+export function jingle(gain = 0.06): void {
+  noise(0.08, { type: 'highpass', freq: 6500, gain });
+  noise(0.05, { type: 'bandpass', freq: 9500, q: 0.7, gain: gain * 0.7 });
+}
+/** Tum do meio (polegar/base no centro) — grave. Ataque seco pra cair no tempo. */
+export function pandeiroTum(): void {
+  tone(115, 0.13, { type: 'sine', gain: 0.24, slideTo: 78, attack: 0.001 });
+  jingle(0.04);
+}
+/** Toque em cima (dedos na borda de cima) — aberto, mais agudo/cristalino. */
+export function pandeiroTop(): void {
+  noise(0.04, { type: 'bandpass', freq: 640, q: 0.9, gain: 0.14 });
+  tone(360, 0.05, { type: 'triangle', gain: 0.08, attack: 0.001 });
+  jingle(0.09);
+}
+/** Toque embaixo (dedos na borda de baixo) — mais fechado/redondo que o de cima. */
+export function pandeiroBottom(): void {
+  noise(0.05, { type: 'bandpass', freq: 410, q: 0.9, gain: 0.13 });
+  tone(240, 0.06, { type: 'triangle', gain: 0.08, attack: 0.001 });
+  jingle(0.06);
 }
 
-/** Batida sutil do groove (bloco de madeira macio) — o compasso opcional. */
-export function groove(): void {
-  tone(150, 0.07, { type: 'sine', gain: 0.05 });
-  noise(0.02, { type: 'bandpass', freq: 1100, q: 1.2, gain: 0.02 });
+// --- 2 · Girar o pescoço: estalo por direção + alívio na volta completa ---
+export function neckCrack(): void {
+  noise(0.04, { type: 'highpass', freq: 2200, gain: 0.1 });
+  tone(150, 0.1, { type: 'sine', gain: 0.09, slideTo: 85 });
+  tone(300, 0.22, { type: 'sine', gain: 0.035, slideTo: 240, attack: 0.05 });
 }
-
-// --- Estalar: creak que sobe enquanto acumula, estalo + suspiro na descarga ---
-/** Rangido curto da tensão subindo (intensidade 0..1). */
-export function creak(intensity: number): void {
-  const f = 90 + intensity * 320;
-  noise(0.05, { type: 'bandpass', freq: f, q: 7, gain: 0.02 + intensity * 0.03 });
-}
-
-/** O estalo: estouro curtíssimo brilhante + thud grave. `power` 0..1. */
-export function crack(power: number): void {
-  noise(0.03 + power * 0.02, { type: 'highpass', freq: 2600, gain: 0.1 + power * 0.12 });
-  tone(130 - power * 30, 0.13, { type: 'sine', gain: 0.13, slideTo: 70 });
-}
-
-/** Alívio: sopro filtrado descendente + tom caindo macio (o "ahh"). */
+/** Alívio maior (volta completa do pescoço): sopro macio descendente + "ahh". */
 export function sigh(): void {
   noise(0.5, { type: 'bandpass', freq: 900, q: 2, gain: 0.07, slideTo: 300 });
   tone(340, 0.45, { type: 'sine', gain: 0.06, slideTo: 220, attack: 0.06 });
 }
 
-// --- Estourar: pop de bolha (blip com queda rápida + tick) ---
-export function pop(pitch: number): void {
-  tone(pitch, 0.09, { type: 'sine', gain: 0.18, slideTo: pitch * 0.45, attack: 0.002 });
-  noise(0.008, { type: 'bandpass', freq: pitch * 1.6, gain: 0.03 });
+// --- 3 · Esmagar: pop suculento + esguicho curto (pitch sobe no combo) ---
+export function squash(pitch: number): void {
+  tone(pitch, 0.08, { type: 'sine', gain: 0.17, slideTo: pitch * 0.4, attack: 0.001 });
+  noise(0.05, { type: 'lowpass', freq: 520, gain: 0.06, slideTo: 150 });
 }

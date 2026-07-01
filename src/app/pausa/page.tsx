@@ -1,33 +1,32 @@
 'use client';
 
 /**
- * Protótipo ISOLADO das mecânicas de PAUSA (fora do fluxo de tickets). Objetivo:
- * provar o feel — som + resposta visual — de gestos relaxantes/satisfatórios que
- * se inspiram no "suco por tecla" do doc/merge SEM copiar o padrão. A regra: no
- * trabalho você executa o padrão certo; na pausa qualquer input é válido.
+ * Protótipo ISOLADO das mecânicas de PAUSA (fora do fluxo de tickets). Rev 2 —
+ * feedback: (1) pandeiro, não kalimba, e sem latência; (2) girar o pescoço em
+ * todas as direções; (3) manter a mecânica boa mas re-tematizar + tecla por alvo.
  *
- * 1 Tamborilar · 2 Estalar · 3 Estourar (troca com as teclas 1/2/3 ou os botões).
+ * 1 Pandeiro · 2 Pescoço · 3 Esmagar (troca com 1/2/3 ou os botões).
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as A from './audio';
 
-type Mode = 'drum' | 'crack' | 'pop';
+type Mode = 'pandeiro' | 'neck' | 'squash';
 
 const TABS: { id: Mode; n: string; label: string }[] = [
-  { id: 'drum', n: '1', label: 'Tamborilar' },
-  { id: 'crack', n: '2', label: 'Estalar' },
-  { id: 'pop', n: '3', label: 'Estourar' },
+  { id: 'pandeiro', n: '1', label: 'Pandeiro' },
+  { id: 'neck', n: '2', label: 'Pescoço' },
+  { id: 'squash', n: '3', label: 'Esmagar' },
 ];
 
 export default function PausaPage() {
-  const [mode, setMode] = useState<Mode>('drum');
+  const [mode, setMode] = useState<Mode>('pandeiro');
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === '1') setMode('drum');
-      else if (e.key === '2') setMode('crack');
-      else if (e.key === '3') setMode('pop');
+      if (e.key === '1') setMode('pandeiro');
+      else if (e.key === '2') setMode('neck');
+      else if (e.key === '3') setMode('squash');
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -39,7 +38,10 @@ export default function PausaPage() {
       style={{ background: 'var(--bg)', color: 'var(--ink)' }}
     >
       <header className="flex flex-col items-center gap-4 text-center">
-        <p className="font-mono text-[11px] uppercase tracking-[0.3em]" style={{ color: 'var(--ink-dim)' }}>
+        <p
+          className="font-mono text-[11px] uppercase tracking-[0.3em]"
+          style={{ color: 'var(--ink-dim)' }}
+        >
           protótipo · mecânicas de pausa
         </p>
         <div className="flex gap-2">
@@ -61,9 +63,9 @@ export default function PausaPage() {
       </header>
 
       <div className="flex w-full max-w-2xl flex-1 items-center justify-center">
-        {mode === 'drum' && <Drum />}
-        {mode === 'crack' && <Crack />}
-        {mode === 'pop' && <Pop />}
+        {mode === 'pandeiro' && <Pandeiro />}
+        {mode === 'neck' && <Neck />}
+        {mode === 'squash' && <Squash />}
       </div>
 
       <style>{PROTO_CSS}</style>
@@ -72,322 +74,366 @@ export default function PausaPage() {
 }
 
 /* ------------------------------------------------------------------ */
-/* 1 · Tamborilar — home row vira mini-instrumento. Escala pentatônica */
-/*     garante que QUALQUER combinação soa bem (não tem nota errada).  */
+/* 1 · Pandeiro — três toques por POSIÇÃO: cima, tum do meio, baixo.   */
+/*     Teclas em coluna vertical (E/D/C ou I/K/M) = cima/meio/baixo.   */
+/*     Percussão pura; ataque seco = onset no tempo.                   */
 /* ------------------------------------------------------------------ */
 
-const DRUM_KEYS = ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'];
-// Dó maior pentatônica em ~2 oitavas: sem dissonância possível.
-const PENTA = [261.63, 293.66, 329.63, 392.0, 440.0, 523.25, 587.33, 659.25, 783.99];
+type Stroke = 'top' | 'tum' | 'bottom';
 
-function Drum() {
-  const [ripples, setRipples] = useState<{ id: number; idx: number }[]>([]);
-  const [flash, setFlash] = useState<Record<number, number>>({});
-  const [groove, setGroove] = useState(false);
-  const rid = useRef(0);
+function Pandeiro() {
+  const [shakeN, setShakeN] = useState(0);
+  const [zone, setZone] = useState<{ n: number; kind: Stroke } | null>(null);
+  const nonce = useRef(0);
 
-  const hit = useCallback((idx: number) => {
-    A.drumNote(PENTA[idx]);
-    const id = ++rid.current;
-    setRipples((r) => [...r, { id, idx }]);
-    setFlash((f) => ({ ...f, [idx]: id }));
+  const play = useCallback((kind: Stroke) => {
+    if (kind === 'tum') A.pandeiroTum();
+    else if (kind === 'top') A.pandeiroTop();
+    else A.pandeiroBottom();
+    const n = ++nonce.current;
+    setShakeN(n);
+    setZone({ n, kind });
   }, []);
 
   useEffect(() => {
+    const map: Record<string, Stroke> = {
+      e: 'top',
+      i: 'top',
+      d: 'tum',
+      k: 'tum',
+      c: 'bottom',
+      m: 'bottom',
+    };
     const onKey = (e: KeyboardEvent) => {
       if (e.repeat) return;
-      const idx = DRUM_KEYS.indexOf(e.key.toLowerCase());
-      if (idx >= 0) {
+      const s = map[e.key.toLowerCase()];
+      if (s) {
         e.preventDefault();
-        hit(idx);
+        play(s);
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [hit]);
+  }, [play]);
 
-  useEffect(() => {
-    if (!groove) return;
-    const iv = setInterval(() => A.groove(), 700);
-    return () => clearInterval(iv);
-  }, [groove]);
-
+  const JINGLES = 10;
+  const band = { width: 128, height: 40, left: 46 } as const;
   return (
     <div className="flex flex-col items-center gap-8">
-      <div className="flex items-end gap-2">
-        {DRUM_KEYS.map((k, idx) => {
-          const h = idx / (DRUM_KEYS.length - 1); // 0..1 grave→agudo
+      <div key={shakeN} className="proto-shake relative" style={{ width: 220, height: 220 }}>
+        {/* aro + platinelas */}
+        <div
+          className="absolute inset-0 rounded-full"
+          style={{ border: '10px solid var(--surface-2)', boxShadow: 'inset 0 0 0 1px var(--line)' }}
+        />
+        {Array.from({ length: JINGLES }, (_, i) => {
+          const a = (i / JINGLES) * Math.PI * 2;
+          const r = 104;
+          const on = zone?.kind !== 'tum';
           return (
-            <div key={k} className="relative flex flex-col items-center gap-2">
-              <div
-                className="proto-pad relative overflow-hidden rounded-xl"
-                onPointerDown={() => hit(idx)}
-                style={{
-                  width: 52,
-                  height: 120 - h * 34,
-                  background: 'var(--surface-2)',
-                  border: '1px solid var(--line)',
-                }}
-              >
-                {flash[idx] !== undefined && (
-                  <span
-                    key={flash[idx]}
-                    className="proto-flash absolute inset-0"
-                    style={{ background: 'var(--amber)' }}
-                  />
-                )}
-                {ripples
-                  .filter((r) => r.idx === idx)
-                  .map((r) => (
-                    <span
-                      key={r.id}
-                      className="proto-ripple absolute left-1/2 top-1/2"
-                      style={{ background: 'var(--amber)' }}
-                      onAnimationEnd={() => setRipples((rs) => rs.filter((x) => x.id !== r.id))}
-                    />
-                  ))}
-              </div>
-              <kbd
-                className="font-mono text-[11px] uppercase"
-                style={{ color: 'var(--ink-dim)' }}
-              >
-                {k}
-              </kbd>
-            </div>
+            <span
+              key={i}
+              className={zone && on ? 'proto-jingle' : ''}
+              style={{
+                position: 'absolute',
+                left: 110 + Math.cos(a) * r - 4,
+                top: 110 + Math.sin(a) * r - 4,
+                width: 8,
+                height: 8,
+                borderRadius: 9999,
+                background: 'var(--amber)',
+                opacity: 0.4,
+              }}
+            />
           );
         })}
+        {/* pele */}
+        <div
+          className="absolute rounded-full"
+          style={{ inset: 18, background: 'var(--surface)', border: '1px solid var(--line)' }}
+        />
+
+        {/* três zonas de toque (clicáveis) + rótulo */}
+        <ZoneBtn label="cima" onHit={() => play('top')} style={{ top: 34, left: band.left, width: band.width, height: band.height, borderRadius: 20 }} />
+        <ZoneBtn label="tum" onHit={() => play('tum')} style={{ top: 76, left: 72, width: 76, height: 76, borderRadius: 9999 }} />
+        <ZoneBtn label="baixo" onHit={() => play('bottom')} style={{ top: 146, left: band.left, width: band.width, height: band.height, borderRadius: 20 }} />
+
+        {/* flash da zona tocada */}
+        {zone && (
+          <span
+            key={zone.n}
+            className="proto-flash absolute"
+            style={{
+              background: 'var(--amber)',
+              borderRadius: zone.kind === 'tum' ? 9999 : 20,
+              top: zone.kind === 'top' ? 34 : zone.kind === 'tum' ? 76 : 146,
+              left: zone.kind === 'tum' ? 72 : band.left,
+              width: zone.kind === 'tum' ? 76 : band.width,
+              height: zone.kind === 'tum' ? 76 : band.height,
+            }}
+          />
+        )}
       </div>
 
-      <div className="flex flex-col items-center gap-2 text-center">
-        <p className="text-sm" style={{ color: 'var(--ink-dim)' }}>
-          Dedilhe as teclas <b style={{ color: 'var(--ink)' }}>A…L</b> — qualquer ritmo soa bem.
-        </p>
-        <button
-          onClick={() => setGroove((g) => !g)}
-          className="rounded-md px-3 py-1 font-mono text-xs"
-          style={{
-            background: groove ? 'var(--teal)' : 'var(--surface-2)',
-            color: groove ? 'var(--bg)' : 'var(--ink-dim)',
-          }}
-        >
-          groove {groove ? 'on' : 'off'}
-        </button>
+      <div className="flex gap-3 font-mono text-xs" style={{ color: 'var(--ink-dim)' }}>
+        <span>
+          <b style={{ color: 'var(--ink)' }}>E</b> cima
+        </span>
+        <span>
+          <b style={{ color: 'var(--ink)' }}>D</b> tum
+        </span>
+        <span>
+          <b style={{ color: 'var(--ink)' }}>C</b> baixo
+        </span>
+        <span className="opacity-60">(ou I / K / M)</span>
       </div>
     </div>
   );
 }
 
+function ZoneBtn({
+  label,
+  onHit,
+  style,
+}: {
+  label: string;
+  onHit: () => void;
+  style: React.CSSProperties;
+}) {
+  return (
+    <button
+      onPointerDown={onHit}
+      className="absolute flex items-center justify-center font-mono text-[10px] uppercase tracking-wider"
+      style={{ color: 'var(--ink-dim)', background: 'transparent', ...style }}
+    >
+      {label}
+    </button>
+  );
+}
+
 /* ------------------------------------------------------------------ */
-/* 2 · Estalar — segurar acumula tensão (rangido sobe), soltar dá o    */
-/*     estalo + suspiro. Sem falha; o prazer é a DESCARGA.             */
+/* 2 · Pescoço — setas rolam a cabeça pra cada lado (estalo). Fazer a  */
+/*     volta completa (as 4) = alívio maior. Livre, sem falha.         */
 /* ------------------------------------------------------------------ */
 
-function Crack() {
-  const [tension, setTension] = useState(0);
-  const [burst, setBurst] = useState(0);
-  const [held, setHeld] = useState(false);
-  const holding = useRef(false);
-  const tRef = useRef(0);
-  const raf = useRef<number | null>(null);
-  const last = useRef(0);
-  const lastCreak = useRef(0);
+const DIRS: Record<string, { dx: number; dy: number }> = {
+  ArrowUp: { dx: 0, dy: -1 },
+  ArrowDown: { dx: 0, dy: 1 },
+  ArrowLeft: { dx: -1, dy: 0 },
+  ArrowRight: { dx: 1, dy: 0 },
+};
 
-  const start = useCallback(() => {
-    if (holding.current) return;
-    holding.current = true;
-    setHeld(true);
-    last.current = performance.now();
-    lastCreak.current = 0;
-    const loop = (t: number) => {
-      if (!holding.current) return;
-      const dt = (t - last.current) / 1000;
-      last.current = t;
-      const nv = Math.min(1, tRef.current + dt / 1.2);
-      tRef.current = nv;
-      setTension(nv);
-      if (t - lastCreak.current > 110) {
-        A.creak(nv);
-        lastCreak.current = t;
-      }
-      raf.current = requestAnimationFrame(loop);
-    };
-    raf.current = requestAnimationFrame(loop);
-  }, []);
+function Neck() {
+  const [off, setOff] = useState({ dx: 0, dy: 0 });
+  const [spark, setSpark] = useState(0);
+  const [relief, setRelief] = useState(0);
+  const hitDirs = useRef<Set<string>>(new Set());
+  const clearT = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const resetT = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const release = useCallback(() => {
-    if (!holding.current) return;
-    holding.current = false;
-    setHeld(false);
-    if (raf.current) cancelAnimationFrame(raf.current);
-    A.crack(tRef.current);
-    A.sigh();
-    setBurst((b) => b + 1);
-    tRef.current = 0;
-    setTension(0);
+  const roll = useCallback((key: string) => {
+    const d = DIRS[key];
+    if (!d) return;
+    A.neckCrack();
+    setOff({ dx: d.dx, dy: d.dy });
+    setSpark((s) => s + 1);
+    if (resetT.current) clearTimeout(resetT.current);
+    resetT.current = setTimeout(() => setOff({ dx: 0, dy: 0 }), 160);
+
+    hitDirs.current.add(key);
+    if (hitDirs.current.size >= 4) {
+      hitDirs.current.clear();
+      A.sigh();
+      setRelief((r) => r + 1);
+    }
+    if (clearT.current) clearTimeout(clearT.current);
+    clearT.current = setTimeout(() => hitDirs.current.clear(), 1600);
   }, []);
 
   useEffect(() => {
-    const kd = (e: KeyboardEvent) => {
-      if (e.code === 'Space') {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.repeat) return;
+      if (DIRS[e.key]) {
         e.preventDefault();
-        if (!e.repeat) start();
+        roll(e.key);
       }
     };
-    const ku = (e: KeyboardEvent) => {
-      if (e.code === 'Space') {
-        e.preventDefault();
-        release();
-      }
-    };
-    window.addEventListener('keydown', kd);
-    window.addEventListener('keyup', ku);
+    window.addEventListener('keydown', onKey);
     return () => {
-      window.removeEventListener('keydown', kd);
-      window.removeEventListener('keyup', ku);
-      if (raf.current) cancelAnimationFrame(raf.current);
+      window.removeEventListener('keydown', onKey);
+      if (clearT.current) clearTimeout(clearT.current);
+      if (resetT.current) clearTimeout(resetT.current);
     };
-  }, [start, release]);
-
-  const squeeze = 1 - tension * 0.42;
-  const warm = 0.2 + tension * 0.8;
+  }, [roll]);
 
   return (
     <div className="flex flex-col items-center gap-10">
-      <div className="relative flex h-56 w-56 items-center justify-center">
-        {/* anel de alívio na descarga */}
-        {burst > 0 && (
+      <div className="relative flex h-64 w-64 items-end justify-center">
+        {relief > 0 && (
           <span
-            key={burst}
+            key={relief}
             className="proto-relief absolute rounded-full"
-            style={{ width: 120, height: 120, border: '2px solid var(--pass)' }}
+            style={{ bottom: 96, width: 120, height: 120, border: '2px solid var(--pass)' }}
           />
         )}
-        {/* o "corpo" que comprime segurando e salta ao soltar */}
+        {/* ombros */}
         <div
-          className={tension > 0.82 ? 'proto-strain' : ''}
           style={{
-            width: 150,
-            height: 150,
-            borderRadius: 28,
-            transform: `scaleY(${squeeze})`,
-            transition: held ? 'none' : 'transform .3s cubic-bezier(.2,1.5,.4,1)',
-            background: `color-mix(in oklab, var(--amber) ${warm * 100}%, var(--surface-2))`,
+            width: 180,
+            height: 70,
+            borderRadius: '40px 40px 16px 16px',
+            background: 'var(--surface-2)',
             border: '1px solid var(--line)',
           }}
         />
+        {/* cabeça */}
+        <div
+          className="absolute"
+          style={{
+            bottom: 70,
+            width: 92,
+            height: 92,
+            borderRadius: 9999,
+            background: 'var(--surface)',
+            border: '1px solid var(--line)',
+            transform: `translate(${off.dx * 26}px, ${off.dy * 20}px) rotate(${off.dx * 10}deg)`,
+            transition: 'transform .28s cubic-bezier(.2,1.3,.4,1)',
+          }}
+        />
+        {spark > 0 && (
+          <span
+            key={spark}
+            className="proto-spark absolute"
+            style={{
+              bottom: 78,
+              width: 26,
+              height: 26,
+              borderRadius: 9999,
+              background: 'var(--amber)',
+            }}
+          />
+        )}
       </div>
       <p className="text-center text-sm" style={{ color: 'var(--ink-dim)' }}>
-        Segure <b style={{ color: 'var(--ink)' }}>Espaço</b> pra acumular… e{' '}
-        <b style={{ color: 'var(--ink)' }}>solte</b> pra estalar.
+        <b style={{ color: 'var(--ink)' }}>↑ ↓ ← →</b> rolam o pescoço — faça a volta completa.
       </p>
     </div>
   );
 }
 
 /* ------------------------------------------------------------------ */
-/* 3 · Estourar — plástico-bolha. Press = 1 pop suculento, pitch sobe  */
-/*     em sucessão rápida. Zero regra, infinito (bolhas voltam).       */
+/* 3 · Esmagar — grade de bugs, CADA tecla um bug. Press/clique esmaga */
+/*     (splat), respawna. Rápido sobe o tom. (re-tema: bolha → bug.)   */
 /* ------------------------------------------------------------------ */
 
-const BUBBLES = 28;
+const GRID: string[][] = [
+  ['q', 'w', 'e', 'r'],
+  ['a', 's', 'd', 'f'],
+  ['z', 'x', 'c', 'v'],
+];
+const KEYS = GRID.flat();
 
-function Pop() {
-  const [popped, setPopped] = useState<Record<number, number>>({}); // id -> nonce (aceso quando estoura)
+function Squash() {
+  const [dead, setDead] = useState<Record<string, number>>({}); // key -> nonce (esmagado)
+  const alive = useRef<Record<string, boolean>>(Object.fromEntries(KEYS.map((k) => [k, true])));
   const combo = useRef(0);
   const lastAt = useRef(0);
-  const available = useRef<boolean[]>(Array.from({ length: BUBBLES }, () => true));
 
-  const popId = useCallback((id: number) => {
-    if (!available.current[id]) return;
-    available.current[id] = false;
+  const squash = useCallback((k: string) => {
+    if (!alive.current[k]) return;
+    alive.current[k] = false;
     const now = performance.now();
     combo.current = now - lastAt.current < 400 ? Math.min(combo.current + 1, 20) : 0;
     lastAt.current = now;
-    A.pop(480 * Math.pow(2, combo.current / 26));
-    setPopped((p) => ({ ...p, [id]: (p[id] ?? 0) + 1 }));
+    A.squash(460 * Math.pow(2, combo.current / 26));
+    setDead((d) => ({ ...d, [k]: (d[k] ?? 0) + 1 }));
     setTimeout(() => {
-      available.current[id] = true;
-      setPopped((p) => {
-        const c = { ...p };
-        delete c[id];
+      alive.current[k] = true;
+      setDead((d) => {
+        const c = { ...d };
+        delete c[k];
         return c;
       });
-    }, 1400);
+    }, 1200);
   }, []);
 
-  const popNext = useCallback(() => {
-    const id = available.current.findIndex((v) => v);
-    if (id >= 0) popId(id);
-  }, [popId]);
-
   useEffect(() => {
-    const kd = (e: KeyboardEvent) => {
-      if (e.code === 'Space') {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.repeat) return;
+      const k = e.key.toLowerCase();
+      if (KEYS.includes(k)) {
         e.preventDefault();
-        if (!e.repeat) popNext();
+        squash(k);
       }
     };
-    window.addEventListener('keydown', kd);
-    return () => window.removeEventListener('keydown', kd);
-  }, [popNext]);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [squash]);
 
   return (
     <div className="flex flex-col items-center gap-8">
-      <div className="grid grid-cols-7 gap-3">
-        {Array.from({ length: BUBBLES }, (_, id) => {
-          const isPopped = popped[id] !== undefined;
-          return (
-            <button
-              key={id}
-              onPointerDown={() => popId(id)}
-              className="relative flex size-11 items-center justify-center"
-              aria-label="bolha"
-            >
-              {!isPopped ? (
-                <span
-                  className="proto-bubble size-9 rounded-full"
-                  style={{
-                    background:
-                      'radial-gradient(circle at 32% 28%, color-mix(in oklab, var(--teal) 55%, white), var(--teal))',
-                    boxShadow: 'inset -2px -3px 4px rgba(0,0,0,.25)',
-                  }}
-                />
-              ) : (
-                <span
-                  key={popped[id]}
-                  className="proto-burst absolute rounded-full"
-                  style={{ width: 22, height: 22, border: '2px solid var(--teal)' }}
-                />
-              )}
-            </button>
-          );
-        })}
+      <div className="flex flex-col gap-3">
+        {GRID.map((row, ri) => (
+          <div key={ri} className="flex gap-3">
+            {row.map((k) => {
+              const isDead = dead[k] !== undefined;
+              return (
+                <button
+                  key={k}
+                  onPointerDown={() => squash(k)}
+                  className="relative flex size-16 items-center justify-center rounded-xl"
+                  style={{ background: 'var(--surface-2)', border: '1px solid var(--line)' }}
+                >
+                  {!isDead ? (
+                    <span className="proto-bug text-2xl" aria-hidden>
+                      🐛
+                    </span>
+                  ) : (
+                    <span
+                      key={dead[k]}
+                      className="proto-splat absolute text-2xl"
+                      aria-hidden
+                      style={{ color: 'var(--pass)' }}
+                    >
+                      ✳
+                    </span>
+                  )}
+                  <kbd
+                    className="absolute bottom-0.5 right-1 font-mono text-[9px] uppercase"
+                    style={{ color: 'var(--ink-dim)' }}
+                  >
+                    {k}
+                  </kbd>
+                </button>
+              );
+            })}
+          </div>
+        ))}
       </div>
       <p className="text-center text-sm" style={{ color: 'var(--ink-dim)' }}>
-        <b style={{ color: 'var(--ink)' }}>Espaço</b> (ou clique) estoura — rápido sobe o tom.
+        Cada tecla é um bug — <b style={{ color: 'var(--ink)' }}>esmague</b> (tecla ou clique). Rápido
+        sobe o tom.
       </p>
     </div>
   );
 }
 
 const PROTO_CSS = `
-.proto-pad { cursor: pointer; touch-action: none; }
-.proto-flash { pointer-events: none; animation: proto-flash .4s ease-out forwards; }
-.proto-ripple {
-  pointer-events: none; width: 46px; height: 46px; border-radius: 9999px;
-  margin-left: -23px; margin-top: -23px; animation: proto-ripple .6s ease-out forwards;
-}
+.proto-shake { animation: proto-shake .18s ease-out; }
+.proto-flash { pointer-events: none; animation: proto-flash .35s ease-out forwards; }
+.proto-jingle { animation: proto-jingle .3s ease-out; }
 .proto-relief { pointer-events: none; animation: proto-relief .5s ease-out forwards; }
-.proto-strain { animation: proto-strain .09s linear infinite; }
-.proto-burst { pointer-events: none; animation: proto-burst .35s ease-out forwards; }
-.proto-bubble { transition: transform .08s ease; }
-.proto-bubble:active { transform: scale(.9); }
-@keyframes proto-flash { from { opacity: .5 } to { opacity: 0 } }
-@keyframes proto-ripple { from { transform: scale(.3); opacity: .5 } to { transform: scale(2.4); opacity: 0 } }
+.proto-spark { pointer-events: none; animation: proto-spark .3s ease-out forwards; }
+.proto-splat { pointer-events: none; animation: proto-splat .4s ease-out forwards; }
+.proto-bug { transition: transform .08s ease; }
+.proto-bug:active { transform: scale(.85); }
+@keyframes proto-shake { 0%,100% { transform: translate(0,0) } 20% { transform: translate(-4px,2px) rotate(-2deg) } 60% { transform: translate(4px,-2px) rotate(2deg) } }
+@keyframes proto-flash { from { opacity: .55 } to { opacity: 0 } }
+@keyframes proto-jingle { 0% { opacity: 1; transform: scale(1.6) } 100% { opacity: .4; transform: scale(1) } }
 @keyframes proto-relief { from { transform: scale(.5); opacity: .6 } to { transform: scale(2.6); opacity: 0 } }
-@keyframes proto-burst { 0% { transform: scale(.4); opacity: .9 } 100% { transform: scale(2.2); opacity: 0 } }
-@keyframes proto-strain { 0%,100% { translate: 0 0 } 25% { translate: -1.5px 0 } 75% { translate: 1.5px 0 } }
+@keyframes proto-spark { 0% { transform: scale(.4); opacity: .9 } 100% { transform: scale(2); opacity: 0 } }
+@keyframes proto-splat { 0% { transform: scale(.4); opacity: 1 } 45% { transform: scale(1.5); opacity: 1 } 100% { transform: scale(1.9); opacity: 0 } }
 @media (prefers-reduced-motion: reduce) {
-  .proto-flash,.proto-ripple,.proto-relief,.proto-burst,.proto-strain { animation: none }
+  .proto-shake,.proto-flash,.proto-jingle,.proto-relief,.proto-spark,.proto-splat { animation: none }
 }
 `;
