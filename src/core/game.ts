@@ -643,6 +643,9 @@ export class Game {
     step.segments.forEach((s) => {
       if (s.type === 'press') s.pressed = s.pressed.map(() => true);
     });
+    // Auto-foca o app reusado — mesma regra do open "fresco" (linha ~331), pra a
+    // transição entre subtasks ser consistente (o app da vez sempre vem à frente).
+    inst.focused = app;
     return true;
   }
 
