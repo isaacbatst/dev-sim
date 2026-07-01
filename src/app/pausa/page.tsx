@@ -81,19 +81,95 @@ export default function PausaPage() {
 
 type Stroke = 'top' | 'tum' | 'bottom';
 
+// Grooves de exemplo (8 colcheias). T = tum(meio), c = cima, b = baixo, . = pausa.
+const PATTERNS: { id: string; name: string; steps: (Stroke | null)[] }[] = [
+  { id: 'basico', name: 'Básico', steps: ['tum', 'top', 'bottom', 'top', 'tum', 'top', 'bottom', 'top'] },
+  { id: 'balanco', name: 'Balanço', steps: ['tum', 'top', 'top', 'bottom', 'tum', 'top', 'top', 'bottom'] },
+  { id: 'sincope', name: 'Síncope', steps: ['tum', null, 'top', 'bottom', 'top', 'tum', 'bottom', 'top'] },
+];
+const STROKE_CH: Record<Stroke, string> = { top: 'c', tum: 'T', bottom: 'b' };
+
 function Pandeiro() {
   const [shakeN, setShakeN] = useState(0);
   const [zone, setZone] = useState<{ n: number; kind: Stroke } | null>(null);
+  const [demo, setDemo] = useState<string | null>(null);
+  const [step, setStep] = useState(-1);
+  const [bpm, setBpm] = useState(110);
+  const [lat, setLat] = useState<number | null>(null);
   const nonce = useRef(0);
+  const demoT = useRef<ReturnType<typeof setInterval> | null>(null);
+  const bpmRef = useRef(110);
 
-  const play = useCallback((kind: Stroke) => {
-    if (kind === 'tum') A.pandeiroTum();
-    else if (kind === 'top') A.pandeiroTop();
-    else A.pandeiroBottom();
+  useEffect(() => {
+    bpmRef.current = bpm;
+  }, [bpm]);
+
+  // Só o áudio (aceita `when` pra agendar no relógio do áudio).
+  const strike = useCallback((kind: Stroke, when?: number) => {
+    if (kind === 'tum') A.pandeiroTum(when);
+    else if (kind === 'top') A.pandeiroTop(when);
+    else A.pandeiroBottom(when);
+  }, []);
+
+  // Só o visual (flash da zona + tremida).
+  const flash = useCallback((kind: Stroke) => {
     const n = ++nonce.current;
     setShakeN(n);
     setZone({ n, kind });
   }, []);
+
+  // Toque manual = áudio imediato + visual + mede a latência de saída.
+  const play = useCallback(
+    (kind: Stroke) => {
+      strike(kind);
+      flash(kind);
+      setLat(A.outLatencyMs());
+    },
+    [strike, flash],
+  );
+
+  const stopDemo = useCallback(() => {
+    if (demoT.current) clearInterval(demoT.current);
+    demoT.current = null;
+    setDemo(null);
+    setStep(-1);
+  }, []);
+
+  const startDemo = useCallback(
+    (id: string) => {
+      const pat = PATTERNS.find((p) => p.id === id);
+      if (!pat) return;
+      if (demoT.current) clearInterval(demoT.current);
+      setDemo(id);
+      let idx = 0;
+      let next = A.now() + 0.08; // pequeno lookahead inicial
+      // Agenda o ÁUDIO no relógio do áudio (preciso); visual segue por setTimeout.
+      demoT.current = setInterval(() => {
+        const ahead = A.now() + 0.15;
+        while (next < ahead) {
+          const i = idx % pat.steps.length;
+          const s = pat.steps[i];
+          const t = next;
+          if (s) strike(s, t);
+          const dMs = Math.max(0, (t - A.now()) * 1000);
+          setTimeout(() => {
+            setStep(i);
+            if (s) flash(s);
+          }, dMs);
+          idx++;
+          next += 30 / bpmRef.current; // colcheia = 60/bpm/2 s
+        }
+      }, 25);
+    },
+    [strike, flash],
+  );
+
+  useEffect(
+    () => () => {
+      if (demoT.current) clearInterval(demoT.current);
+    },
+    [],
+  );
 
   useEffect(() => {
     const map: Record<string, Stroke> = {
@@ -186,6 +262,70 @@ function Pandeiro() {
           <b style={{ color: 'var(--ink)' }}>C</b> baixo
         </span>
         <span className="opacity-60">(ou I / K / M)</span>
+      </div>
+
+      {/* Demos de ritmo: tocam sozinhos acendendo as zonas no tempo. */}
+      <div className="flex flex-col items-center gap-3">
+        <div className="flex items-center gap-3">
+          <p
+            className="font-mono text-[10px] uppercase tracking-[0.2em]"
+            style={{ color: 'var(--ink-dim)' }}
+          >
+            demos de ritmo
+          </p>
+          {lat !== null && (
+            <span className="font-mono text-[10px]" style={{ color: 'var(--ink-dim)' }}>
+              · latência saída ~{lat}ms
+            </span>
+          )}
+        </div>
+        <label className="flex items-center gap-2 font-mono text-[11px]" style={{ color: 'var(--ink-dim)' }}>
+          {bpm} bpm
+          <input
+            type="range"
+            min={60}
+            max={180}
+            value={bpm}
+            onChange={(e) => setBpm(Number(e.target.value))}
+            style={{ accentColor: 'var(--amber)' }}
+          />
+        </label>
+        <div className="flex gap-2">
+          {PATTERNS.map((p) => {
+            const on = demo === p.id;
+            return (
+              <button
+                key={p.id}
+                onClick={() => (on ? stopDemo() : startDemo(p.id))}
+                className="rounded-md px-3 py-1.5 text-xs font-medium transition-colors"
+                style={
+                  on
+                    ? { background: 'var(--amber)', color: 'var(--bg)' }
+                    : { background: 'var(--surface-2)', color: 'var(--ink-dim)' }
+                }
+              >
+                {on ? '■' : '▶'} {p.name}
+              </button>
+            );
+          })}
+        </div>
+        {demo && (
+          <div className="flex gap-1">
+            {PATTERNS.find((p) => p.id === demo)!.steps.map((s, i) => (
+              <span
+                key={i}
+                className="flex size-7 items-center justify-center rounded font-mono text-xs"
+                style={{
+                  background: i === step ? 'var(--amber)' : 'var(--surface-2)',
+                  color: i === step ? 'var(--bg)' : s ? 'var(--ink)' : 'var(--ink-dim)',
+                  border: '1px solid var(--line)',
+                }}
+              >
+                {s ? STROKE_CH[s] : '·'}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

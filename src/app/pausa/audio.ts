@@ -23,6 +23,21 @@ function ac(): AudioContext | null {
   return ctx;
 }
 
+/** Instante do relógio de áudio (pra agendar demos sample-accurate). */
+export function now(): number {
+  const c = ac();
+  return c ? c.currentTime : 0;
+}
+
+/** Piso de latência de saída (buffer do navegador/SO), em ms — só pra medir. */
+export function outLatencyMs(): number {
+  const c = ac();
+  if (!c) return 0;
+  const base = (c as unknown as { baseLatency?: number }).baseLatency ?? 0;
+  const out = (c as unknown as { outputLatency?: number }).outputLatency ?? 0;
+  return Math.round((base + out) * 1000);
+}
+
 interface ToneOpts {
   type?: OscillatorType;
   gain?: number;
@@ -30,13 +45,22 @@ interface ToneOpts {
   slideTo?: number;
   attack?: number;
   cutoff?: number;
+  when?: number;
 }
 
 function tone(freq: number, dur: number, opts: ToneOpts = {}): void {
   const c = ac();
   if (!c || !master) return;
-  const { type = 'triangle', gain = 0.16, delay = 0, slideTo, attack = 0.002, cutoff = 2600 } = opts;
-  const t0 = c.currentTime + delay;
+  const {
+    type = 'triangle',
+    gain = 0.16,
+    delay = 0,
+    slideTo,
+    attack = 0.002,
+    cutoff = 2600,
+    when,
+  } = opts;
+  const t0 = when ?? c.currentTime + delay;
   const osc = c.createOscillator();
   const lp = c.createBiquadFilter();
   lp.type = 'lowpass';
@@ -62,13 +86,14 @@ interface NoiseOpts {
   q?: number;
   gain: number;
   slideTo?: number;
+  when?: number;
 }
 
 function noise(dur: number, opts: NoiseOpts): void {
   const c = ac();
   if (!c || !master) return;
-  const { type = 'bandpass', freq, q = 1, gain, slideTo } = opts;
-  const t0 = c.currentTime;
+  const { type = 'bandpass', freq, q = 1, gain, slideTo, when } = opts;
+  const t0 = when ?? c.currentTime;
   const frames = Math.max(1, Math.floor(c.sampleRate * dur));
   const buffer = c.createBuffer(1, frames, c.sampleRate);
   const data = buffer.getChannelData(0);
@@ -91,27 +116,34 @@ function noise(dur: number, opts: NoiseOpts): void {
 }
 
 // --- 1 · Pandeiro: chocalho metálico + pele (tum grave / ta agudo) ---
+/** Transiente curtíssimo (1ª frente de onda) — deixa o onset "cair" antes. */
+function click(gain: number, when?: number): void {
+  noise(0.005, { type: 'highpass', freq: 4200, gain, when });
+}
 /** Platinelas: brilho metálico curtíssimo (sempre acompanha a pele). */
-export function jingle(gain = 0.06): void {
-  noise(0.08, { type: 'highpass', freq: 6500, gain });
-  noise(0.05, { type: 'bandpass', freq: 9500, q: 0.7, gain: gain * 0.7 });
+export function jingle(gain = 0.06, when?: number): void {
+  noise(0.08, { type: 'highpass', freq: 6500, gain, when });
+  noise(0.05, { type: 'bandpass', freq: 9500, q: 0.7, gain: gain * 0.7, when });
 }
 /** Tum do meio (polegar/base no centro) — grave. Ataque seco pra cair no tempo. */
-export function pandeiroTum(): void {
-  tone(115, 0.13, { type: 'sine', gain: 0.24, slideTo: 78, attack: 0.001 });
-  jingle(0.04);
+export function pandeiroTum(when?: number): void {
+  click(0.04, when);
+  tone(115, 0.13, { type: 'sine', gain: 0.24, slideTo: 78, attack: 0.0005, when });
+  jingle(0.04, when);
 }
 /** Toque em cima (dedos na borda de cima) — aberto, mais agudo/cristalino. */
-export function pandeiroTop(): void {
-  noise(0.04, { type: 'bandpass', freq: 640, q: 0.9, gain: 0.14 });
-  tone(360, 0.05, { type: 'triangle', gain: 0.08, attack: 0.001 });
-  jingle(0.09);
+export function pandeiroTop(when?: number): void {
+  click(0.06, when);
+  noise(0.04, { type: 'bandpass', freq: 640, q: 0.9, gain: 0.14, when });
+  tone(360, 0.05, { type: 'triangle', gain: 0.08, attack: 0.0005, when });
+  jingle(0.09, when);
 }
 /** Toque embaixo (dedos na borda de baixo) — mais fechado/redondo que o de cima. */
-export function pandeiroBottom(): void {
-  noise(0.05, { type: 'bandpass', freq: 410, q: 0.9, gain: 0.13 });
-  tone(240, 0.06, { type: 'triangle', gain: 0.08, attack: 0.001 });
-  jingle(0.06);
+export function pandeiroBottom(when?: number): void {
+  click(0.05, when);
+  noise(0.05, { type: 'bandpass', freq: 410, q: 0.9, gain: 0.13, when });
+  tone(240, 0.06, { type: 'triangle', gain: 0.08, attack: 0.0005, when });
+  jingle(0.06, when);
 }
 
 // --- 2 · Girar o pescoço: estalo por direção + alívio na volta completa ---
