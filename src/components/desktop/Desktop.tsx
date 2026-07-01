@@ -68,10 +68,16 @@ export function Desktop({
         <section className="flex min-w-0 flex-1 items-start justify-center pb-16">
           {active ? (
             <div className="relative flex max-h-full w-full max-w-[44rem] flex-col">
-              {/* Objetivo do passo: banner FORA da janela (na área do OS, acima do
-                  programa) — fonte única da info. Quebra em várias linhas. */}
+              <AppWindow
+                active={active}
+                slots={slots}
+                shake={shake}
+                onFocusProgram={onFocusProgram}
+              />
+              {/* Objetivo do passo: banner FORA da janela (na área do OS, abaixo
+                  da action bar) — fonte única da info. Quebra em várias linhas. */}
               {objective && (
-                <div className="elev-2 mb-2.5 flex shrink-0 items-start gap-2.5 rounded-lg border border-edge bg-surface px-4 py-3 backdrop-blur-sm">
+                <div className="elev-2 mt-2.5 flex shrink-0 items-start gap-2.5 rounded-lg border border-edge bg-surface px-4 py-3 backdrop-blur-sm">
                   {/* Caixa de uma linha (leading-relaxed = 1.625) centra o ícone
                       opticamente com a 1ª linha — sem mt mágico, robusto ao wrap. */}
                   <span className="flex h-[1.625em] shrink-0 items-center text-sm">
@@ -85,12 +91,6 @@ export function Desktop({
                   </p>
                 </div>
               )}
-              <AppWindow
-                active={active}
-                slots={slots}
-                shake={shake}
-                onFocusProgram={onFocusProgram}
-              />
               {floatScore && (
                 <span className="animate-floatup pointer-events-none absolute -top-3 left-1/2 -translate-x-1/2 font-mono text-lg font-bold text-pass">
                   {floatScore}
