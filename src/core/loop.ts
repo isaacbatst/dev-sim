@@ -13,6 +13,8 @@ export class GameLoop {
   private game: Game;
   private rafId: number | null = null;
   private lastTs = 0;
+  /** O loop deve estar rodando? (distingue "parado" de "pausado por aba oculta") */
+  private running = false;
   private listener: SnapshotListener;
   private onSound: SoundListener | null;
 
@@ -33,18 +35,47 @@ export class GameLoop {
   }
 
   start(): void {
-    if (this.rafId !== null) return;
+    if (this.running) return;
+    this.running = true;
     this.lastTs = performance.now();
     this.sync();
-    this.rafId = requestAnimationFrame(this.frame);
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', this.onVisibility);
+    }
+    // Se abrir já oculto, não roda o RAF; o visibilitychange retoma ao voltar.
+    if (typeof document === 'undefined' || !document.hidden) {
+      this.rafId = requestAnimationFrame(this.frame);
+    }
   }
 
   stop(): void {
+    this.running = false;
     if (this.rafId !== null) {
       cancelAnimationFrame(this.rafId);
       this.rafId = null;
     }
+    if (typeof document !== 'undefined') {
+      document.removeEventListener('visibilitychange', this.onVisibility);
+    }
   }
+
+  /**
+   * Pausa o jogo quando a aba fica oculta (alt-tab / segundo plano): congela o
+   * relógio, os deadlines e o CR — nada de tempo passa fora de foco. Ao voltar,
+   * reinicia o `lastTs` pra não haver salto de dt (paridade com o clamp do frame).
+   */
+  private onVisibility = (): void => {
+    if (!this.running) return;
+    if (document.hidden) {
+      if (this.rafId !== null) {
+        cancelAnimationFrame(this.rafId);
+        this.rafId = null;
+      }
+    } else if (this.rafId === null) {
+      this.lastTs = performance.now();
+      this.rafId = requestAnimationFrame(this.frame);
+    }
+  };
 
   // Intenções de input vindas da UI são repassadas ao motor.
   selectSlot(index: number): void {
