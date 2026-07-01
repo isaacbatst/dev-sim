@@ -13,8 +13,6 @@ export class GameLoop {
   private game: Game;
   private rafId: number | null = null;
   private lastTs = 0;
-  /** O loop deve estar rodando? (distingue "parado" de "pausado por aba oculta") */
-  private running = false;
   private listener: SnapshotListener;
   private onSound: SoundListener | null;
 
@@ -35,47 +33,18 @@ export class GameLoop {
   }
 
   start(): void {
-    if (this.running) return;
-    this.running = true;
+    if (this.rafId !== null) return;
     this.lastTs = performance.now();
     this.sync();
-    if (typeof document !== 'undefined') {
-      document.addEventListener('visibilitychange', this.onVisibility);
-    }
-    // Se abrir já oculto, não roda o RAF; o visibilitychange retoma ao voltar.
-    if (typeof document === 'undefined' || !document.hidden) {
-      this.rafId = requestAnimationFrame(this.frame);
-    }
+    this.rafId = requestAnimationFrame(this.frame);
   }
 
   stop(): void {
-    this.running = false;
     if (this.rafId !== null) {
       cancelAnimationFrame(this.rafId);
       this.rafId = null;
     }
-    if (typeof document !== 'undefined') {
-      document.removeEventListener('visibilitychange', this.onVisibility);
-    }
   }
-
-  /**
-   * Pausa o jogo quando a aba fica oculta (alt-tab / segundo plano): congela o
-   * relógio, os deadlines e o CR — nada de tempo passa fora de foco. Ao voltar,
-   * reinicia o `lastTs` pra não haver salto de dt (paridade com o clamp do frame).
-   */
-  private onVisibility = (): void => {
-    if (!this.running) return;
-    if (document.hidden) {
-      if (this.rafId !== null) {
-        cancelAnimationFrame(this.rafId);
-        this.rafId = null;
-      }
-    } else if (this.rafId === null) {
-      this.lastTs = performance.now();
-      this.rafId = requestAnimationFrame(this.frame);
-    }
-  };
 
   // Intenções de input vindas da UI são repassadas ao motor.
   selectSlot(index: number): void {
@@ -119,8 +88,11 @@ export class GameLoop {
   }
 
   private frame = (ts: number): void => {
-    // Clampeia dt para evitar saltos enormes ao voltar de uma aba inativa.
-    const dtMs = Math.min(100, ts - this.lastTs);
+    // dt = tempo real decorrido, SEM clamp: o RAF é estrangulado a ~1fps em
+    // segundo plano; clampear faria o relógio/deadlines/CR rastejarem. Assim o
+    // jogo segue no tempo real mesmo com a aba em background (o `tick` limita só
+    // a parte de gameplay — hold/gauge — contra saltos ao voltar segurando tecla).
+    const dtMs = ts - this.lastTs;
     this.lastTs = ts;
     this.game.tick(dtMs);
     this.sync();

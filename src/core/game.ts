@@ -94,6 +94,9 @@ export class Game {
   tick(dtMs: number): void {
     if (this.status !== 'playing') return;
     const dt = dtMs / 1000;
+    // dt de gameplay (hold/gauge): limitado, senão voltar do background segurando
+    // uma tecla encheria a barra de uma vez. Timers ambientes usam o dt real.
+    const gdt = Math.min(dt, 0.1);
     this.elapsed += dt;
 
     if (this.gameMinutes() >= DAY_END_MIN) {
@@ -142,7 +145,7 @@ export class Game {
           }
         }
       } else if (seg.type === 'hold' && i === this.activeSlot && seg.holding) {
-        seg.held += dt;
+        seg.held += gdt;
         if (segmentCompleted(seg)) {
           this.emit('holdEnd');
           const before = this.progKey(inst);
@@ -152,7 +155,7 @@ export class Game {
       } else if (seg.type === 'gauge' && i === this.activeSlot && seg.holding && !seg.committed) {
         // Enche segurando — PODE passar do alvo (até o fim). O julgamento é só ao
         // soltar (keyUp): soltou na zona → ok; fora (cedo ou passou) → CR rejeita.
-        seg.current = Math.min(1, seg.current + seg.rate * dt);
+        seg.current = Math.min(1, seg.current + seg.rate * gdt);
       }
     });
   }
