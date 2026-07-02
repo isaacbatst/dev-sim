@@ -5,12 +5,14 @@ import { ThemeControl } from './ThemeControl';
 export function MenuBar({
   clock,
   day,
+  position,
   delivered,
   expired,
   score,
 }: {
   clock: string;
   day: number;
+  position: string;
   delivered: number;
   expired: number;
   score: number;
@@ -18,7 +20,9 @@ export function MenuBar({
   return (
     <header className="flex items-center gap-4 border-b border-edge bg-surface/80 px-4 py-2 text-sm backdrop-blur">
       <span className="font-grotesk font-bold tracking-tight text-ink">devOS</span>
-      <span className="font-mono text-xs text-ink-dim">Dia {day}</span>
+      <span className="font-mono text-xs text-ink-dim">
+        Dia {day} · <span className="text-amber">{position}</span>
+      </span>
       <nav className="hidden gap-4 text-ink-dim sm:flex">
         <span>Arquivo</span>
         <span>Editar</span>

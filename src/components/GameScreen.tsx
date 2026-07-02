@@ -8,6 +8,8 @@ import { Workstation } from './desktop/Workstation';
 export function GameScreen() {
   const snapshot = useGameStore((s) => s.snapshot);
   const day = useGameStore((s) => s.day);
+  const career = useGameStore((s) => s.career);
+  const dayResult = useGameStore((s) => s.dayResult);
   const start = useGameStore((s) => s.start);
   const nextDay = useGameStore((s) => s.nextDay);
   const selectSlot = useGameStore((s) => s.selectSlot);
@@ -96,6 +98,8 @@ export function GameScreen() {
       <Desktop
         snapshot={snapshot}
         day={day}
+        career={career}
+        dayResult={dayResult}
         shake={shake}
         floatScore={floatScore}
         onFocusProgram={focusProgram}

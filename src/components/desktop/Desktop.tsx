@@ -1,18 +1,12 @@
 import type { Snapshot } from '@/core/snapshot';
+import type { Career, DayResult } from '@/store/gameStore';
+import { positionName, levelProgress } from '@/data/positions';
 import { MenuBar } from './MenuBar';
 import { InboxPanel } from './InboxPanel';
 import { StatusIcon } from './issueIcons';
 import { AppWindow } from './AppWindow';
 import { Dock } from './Dock';
 
-/** Título de carreira por tempo de casa (leve; o rank-por-skill vem depois). */
-function careerTitle(day: number): string {
-  if (day <= 2) return 'Estagiário';
-  if (day <= 5) return 'Júnior';
-  if (day <= 10) return 'Pleno';
-  if (day <= 16) return 'Sênior';
-  return 'Tech Lead';
-}
 /** Nota do dia → letra (boletim). Limiares chutados — afinar no playtest. */
 function dayGrade(score: number): string {
   if (score >= 600) return 'S';
@@ -26,6 +20,8 @@ function dayGrade(score: number): string {
 export function Desktop({
   snapshot,
   day,
+  career,
+  dayResult,
   shake,
   floatScore,
   onFocusProgram,
@@ -34,6 +30,8 @@ export function Desktop({
 }: {
   snapshot: Snapshot;
   day: number;
+  career: Career;
+  dayResult: DayResult | null;
   shake: boolean;
   floatScore: string | null;
   onFocusProgram: (id: import('@/core/snapshot').ProgramId) => void;
@@ -52,7 +50,14 @@ export function Desktop({
 
   return (
     <div className="relative flex h-full flex-col overflow-hidden">
-      <MenuBar clock={clock} day={day} delivered={delivered} expired={expired} score={score} />
+      <MenuBar
+        clock={clock}
+        day={day}
+        position={positionName(career.level)}
+        delivered={delivered}
+        expired={expired}
+        score={score}
+      />
 
       {/* Wallpaper: gradiente + grade técnica sutil + brilho do humor */}
       <main className="relative flex flex-1 gap-5 overflow-hidden p-5">
@@ -124,18 +129,28 @@ export function Desktop({
 
       {status !== 'playing' && (
         <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/85 p-6 backdrop-blur-sm">
-          {/* Fim de dia = boletim/identidade — o artefato de share (POSICIONAMENTO §3/§5). */}
+          {/* Fim de dia = boletim/carreira — o artefato de share (POSICIONAMENTO §3/§5). */}
           <div className="elev-2 w-full max-w-sm rounded-xl border border-edge bg-surface p-6 text-center">
             <p className="font-code text-[11px] uppercase tracking-[0.25em] text-ink-dim">
               Dia {day} · 17:00
             </p>
             <h2 className="mt-1 font-code text-2xl font-bold text-ink">fim do expediente</h2>
 
-            {/* Linha de identidade (o que se compartilha) */}
-            <p className="mt-4 text-sm leading-relaxed text-ink">
-              Sobrevivi ao <span className="font-semibold">Dia {day}</span> como{' '}
-              <span className="font-semibold text-amber">{careerTitle(day)}</span> — sem IA.
-            </p>
+            {/* Promoção (o marco) ou a posição atual */}
+            {dayResult?.promotedTo ? (
+              <p className="mt-4 text-sm leading-relaxed text-ink">
+                <span className="font-semibold text-amber">Promovido</span> a{' '}
+                <span className="font-semibold text-amber">
+                  {positionName(dayResult.promotedTo)}
+                </span>{' '}
+                🎉
+              </p>
+            ) : (
+              <p className="mt-4 text-sm leading-relaxed text-ink">
+                Fechou o dia como{' '}
+                <span className="font-semibold text-amber">{positionName(career.level)}</span>.
+              </p>
+            )}
 
             {/* Nota do dia */}
             <div className="mt-5 flex items-center justify-center gap-3">
@@ -155,9 +170,17 @@ export function Desktop({
               {expired > 0 && <span className="text-fail">✕ {expired} perdidas</span>}
             </div>
 
-            <p className="mt-4 text-[11px] leading-relaxed text-ink-dim">
-              Zero Copilot, zero ChatGPT. Só você e o code review.
-            </p>
+            {/* Barra pra próxima posição (o caminho a percorrer) */}
+            <CareerBar career={career} />
+
+            <div className="mt-4 flex items-center justify-center gap-4 font-mono text-[11px] text-ink-dim">
+              <span>
+                🔥 <span className="text-ink">{career.streak}</span> dias seguidos
+              </span>
+              <span>
+                💰 <span className="text-ink tabular-nums">{Math.round(career.wallet)}</span>
+              </span>
+            </div>
 
             <button
               onClick={onNextDay}
@@ -178,5 +201,30 @@ function KeyHintInline() {
       <kbd className="keycap !h-5 !min-w-5 !text-[10px]">1</kbd>–
       <kbd className="keycap !h-5 !min-w-5 !text-[10px]">5</kbd>
     </span>
+  );
+}
+
+/** Barra do progresso pra próxima posição — o caminho a percorrer. */
+function CareerBar({ career }: { career: Career }) {
+  const { level, frac, toNext } = levelProgress(career.careerTotal);
+  return (
+    <div className="mt-5 text-left">
+      <div className="mb-1 flex items-center justify-between font-mono text-[10px] text-ink-dim">
+        <span className="text-ink">{positionName(level)}</span>
+        {toNext !== null ? (
+          <span>
+            {positionName(level + 1)} · faltam {toNext}
+          </span>
+        ) : (
+          <span>topo da carreira</span>
+        )}
+      </div>
+      <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+        <div
+          className="h-full rounded-full bg-amber transition-[width]"
+          style={{ width: `${frac * 100}%` }}
+        />
+      </div>
+    </div>
   );
 }
