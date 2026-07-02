@@ -2,7 +2,11 @@
 
 > **Status:** direção concreta (concretiza `DIRECAO_GAMEPLAY.md` §4). É o **level
 > design** da campanha: mesmo pool de tarefas, "prato do dia" diferente. Complementa
-> `POSICIONAMENTO.md` (voz anti-IA dos standups) e a memória `onboarding-difficulty-ramp`.
+> `POSICIONAMENTO.md` (voz/tom) e a memória `onboarding-difficulty-ramp`.
+>
+> **Tom:** humor dev amplo (legado, deadline, PO mudando escopo, deploy na sexta, prod
+> caindo, on-call, review, o estagiário…). NÃO enviesar pra anti-IA — é só um tema entre
+> muitos, se aparecer.
 
 ---
 
@@ -11,7 +15,7 @@
 **Testável já (sem modificador):**
 
 - `nome / manchete` — o rótulo do dia.
-- `standup` — a fala de abertura = o **reveal** (o que carrega humor + ângulo anti-IA).
+- `standup` — a fala de abertura = o **reveal** (o que carrega o humor dev do dia).
 - `assinatura` — a linha do fim-de-dia (o artefato de **share**, POSICIONAMENTO §3).
 - `viés de mix` — que fatia do pool predomina (pesos por ticket).
 - `intensidade` — multiplicadores sobre o **steady-state** (spawn + deadline + volume).
@@ -30,18 +34,18 @@ mecânica (CR mais rígido, tudo pra um horário). Não bloqueia testar a hipót
 
 | # | Dia | Caráter | Viés de mix | Intensidade | Assinatura |
 |---|---|---|---|---|---|
-| 1 | **Primeiro Commit** 🟢 *(onboarding)* | ensina o loop | `fix_typo`, `email`, `slack`, `study` (só single simples) | volume ↓↓, deadline ↑↑, sem urgente | "fechou o dia sem autocomplete" |
+| 1 | **Primeiro Commit** 🟢 *(onboarding)* | ensina o loop | `fix_typo`, `email`, `slack`, `study` (só single simples) | volume ↓↓, deadline ↑↑, sem urgente | "sobreviveu ao primeiro dia" |
 | 2 | **Segunda do Backlog** 🟡 | a fila acorda | amplo/cotidiano, `normal`; entra `new_ui_feature` | volume ↑, deadline médio | a fila lotando às 11h |
 | 3 | **Incident Day** 🔴 | urgentes de correção | `fix_bug`/`fix_login_bug`/`deploy_hotfix`, `urgente`/`alta` | deadline ↓, spawn médio | o alerta das 9h03 |
 | 4 | **Maratona de Reunião** 🔵 | dia falado, pouco código | `meeting` + `slack` | pressão ↓, muitos itens curtos | a reunião que podia ser um email |
 | 5 | **Refactor Day** 🟣 | zen, tarefas longas | `refactor`/`refactor_module`/`document` | volume ↓, deadline ↑ | tocar no código de 2019 |
 | 6 | **Estagiário Quebrou a Main** 🔴 | cascata de fixes | `fix_typo`/`fix_bug` em rajada, `urgente` | spawn dispara num intervalo, depois acalma | o push fatídico |
 
-### Standups (o reveal, voz anti-IA)
+### Standups (o reveal — humor dev amplo)
 
-- **Primeiro Commit:** "Primeiro dia. Sem Copilot, sem ChatGPT — bem-vindo a 2021. Lê o ticket, faz na mão."
+- **Primeiro Commit:** "Primeiro dia. Café na mão, o backlog ainda te dá trégua — lê o ticket com calma."
 - **Segunda do Backlog:** "A semana começou e o backlog não perdoa."
-- **Incident Day:** "O alerta tocou 9h03. Prod caiu. E não, a IA não vai te salvar."
+- **Incident Day:** "O alerta tocou às 9h03. Prod caiu. Respira e vai."
 - **Maratona de Reunião:** "Reunião sobre a reunião sobre o alinhamento."
 - **Refactor Day:** "Hoje você toca em código de 2019. Respira."
 - **Estagiário Quebrou a Main:** "Alguém deu force push na main. Adivinha quem limpa."

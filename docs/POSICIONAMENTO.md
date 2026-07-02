@@ -19,7 +19,13 @@
 
 ---
 
-## 1. O ângulo central: "antes da IA" **[DIREÇÃO]**
+## 1. O ângulo central: "antes da IA" **[EM REVISÃO]**
+
+> **Revisão (2026-07):** o anti-IA virou muleta e enviesou o humor. Decisão já tomada:
+> o **tom/humor** do jogo é **dev amplo** (§4), com anti-IA como um tema entre muitos.
+> **Em aberto:** se o *posicionamento de marketing* (o ângulo de entrada abaixo) continua
+> sendo "antes da IA" ou passa a algo mais amplo (nostalgia/vida de dev). Decidir antes do
+> lançamento — não deixar o marketing forçar o anti-IA de volta na escrita do jogo.
 
 O gancho emocional do jogo é a **nostalgia do trabalho de dev pré-IA** — quando se
 programava na mão, lia-se o code review inteiro, sofria-se na reunião sem o ChatGPT
@@ -94,8 +100,10 @@ puzzle comum_:
 - **Humor de reconhecimento, não amargura** (`GDD.md` §7): rir da dor, não sofrer com
   ela. A linha entre "engraçado" e "parece overtime" é onde o jogo vive ou morre
   (`DIRECAO_GAMEPLAY.md` §0).
-- **Veneno anti-IA com carinho:** o inimigo é a dependência de IA, não quem usa IA.
-  Cutucada nostálgica, não sermão.
+- **Humor dev amplo (não só anti-IA):** rir das dores universais do ofício — legado que
+  ninguém entende, deadline em cima, PO mudando o escopo pela 3ª vez, deploy na sexta,
+  prod caindo às 9h03, on-call, o PR de 800 linhas do estagiário, o review interminável.
+  Anti-IA/nostalgia é **um tema entre muitos**, não o eixo — não enviesar tudo pra ele.
 - **Específico vence genérico:** "PO mudou o escopo pela 3ª vez" > "dia difícil". Todo
   flavor text é uma unidade de marketing potencial (ver §6).
 
@@ -134,12 +142,12 @@ O posicionamento não inventa trabalho de dev — confirma o que já está nos d
 | Peça | Onde já está | Por que o posicionamento a eleva |
 | --- | --- | --- |
 | Tela de fim / resultado de identidade | `DIRECAO_GAMEPLAY.md` §8, §10.1 | É o artefato de share (§3, §5.2) |
-| Flavor text com veneno anti-IA | `GDD.md` 0.3 | Carrega o ângulo central (§1.1) e é unidade de marketing (§6) |
+| Flavor text (humor dev amplo) | `GDD.md` 0.3 | Carrega o tom do jogo e é unidade de marketing (§6) |
 | Analytics (share/referrer/D1) | `DESIGN_CONSULTORIA.md` §9.7 | Mede se o posicionamento converte |
 | Título/registro de carreira | `DIRECAO_GAMEPLAY.md` §6 | É o que se compartilha agora (§3) |
 
-> **Única diretriz genuinamente nova:** o **tom anti-IA** no flavor text e na copy (§1.1,
-> §4). Não é feature — é direção de escrita.
+> **Única diretriz genuinamente nova:** o **tom de humor dev amplo** no flavor text e na
+> copy (§4) — anti-IA é só um dos temas, não o eixo. Não é feature — é direção de escrita.
 
 ---
 
