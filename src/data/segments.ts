@@ -208,7 +208,7 @@ export const SEGMENTS: Record<string, Segment> = {
     categories: [
       { key: 'j', label: 'Bloquear', color: '#e5484d' },
       { key: 'k', label: 'Comentar', color: '#e8a13a' },
-      { key: 'l', label: 'Aprovar', color: '#3fb765' },
+      { key: 'l', label: 'Elogiar', color: '#3fb765' },
     ],
     comments: REVIEW_COMMENTS,
     minItems: 6,

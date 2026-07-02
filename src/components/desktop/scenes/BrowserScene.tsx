@@ -105,19 +105,17 @@ function PrReview({ triage }: { triage?: Extract<SegmentView, { type: 'triage' }
           </span>
         ))}
       </div>
-      <div className="flex-1 divide-y divide-zinc-100 overflow-auto">
-        {triage.items.map((it, i) => {
+      {/* Fila que encolhe pelo topo: só de `cursor` em diante (o despachado some,
+          o próximo sempre no topo). O atual é o 1º, destacado. */}
+      <div className="flex min-h-0 flex-1 flex-col divide-y divide-zinc-100 overflow-hidden">
+        {triage.items.slice(triage.cursor).map((it, qi) => {
           const cat = triage.categories[it.cat];
-          const current = i === triage.cursor;
+          const current = qi === 0;
           return (
             <div
-              key={i}
-              className={`flex items-center gap-3 px-4 py-2.5 ${
-                current
-                  ? 'bg-amber-50 ring-1 ring-inset ring-amber-300'
-                  : it.done
-                    ? 'opacity-40'
-                    : ''
+              key={triage.cursor + qi}
+              className={`flex items-center gap-3 px-4 py-3 ${
+                current ? 'bg-amber-50 ring-1 ring-inset ring-amber-300' : 'opacity-70'
               }`}
             >
               <span
@@ -125,14 +123,7 @@ function PrReview({ triage }: { triage?: Extract<SegmentView, { type: 'triage' }
                 style={{ background: cat.color }}
                 aria-hidden
               />
-              <span
-                className={`flex-1 text-sm ${
-                  it.done ? 'text-zinc-400 line-through' : 'text-zinc-800'
-                }`}
-              >
-                {it.text}
-              </span>
-              {it.done && <span className="text-emerald-600">✓</span>}
+              <span className="flex-1 text-sm text-zinc-800">{it.text}</span>
             </div>
           );
         })}

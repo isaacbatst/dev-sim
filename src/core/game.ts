@@ -932,7 +932,7 @@ export class Game {
       case 'document':
         return `Documente a função no VSCode; faça push, aguarde o CR e o merge.`;
       case 'review_pr':
-        return `Abra o PR no Chrome e despache cada comentário do review: Bloquear (J) / Comentar (K) / Aprovar (L), conforme o rótulo.`;
+        return `Abra o PR no Chrome e despache cada comentário do review: Bloquear (J) / Comentar (K) / Elogiar (L), conforme o rótulo.`;
       case 'refactor':
         return `Refatore ${this.fileTarget(t) ?? 'o módulo'}: segure pra simplificar e solte na zona certa (sem exagerar); faça push, aguarde o CR e o merge.`;
       case 'fix_typo': {
