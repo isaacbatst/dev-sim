@@ -197,6 +197,30 @@ function Cue({ seg }: { seg: SegmentView }) {
           </span>
         </div>
       );
+    case 'triage': {
+      // Legenda dos vereditos (você casa a tecla com o rótulo do comentário) + progresso.
+      const total = seg.items.length;
+      return (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          {seg.categories.map((c) => (
+            <span key={c.key} className="flex items-center gap-1.5">
+              <KeyCap state="idle">{c.key}</KeyCap>
+              <span className="flex items-center gap-1.5 text-sm text-ink">
+                <span
+                  className="size-2.5 rounded-full"
+                  style={{ background: c.color }}
+                  aria-hidden
+                />
+                {c.label}
+              </span>
+            </span>
+          ))}
+          <span className="ml-auto font-mono text-xs text-ink-dim">
+            {Math.min(seg.cursor, total)}/{total}
+          </span>
+        </div>
+      );
+    }
     case 'file':
       return seg.searching ? (
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">

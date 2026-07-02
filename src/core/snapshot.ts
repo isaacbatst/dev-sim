@@ -117,6 +117,15 @@ export type SegmentView =
       wrong: boolean;
     }
   | {
+      type: 'triage';
+      /** Vereditos (tecla/rótulo/cor) — os "baldes". */
+      categories: { key: string; label: string; color: string }[];
+      /** Fila de comentários, cada um com o veredito certo (`cat`) e se já foi despachado. */
+      items: { text: string; cat: number; done: boolean }[];
+      /** Comentário atual (índice na fila). */
+      cursor: number;
+    }
+  | {
       type: 'file';
       /** Todos os caminhos (para o Ctrl+P buscar em pastas aninhadas). */
       files: string[];

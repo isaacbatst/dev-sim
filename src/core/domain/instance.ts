@@ -14,6 +14,7 @@ import type {
   StepTemplate,
   TaskTemplate,
   TicketTemplate,
+  TriageCategory,
 } from './types';
 import type { AppId, ProgramId } from '../snapshot';
 import { PROJECT_FILES } from '@/data/files';
@@ -124,6 +125,22 @@ export interface GaugeInstance {
   wrong: boolean;
 }
 
+export interface TriageItem {
+  text: string;
+  /** Índice do veredito correto em `categories`. */
+  cat: number;
+}
+
+export interface TriageInstance {
+  type: 'triage';
+  categories: TriageCategory[];
+  items: TriageItem[];
+  /** Comentário atual da fila (avança ao acertar a tecla). */
+  cursor: number;
+  /** Houve algum despacho errado (só p/ feedback; não vai pra CR). */
+  wrong: boolean;
+}
+
 export interface FileInstance {
   type: 'file';
   files: string[];
@@ -206,7 +223,8 @@ export type SegmentInstance =
   | MashInstance
   | ComboInstance
   | ScrubInstance
-  | GaugeInstance;
+  | GaugeInstance
+  | TriageInstance;
 
 export interface StepInstance {
   segments: SegmentInstance[];
@@ -339,6 +357,11 @@ function instantiateSegment(segment: Segment): SegmentInstance {
         committed: false,
         wrong: false,
       };
+    case 'triage': {
+      const n = randInt(segment.minItems, segment.maxItems);
+      const items = shuffleTake(segment.comments, n).map((c) => ({ text: c.text, cat: c.cat }));
+      return { type: 'triage', categories: segment.categories, items, cursor: 0, wrong: false };
+    }
     case 'file': {
       const allowed = segment.ext
         ? PROJECT_FILES.map((f, i) => (f.endsWith(`.${segment.ext}`) ? i : -1)).filter(
@@ -410,6 +433,8 @@ export function segmentCompleted(seg: SegmentInstance): boolean {
       return seg.committed;
     case 'gauge':
       return seg.committed;
+    case 'triage':
+      return seg.cursor >= seg.items.length;
   }
 }
 
@@ -478,6 +503,10 @@ export function resetSegment(seg: SegmentInstance): void {
       seg.current = 0;
       seg.holding = false;
       seg.committed = false;
+      seg.wrong = false;
+      break;
+    case 'triage':
+      seg.cursor = 0;
       seg.wrong = false;
       break;
   }

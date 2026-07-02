@@ -320,6 +320,22 @@ export class Game {
         }
         break;
       }
+      case 'triage': {
+        // Matching puro: aperta a tecla do veredito do comentário atual.
+        if (seg.cursor >= seg.items.length) break;
+        const item = seg.items[seg.cursor];
+        const correct = seg.categories[item.cat]?.key;
+        if (key === correct) {
+          seg.cursor += 1;
+          incidental = 'mash'; // catraca que sobe com o ritmo (fila esvaziando)
+        } else if (seg.categories.some((c) => c.key === key)) {
+          // veredito errado pro comentário → erro (não avança)
+          inst.errors += 1;
+          seg.wrong = true;
+          incidental = 'error';
+        }
+        break;
+      }
       case 'wait':
         break;
     }
@@ -915,6 +931,8 @@ export class Game {
         return `Abra o Chrome, abra o webmail e arquive a mensagem do chefe.`;
       case 'document':
         return `Documente a função no VSCode; faça push, aguarde o CR e o merge.`;
+      case 'review_pr':
+        return `Abra o PR no Chrome e despache cada comentário do review: Bloquear (J) / Comentar (K) / Aprovar (L), conforme o rótulo.`;
       case 'refactor':
         return `Refatore ${this.fileTarget(t) ?? 'o módulo'}: segure pra simplificar e solte na zona certa (sem exagerar); faça push, aguarde o CR e o merge.`;
       case 'fix_typo': {
@@ -1048,6 +1066,13 @@ export class Game {
           holding: seg.holding,
           committed: seg.committed,
           wrong: seg.wrong,
+        };
+      case 'triage':
+        return {
+          type: 'triage',
+          categories: seg.categories.map((c) => ({ key: c.key, label: c.label, color: c.color })),
+          items: seg.items.map((it, i) => ({ text: it.text, cat: it.cat, done: i < seg.cursor })),
+          cursor: seg.cursor,
         };
       case 'file': {
         const expanded = new Set(seg.expanded);

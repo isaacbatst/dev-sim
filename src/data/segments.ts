@@ -6,6 +6,28 @@
  */
 import type { Segment } from '@/core/domain/types';
 
+// Pool de comentários de code review (humor dev amplo). `cat`: 0 Bloquear (🔴),
+// 1 Comentar (🟡), 2 Aprovar (🟢). A instância sorteia N — matching puro.
+const REVIEW_COMMENTS: { text: string; cat: number }[] = [
+  { text: "console.log('aqui') esquecido", cat: 0 },
+  { text: 'senha hardcoded no código', cat: 0 },
+  { text: 'catch (e) {} engolindo o erro', cat: 0 },
+  { text: 'commit direto na main', cat: 0 },
+  { text: 'credencial no .env versionado', cat: 0 },
+  { text: 'off-by-one no laço', cat: 0 },
+  { text: 'variável não usada', cat: 1 },
+  { text: 'faltou teste pra esse caso', cat: 1 },
+  { text: 'esse método tá gigante', cat: 1 },
+  { text: 'extrai isso numa função', cat: 1 },
+  { text: 'comentário desatualizado', cat: 1 },
+  { text: 'nome pouco claro: `data`', cat: 1 },
+  { text: 'limpo, pode ir', cat: 2 },
+  { text: 'boa solução', cat: 2 },
+  { text: 'nada a apontar', cat: 2 },
+  { text: 'gostei da abordagem', cat: 2 },
+  { text: 'simples e direto', cat: 2 },
+];
+
 export const SEGMENTS: Record<string, Segment> = {
   // --- press ---
   press_open_browser: {
@@ -173,6 +195,24 @@ export const SEGMENTS: Record<string, Segment> = {
       { key: 't', label: 'Texto' },
       { key: 'b', label: 'Fundo' },
     ],
+  },
+
+  // --- triage (fazer code review: despachar comentários já rotulados) ---
+  press_open_pr: {
+    type: 'press',
+    maxItems: 1,
+    actions: [{ key: 'p', label: 'Abrir o PR' }],
+  },
+  triage_review: {
+    type: 'triage',
+    categories: [
+      { key: 'j', label: 'Bloquear', color: '#e5484d' },
+      { key: 'k', label: 'Comentar', color: '#e8a13a' },
+      { key: 'l', label: 'Aprovar', color: '#3fb765' },
+    ],
+    comments: REVIEW_COMMENTS,
+    minItems: 6,
+    maxItems: 9,
   },
 
   // --- wait (AUDITORIA: tempo morto) ---

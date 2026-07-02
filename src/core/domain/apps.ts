@@ -8,6 +8,7 @@ const APP_BY_TASK: Record<string, AppId> = {
   study: 'browser',
   meeting: 'browser',
   test_feature: 'browser',
+  review_pr: 'browser',
   slack: 'slack',
   email: 'browser',
   document: 'editor',

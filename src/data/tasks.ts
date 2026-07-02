@@ -80,6 +80,14 @@ export const TASKS: Record<string, TaskTemplate> = {
       step('mash_merge'),
     ],
   },
+  // Revisar PR: você é o revisor — abra o PR no Chrome e despache cada comentário
+  // (já rotulado) com o veredito certo. Task ativa, sem CR/merge (você não espera).
+  review_pr: {
+    id: 'review_pr',
+    title: 'Revisar PR',
+    description: 'Abrir o PR no Chrome e despachar os comentários do review',
+    steps: [step('press_open_browser'), step('press_open_pr'), step('triage_review')],
+  },
   // Corrigir bug: a cada vez sorteia COMO resolver — você já sabe (digita o fix)
   // ou pesquisa no Stack Overflow e cola (Ctrl+C/Ctrl+V). Ver `variants`.
   fix_bug: {

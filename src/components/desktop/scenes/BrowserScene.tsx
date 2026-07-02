@@ -5,7 +5,7 @@ import { FIX_SNIPPET } from './EditorScene';
 type Slots = (SlotSnapshot | null)[];
 
 type SiteKind =
-  'qa' | 'docs' | 'wiki' | 'article' | 'staging' | 'inbox' | 'meet' | 'issues' | 'home';
+  'qa' | 'docs' | 'wiki' | 'article' | 'staging' | 'inbox' | 'meet' | 'issues' | 'pr' | 'home';
 interface Site {
   tab: string;
   dot: string;
@@ -37,12 +37,19 @@ const SITES: Record<string, Site> = {
     url: 'github.com/empresa/app/issues',
     kind: 'issues',
   },
+  pr: {
+    tab: 'GitHub',
+    dot: 'bg-zinc-800',
+    url: 'github.com/empresa/app/pull/42',
+    kind: 'pr',
+  },
   home: { tab: 'Nova aba', dot: 'bg-zinc-400', url: '', kind: 'home' },
 };
 
 function siteKey(focus: SegmentView | undefined, browserSite: string): string {
   // "Abrir/Entrar ..." mostra a tela inicial (carregando); demais ações (Ler,
   // Arquivar, Falar…) acontecem sobre a página/app já carregado.
+  if (focus?.type === 'triage') return 'pr';
   if (focus?.type === 'hold') return browserSite;
   if (focus?.type === 'combo') return browserSite; // copiar acontece sobre a página
   if (focus?.type === 'press') {
@@ -75,20 +82,83 @@ const PRIORITY_TAG: Record<Priority, { label: string; cls: string }> = {
   baixa: { label: 'baixa', cls: 'border-zinc-200 bg-zinc-100 text-zinc-600' },
 };
 
+/** Fazer code review: o PR no GitHub com a fila de comentários já rotulados.
+ *  Você casa a tecla do veredito (legenda no action bar) com o rótulo de cada um. */
+function PrReview({ triage }: { triage?: Extract<SegmentView, { type: 'triage' }> }) {
+  if (!triage) return null;
+  return (
+    <div className="flex min-h-0 flex-1 flex-col bg-white">
+      <div className="border-b border-zinc-200 px-4 py-2.5">
+        <p className="text-sm text-zinc-500">
+          empresa / app <span className="font-semibold text-zinc-900">#42</span>
+        </p>
+        <p className="text-base font-semibold text-zinc-900">Ajustes no fluxo de login</p>
+      </div>
+      <div className="flex flex-wrap gap-3 border-b border-zinc-200 bg-zinc-50 px-4 py-2 text-xs text-zinc-600">
+        {triage.categories.map((c) => (
+          <span key={c.key} className="flex items-center gap-1.5">
+            <span className="size-2.5 rounded-full" style={{ background: c.color }} aria-hidden />
+            {c.label}
+            <kbd className="rounded border border-zinc-300 bg-white px-1 font-mono text-[10px] uppercase text-zinc-500">
+              {c.key}
+            </kbd>
+          </span>
+        ))}
+      </div>
+      <div className="flex-1 divide-y divide-zinc-100 overflow-auto">
+        {triage.items.map((it, i) => {
+          const cat = triage.categories[it.cat];
+          const current = i === triage.cursor;
+          return (
+            <div
+              key={i}
+              className={`flex items-center gap-3 px-4 py-2.5 ${
+                current
+                  ? 'bg-amber-50 ring-1 ring-inset ring-amber-300'
+                  : it.done
+                    ? 'opacity-40'
+                    : ''
+              }`}
+            >
+              <span
+                className="size-3 shrink-0 rounded-full"
+                style={{ background: cat.color }}
+                aria-hidden
+              />
+              <span
+                className={`flex-1 text-sm ${
+                  it.done ? 'text-zinc-400 line-through' : 'text-zinc-800'
+                }`}
+              >
+                {it.text}
+              </span>
+              {it.done && <span className="text-emerald-600">✓</span>}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function Page({
   site,
   holding,
   progress,
   slots,
   copy,
+  triage,
 }: {
   site: Site;
   holding: boolean;
   progress: number;
   slots: Slots;
   copy?: { active: boolean; copied: boolean };
+  triage?: Extract<SegmentView, { type: 'triage' }>;
 }) {
   switch (site.kind) {
+    case 'pr':
+      return <PrReview triage={triage} />;
     case 'qa':
       return (
         <div className="flex flex-col gap-3 p-5">
@@ -349,6 +419,7 @@ export function BrowserScene({ active, slots }: { active: ActiveTicketSnapshot; 
     focus?.type === 'combo'
       ? { active: true, copied: focus.tokens.every((t) => t.done) }
       : undefined;
+  const triage = focus?.type === 'triage' ? focus : undefined;
 
   return (
     <div className="flex min-h-[22rem] flex-1 flex-col bg-[#fbfbfd] text-zinc-800">
@@ -369,7 +440,14 @@ export function BrowserScene({ active, slots }: { active: ActiveTicketSnapshot; 
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col">
-        <Page site={site} holding={holding} progress={progress} slots={slots} copy={copy} />
+        <Page
+          site={site}
+          holding={holding}
+          progress={progress}
+          slots={slots}
+          copy={copy}
+          triage={triage}
+        />
       </div>
     </div>
   );

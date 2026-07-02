@@ -20,7 +20,17 @@ export type Priority = 'urgente' | 'alta' | 'normal' | 'baixa';
 export const PRIORITY_BY_INT: Priority[] = ['urgente', 'alta', 'normal', 'baixa'];
 
 export type SegmentType =
-  'press' | 'hold' | 'nav' | 'selection' | 'wait' | 'file' | 'mash' | 'combo' | 'scrub' | 'gauge';
+  | 'press'
+  | 'hold'
+  | 'nav'
+  | 'selection'
+  | 'wait'
+  | 'file'
+  | 'mash'
+  | 'combo'
+  | 'scrub'
+  | 'gauge'
+  | 'triage';
 
 /** Uma ação/tecla com rótulo legível (ex.: { key: 'w', label: 'Abrir navegador' }). */
 export interface Action {
@@ -139,6 +149,28 @@ export interface GaugeSegment {
   rate: number;
 }
 
+/** Um veredito de code review: tecla + rótulo + cor (bolinha, não emoji). */
+export interface TriageCategory {
+  key: string;
+  label: string;
+  color: string;
+}
+
+/**
+ * `triage`: revisar um PR — uma fila de comentários JÁ rotulados; despachar cada
+ * um com a tecla do veredito certo (matching puro). Tecla certa avança; tecla de
+ * outro veredito conta erro. Discreto (latência-tolerante), NÃO é tempo morto —
+ * cada item é uma ação com feedback que escala. Ver PERSONALIDADE_DO_DIA.md.
+ */
+export interface TriageSegment {
+  type: 'triage';
+  categories: TriageCategory[];
+  /** Pool de comentários (`cat` indexa `categories`); a instância sorteia N. */
+  comments: { text: string; cat: number }[];
+  minItems: number;
+  maxItems: number;
+}
+
 export type Segment =
   | PressSegment
   | HoldSegment
@@ -149,7 +181,8 @@ export type Segment =
   | MashSegment
   | ComboSegment
   | ScrubSegment
-  | GaugeSegment;
+  | GaugeSegment
+  | TriageSegment;
 
 /** Passo: contém segmentos do mesmo tipo (GDD 3.1). No conteúdo atual, 1 por passo. */
 export interface StepTemplate {
