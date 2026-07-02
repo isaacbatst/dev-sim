@@ -23,6 +23,12 @@ function ac(): AudioContext | null {
   return ctx;
 }
 
+/** Instante do relógio de áudio (pra agendar demos sample-accurate). */
+export function now(): number {
+  const c = ac();
+  return c ? c.currentTime : 0;
+}
+
 interface ToneOpts {
   type?: OscillatorType;
   gain?: number;
@@ -30,13 +36,22 @@ interface ToneOpts {
   slideTo?: number;
   attack?: number;
   cutoff?: number;
+  when?: number;
 }
 
 function tone(freq: number, dur: number, opts: ToneOpts = {}): void {
   const c = ac();
   if (!c || !master) return;
-  const { type = 'triangle', gain = 0.16, delay = 0, slideTo, attack = 0.002, cutoff = 2600 } = opts;
-  const t0 = c.currentTime + delay;
+  const {
+    type = 'triangle',
+    gain = 0.16,
+    delay = 0,
+    slideTo,
+    attack = 0.002,
+    cutoff = 2600,
+    when,
+  } = opts;
+  const t0 = when ?? c.currentTime + delay;
   const osc = c.createOscillator();
   const lp = c.createBiquadFilter();
   lp.type = 'lowpass';
@@ -102,10 +117,10 @@ export function sigh(): void {
   tone(340, 0.45, { type: 'sine', gain: 0.06, slideTo: 220, attack: 0.06 });
 }
 
-// --- Esmagar: pop suculento + esguicho curto (pitch sobe no combo) ---
-export function squash(pitch: number): void {
-  tone(pitch, 0.08, { type: 'sine', gain: 0.17, slideTo: pitch * 0.4, attack: 0.001 });
-  noise(0.05, { type: 'lowpass', freq: 520, gain: 0.06, slideTo: 150 });
+// --- Tecladinho: nota "piano" macia (fundamental + oitava de brilho) ---
+export function pianoNote(freq: number, when?: number): void {
+  tone(freq, 0.55, { type: 'triangle', gain: 0.16, cutoff: 2400, attack: 0.004, when });
+  tone(freq * 2, 0.3, { type: 'sine', gain: 0.04, cutoff: 3200, attack: 0.004, when });
 }
 
 // --- Regar: "plip" aguado (tom curto caindo + esguicho macio na terra) ---

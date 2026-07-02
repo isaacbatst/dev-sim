@@ -11,21 +11,21 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as A from './audio';
 
-type Mode = 'neck' | 'squash' | 'water';
+type Mode = 'neck' | 'keys' | 'water';
 
 const TABS: { id: Mode; n: string; label: string }[] = [
   { id: 'neck', n: '1', label: 'Pescoço' },
-  { id: 'squash', n: '2', label: 'Esmagar' },
+  { id: 'keys', n: '2', label: 'Tecladinho' },
   { id: 'water', n: '3', label: 'Regar' },
 ];
 
 export default function PausaPage() {
-  const [mode, setMode] = useState<Mode>('water');
+  const [mode, setMode] = useState<Mode>('keys');
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === '1') setMode('neck');
-      else if (e.key === '2') setMode('squash');
+      else if (e.key === '2') setMode('keys');
       else if (e.key === '3') setMode('water');
     };
     window.addEventListener('keydown', onKey);
@@ -64,7 +64,7 @@ export default function PausaPage() {
 
       <div className="flex w-full max-w-2xl flex-1 items-center justify-center">
         {mode === 'neck' && <Neck />}
-        {mode === 'squash' && <Squash />}
+        {mode === 'keys' && <Keys />}
         {mode === 'water' && <Water />}
       </div>
 
@@ -127,7 +127,9 @@ function Neck() {
     };
   }, [roll]);
 
-  const viewTransform = `translate(${off.dx * -18}px, ${off.dy * -26}px) rotate(${off.dx * 7}deg)`;
+  // Rolar (←→) = rotação anti-horária pra direita sobe o lado direito; olhar
+  // (↑↓) = pitch (translateY). Inclinar é rolar, não deslizar de lado.
+  const viewTransform = `translateY(${off.dy * -26}px) rotate(${off.dx * -8}deg)`;
 
   return (
     <div className="flex flex-col items-center gap-10">
@@ -203,95 +205,192 @@ function Neck() {
 }
 
 /* ------------------------------------------------------------------ */
-/* 2 · Esmagar — grade de bugs, CADA tecla um bug (splat + respawn).   */
+/* 2 · Tecladinho — uma oitava (C maior, teclas brancas) na home row.  */
+/*     Melódico = self-paced → latência não atrapalha. Demos de música */
+/*     tocadas pelo relógio do áudio (no tempo) só pra ouvir.          */
 /* ------------------------------------------------------------------ */
 
-const GRID: string[][] = [
-  ['q', 'w', 'e', 'r'],
-  ['a', 's', 'd', 'f'],
-  ['z', 'x', 'c', 'v'],
+const WHITE: { k: string; name: string; f: number }[] = [
+  { k: 'a', name: 'C', f: 261.63 },
+  { k: 's', name: 'D', f: 293.66 },
+  { k: 'd', name: 'E', f: 329.63 },
+  { k: 'f', name: 'F', f: 349.23 },
+  { k: 'g', name: 'G', f: 392.0 },
+  { k: 'h', name: 'A', f: 440.0 },
+  { k: 'j', name: 'B', f: 493.88 },
+  { k: 'k', name: 'C', f: 523.25 },
 ];
-const KEYS = GRID.flat();
+const KEY_TO_I: Record<string, number> = Object.fromEntries(WHITE.map((w, i) => [w.k, i]));
 
-function Squash() {
-  const [dead, setDead] = useState<Record<string, number>>({});
-  const alive = useRef<Record<string, boolean>>(Object.fromEntries(KEYS.map((k) => [k, true])));
-  const combo = useRef(0);
-  const lastAt = useRef(0);
+// Demos: índices na escala (0..7 = C..C), -1 = pausa. Só teclas brancas.
+const SONGS: { id: string; name: string; notes: number[] }[] = [
+  { id: 'ode', name: 'Ode à Alegria', notes: [2, 2, 3, 4, 4, 3, 2, 1, 0, 0, 1, 2, 2, 1, 1, -1] },
+  { id: 'twinkle', name: 'Brilha Estrela', notes: [0, 0, 4, 4, 5, 5, 4, -1, 3, 3, 2, 2, 1, 1, 0, -1] },
+  { id: 'frere', name: 'Frère Jacques', notes: [0, 1, 2, 0, 0, 1, 2, 0, 2, 3, 4, -1, 2, 3, 4, -1] },
+];
 
-  const squash = useCallback((k: string) => {
-    if (!alive.current[k]) return;
-    alive.current[k] = false;
-    const now = performance.now();
-    combo.current = now - lastAt.current < 400 ? Math.min(combo.current + 1, 20) : 0;
-    lastAt.current = now;
-    A.squash(460 * Math.pow(2, combo.current / 26));
-    setDead((d) => ({ ...d, [k]: (d[k] ?? 0) + 1 }));
+function Keys() {
+  const [lit, setLit] = useState<Record<number, number>>({});
+  const [song, setSong] = useState<string | null>(null);
+  const [bpm, setBpm] = useState(112);
+  const bpmRef = useRef(112);
+  const demoT = useRef<ReturnType<typeof setInterval> | null>(null);
+  const nonce = useRef(0);
+
+  useEffect(() => {
+    bpmRef.current = bpm;
+  }, [bpm]);
+
+  const litKey = useCallback((i: number) => {
+    const n = ++nonce.current;
+    setLit((l) => ({ ...l, [i]: n }));
     setTimeout(() => {
-      alive.current[k] = true;
-      setDead((d) => {
-        const c = { ...d };
-        delete c[k];
+      setLit((l) => {
+        if (l[i] !== n) return l; // nova batida chegou; não apaga
+        const c = { ...l };
+        delete c[i];
         return c;
       });
-    }, 1200);
+    }, 180);
   }, []);
+
+  const press = useCallback(
+    (i: number) => {
+      A.pianoNote(WHITE[i].f);
+      litKey(i);
+    },
+    [litKey],
+  );
+
+  const stopSong = useCallback(() => {
+    if (demoT.current) clearInterval(demoT.current);
+    demoT.current = null;
+    setSong(null);
+  }, []);
+
+  const startSong = useCallback(
+    (id: string) => {
+      const s = SONGS.find((x) => x.id === id);
+      if (!s) return;
+      if (demoT.current) clearInterval(demoT.current);
+      setSong(id);
+      let idx = 0;
+      let next = A.now() + 0.1;
+      demoT.current = setInterval(() => {
+        const ahead = A.now() + 0.2;
+        while (next < ahead) {
+          const deg = s.notes[idx % s.notes.length];
+          const t = next;
+          if (deg >= 0) {
+            A.pianoNote(WHITE[deg].f, t);
+            const dMs = Math.max(0, (t - A.now()) * 1000);
+            setTimeout(() => litKey(deg), dMs);
+          }
+          idx++;
+          next += 60 / bpmRef.current; // uma semínima por nota
+        }
+      }, 25);
+    },
+    [litKey],
+  );
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.repeat) return;
-      const k = e.key.toLowerCase();
-      if (KEYS.includes(k)) {
+      const i = KEY_TO_I[e.key.toLowerCase()];
+      if (i !== undefined) {
         e.preventDefault();
-        squash(k);
+        press(i);
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [squash]);
+  }, [press]);
+
+  useEffect(
+    () => () => {
+      if (demoT.current) clearInterval(demoT.current);
+    },
+    [],
+  );
 
   return (
-    <div className="flex flex-col items-center gap-8">
-      <div className="flex flex-col gap-3">
-        {GRID.map((row, ri) => (
-          <div key={ri} className="flex gap-3">
-            {row.map((k) => {
-              const isDead = dead[k] !== undefined;
-              return (
-                <button
-                  key={k}
-                  onPointerDown={() => squash(k)}
-                  className="relative flex size-16 items-center justify-center rounded-xl"
-                  style={{ background: 'var(--surface-2)', border: '1px solid var(--line)' }}
-                >
-                  {!isDead ? (
-                    <span className="proto-bug text-2xl" aria-hidden>
-                      🐛
-                    </span>
-                  ) : (
-                    <span
-                      key={dead[k]}
-                      className="proto-splat absolute text-2xl"
-                      aria-hidden
-                      style={{ color: 'var(--pass)' }}
-                    >
-                      ✳
-                    </span>
-                  )}
-                  <kbd
-                    className="absolute bottom-0.5 right-1 font-mono text-[9px] uppercase"
-                    style={{ color: 'var(--ink-dim)' }}
-                  >
-                    {k}
-                  </kbd>
-                </button>
-              );
-            })}
-          </div>
-        ))}
+    <div className="flex flex-col items-center gap-7">
+      {/* teclado: uma oitava de teclas brancas */}
+      <div className="flex gap-1">
+        {WHITE.map((w, i) => {
+          const on = lit[i] !== undefined;
+          return (
+            <button
+              key={w.k}
+              onPointerDown={() => press(i)}
+              className="relative flex items-end justify-center rounded-b-md pb-2 transition-transform"
+              style={{
+                width: 46,
+                height: 150,
+                background: on ? 'var(--amber)' : '#f4f1ea',
+                border: '1px solid var(--line)',
+                color: '#3a3a3a',
+                transform: on ? 'translateY(2px)' : 'none',
+              }}
+            >
+              <span className="font-mono text-[11px]">{w.name}</span>
+              <kbd
+                className="absolute bottom-1 right-1 font-mono text-[8px] uppercase"
+                style={{ color: 'rgba(0,0,0,.35)' }}
+              >
+                {w.k}
+              </kbd>
+            </button>
+          );
+        })}
       </div>
+
+      <label
+        className="flex items-center gap-2 font-mono text-[11px]"
+        style={{ color: 'var(--ink-dim)' }}
+      >
+        {bpm} bpm
+        <input
+          type="range"
+          min={60}
+          max={180}
+          value={bpm}
+          onChange={(e) => setBpm(Number(e.target.value))}
+          style={{ accentColor: 'var(--amber)' }}
+        />
+      </label>
+
+      <div className="flex flex-col items-center gap-2">
+        <p
+          className="font-mono text-[10px] uppercase tracking-[0.2em]"
+          style={{ color: 'var(--ink-dim)' }}
+        >
+          demos de música
+        </p>
+        <div className="flex gap-2">
+          {SONGS.map((s) => {
+            const on = song === s.id;
+            return (
+              <button
+                key={s.id}
+                onClick={() => (on ? stopSong() : startSong(s.id))}
+                className="rounded-md px-3 py-1.5 text-xs font-medium transition-colors"
+                style={
+                  on
+                    ? { background: 'var(--amber)', color: 'var(--bg)' }
+                    : { background: 'var(--surface-2)', color: 'var(--ink-dim)' }
+                }
+              >
+                {on ? '■' : '▶'} {s.name}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       <p className="text-center text-sm" style={{ color: 'var(--ink-dim)' }}>
-        Cada tecla é um bug — <b style={{ color: 'var(--ink)' }}>esmague</b> (tecla ou clique).
+        Toque <b style={{ color: 'var(--ink)' }}>A…K</b> (uma oitava) — no seu tempo, sem errar.
       </p>
     </div>
   );
@@ -421,19 +520,15 @@ function Water() {
 const PROTO_CSS = `
 .proto-spark { pointer-events: none; animation: proto-spark .3s ease-out forwards; }
 .proto-relief { pointer-events: none; animation: proto-relief .5s ease-out forwards; }
-.proto-splat { pointer-events: none; animation: proto-splat .4s ease-out forwards; }
-.proto-bug { transition: transform .08s ease; }
-.proto-bug:active { transform: scale(.85); }
 .proto-absorb { pointer-events: none; animation: proto-absorb 1.6s ease-out forwards; }
 .proto-splash { pointer-events: none; width: 16px; height: 16px; margin-left: -8px; border-radius: 9999px; border: 2px solid #9fd0e6; animation: proto-splash .45s ease-out forwards; }
 .proto-leaf { position: relative; animation: proto-leaf .32s ease-out; }
 @keyframes proto-spark { 0% { transform: scale(.4); opacity: .9 } 100% { transform: scale(2); opacity: 0 } }
 @keyframes proto-relief { from { transform: scale(.5); opacity: .6 } to { transform: scale(2.6); opacity: 0 } }
-@keyframes proto-splat { 0% { transform: scale(.4); opacity: 1 } 45% { transform: scale(1.5); opacity: 1 } 100% { transform: scale(1.9); opacity: 0 } }
 @keyframes proto-absorb { 0% { opacity: .92 } 100% { opacity: 0 } }
 @keyframes proto-splash { 0% { transform: scale(.3); opacity: .85 } 100% { transform: scale(2); opacity: 0 } }
 @keyframes proto-leaf { 0%,100% { transform: scale(1) } 45% { transform: scale(1.05) } }
 @media (prefers-reduced-motion: reduce) {
-  .proto-spark,.proto-relief,.proto-splat,.proto-absorb,.proto-splash,.proto-leaf { animation: none }
+  .proto-spark,.proto-relief,.proto-absorb,.proto-splash,.proto-leaf { animation: none }
 }
 `;
