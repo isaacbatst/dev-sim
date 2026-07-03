@@ -19,6 +19,7 @@ export function GameScreen() {
   const focusProgram = useGameStore((s) => s.focusProgram);
   const cycleFocus = useGameStore((s) => s.cycleFocus);
   const quickOpen = useGameStore((s) => s.quickOpen);
+  const buyCosmetic = useGameStore((s) => s.buyCosmetic);
 
   const [shake, setShake] = useState(false);
   const [floatScore, setFloatScore] = useState<string | null>(null);
@@ -94,7 +95,7 @@ export function GameScreen() {
   }
 
   return (
-    <Workstation clock={snapshot.clock}>
+    <Workstation clock={snapshot.clock} owned={career.owned}>
       <Desktop
         snapshot={snapshot}
         day={day}
@@ -105,6 +106,7 @@ export function GameScreen() {
         onFocusProgram={focusProgram}
         onSelect={selectSlot}
         onNextDay={nextDay}
+        onBuy={buyCosmetic}
       />
     </Workstation>
   );

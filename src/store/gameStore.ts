@@ -103,6 +103,8 @@ interface GameState {
   focusProgram: (id: ProgramId) => void;
   cycleFocus: (dir?: 1 | -1) => void;
   quickOpen: () => void;
+  /** Compra um cosmético: desconta `$` e adiciona a `owned` (persiste). */
+  buyCosmetic: (id: string, preco: number) => void;
 }
 
 let loop: GameLoop | null = null;
@@ -184,5 +186,13 @@ export const useGameStore = create<GameState>((set, get) => {
     focusProgram: (id) => loop?.focusProgram(id),
     cycleFocus: (dir) => loop?.cycleFocus(dir),
     quickOpen: () => loop?.quickOpen(),
+    buyCosmetic: (id, preco) => {
+      const c = { ...get().career };
+      if (c.owned.includes(id) || c.wallet < preco) return;
+      c.wallet -= preco;
+      c.owned = [...c.owned, id];
+      saveCareer(c);
+      set({ career: c });
+    },
   };
 });

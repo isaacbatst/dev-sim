@@ -17,8 +17,17 @@ function ambientFor(clock: string): string {
   return '#c25733'; // fim do dia, alaranjado
 }
 
-export function Workstation({ clock, children }: { clock: string; children: React.ReactNode }) {
+export function Workstation({
+  clock,
+  owned = [],
+  children,
+}: {
+  clock: string;
+  owned?: string[];
+  children: React.ReactNode;
+}) {
   const ambient = ambientFor(clock);
+  const has = (id: string) => owned.includes(id);
 
   return (
     <div className="relative h-dvh w-full overflow-hidden bg-[#06070b]">
@@ -151,8 +160,44 @@ export function Workstation({ clock, children }: { clock: string; children: Reac
           className="flex items-end gap-5"
           style={{ transform: 'rotateX(58deg)', transformOrigin: 'center bottom' }}
         >
-          {/* caneca */}
+          {/* planta (cosmético) — vasinho à esquerda */}
+          {has('planta') && (
+            <div className="relative mb-1 h-9 w-7 shrink-0">
+              {[-7, -2, 3, 8].map((x, i) => (
+                <span
+                  key={i}
+                  className="absolute bottom-3"
+                  style={{
+                    left: 14 + x,
+                    width: 5,
+                    height: 16 + (i % 2) * 6,
+                    borderRadius: '50% 50% 50% 50% / 70% 70% 30% 30%',
+                    background: `color-mix(in oklab, #4ec07a ${72 - i * 8}%, #1c3a24)`,
+                    transform: `rotate(${x * 2}deg)`,
+                    transformOrigin: 'bottom center',
+                  }}
+                />
+              ))}
+              <div
+                className="absolute inset-x-0 bottom-0 h-3.5 rounded-b-[4px] rounded-t-[2px]"
+                style={{ background: 'linear-gradient(180deg, #b5622f, #7d3f1c)' }}
+              />
+            </div>
+          )}
+
+          {/* caneca (+ vapor se comprou café fresco) */}
           <div className="relative mb-1 h-7 w-6 shrink-0">
+            {has('cafe') && (
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                {[-3, 0, 3].map((x, i) => (
+                  <span
+                    key={i}
+                    className="animate-edgepulse absolute bottom-0 w-0.5 rounded-full bg-white/25"
+                    style={{ left: x, height: 12, animationDelay: `${i * 220}ms` }}
+                  />
+                ))}
+              </div>
+            )}
             <div
               className="absolute inset-0 rounded-b-[10px] rounded-t-[4px]"
               style={{ background: 'linear-gradient(180deg, #2c3140, #171a22)' }}
@@ -161,14 +206,17 @@ export function Workstation({ clock, children }: { clock: string; children: Reac
             <div className="absolute inset-x-1 top-0 h-1.5 rounded-full bg-[#0c0e14]" />
           </div>
 
-          {/* teclado */}
+          {/* teclado (keycaps com brilho RGB se comprou o mecânico) */}
           <div
             className="relative h-20 w-[min(420px,48vw)] rounded-xl"
             style={{
               background: 'linear-gradient(180deg, #191b24, #0c0e14)',
-              boxShadow: '0 30px 36px -12px rgba(0,0,0,0.75), 0 1px 0 rgba(255,255,255,0.05) inset',
-              backgroundImage:
-                'repeating-linear-gradient(90deg, rgba(255,255,255,0.035) 0 4.5%, transparent 4.5% 6.5%), repeating-linear-gradient(0deg, rgba(255,255,255,0.035) 0 24%, transparent 24% 32%)',
+              boxShadow: has('teclado')
+                ? '0 30px 36px -12px rgba(0,0,0,0.75), 0 1px 0 rgba(255,255,255,0.05) inset, 0 -2px 22px -4px rgba(120,160,255,0.5)'
+                : '0 30px 36px -12px rgba(0,0,0,0.75), 0 1px 0 rgba(255,255,255,0.05) inset',
+              backgroundImage: has('teclado')
+                ? 'repeating-linear-gradient(90deg, rgba(140,120,255,0.22) 0 4.5%, transparent 4.5% 6.5%), repeating-linear-gradient(0deg, rgba(90,200,255,0.18) 0 24%, transparent 24% 32%)'
+                : 'repeating-linear-gradient(90deg, rgba(255,255,255,0.035) 0 4.5%, transparent 4.5% 6.5%), repeating-linear-gradient(0deg, rgba(255,255,255,0.035) 0 24%, transparent 24% 32%)',
             }}
           >
             <div className="absolute bottom-3 left-1/2 h-3 w-2/5 -translate-x-1/2 rounded-sm bg-white/[0.03]" />

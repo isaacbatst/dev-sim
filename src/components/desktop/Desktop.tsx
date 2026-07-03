@@ -1,6 +1,7 @@
 import type { Snapshot } from '@/core/snapshot';
 import type { Career, DayResult } from '@/store/gameStore';
 import { positionName, levelProgress } from '@/data/positions';
+import { COSMETICS } from '@/data/cosmetics';
 import { MenuBar } from './MenuBar';
 import { InboxPanel } from './InboxPanel';
 import { StatusIcon } from './issueIcons';
@@ -27,6 +28,7 @@ export function Desktop({
   onFocusProgram,
   onSelect,
   onNextDay,
+  onBuy,
 }: {
   snapshot: Snapshot;
   day: number;
@@ -37,6 +39,7 @@ export function Desktop({
   onFocusProgram: (id: import('@/core/snapshot').ProgramId) => void;
   onSelect: (index: number) => void;
   onNextDay: () => void;
+  onBuy: (id: string, preco: number) => void;
 }) {
   const { status, clock, delivered, expired, score, slots, active } = snapshot;
   const openCount = slots.filter(Boolean).length;
@@ -182,6 +185,9 @@ export function Desktop({
               </span>
             </div>
 
+            {/* Loja: gasta $ em cosméticos da mesa (identidade, nunca poder §6). */}
+            <Shop career={career} onBuy={onBuy} />
+
             <button
               onClick={onNextDay}
               className="mt-5 rounded-lg border border-amber px-5 py-2 font-grotesk font-semibold text-amber transition-colors hover:bg-amber/10"
@@ -201,6 +207,46 @@ function KeyHintInline() {
       <kbd className="keycap !h-5 !min-w-5 !text-[10px]">1</kbd>–
       <kbd className="keycap !h-5 !min-w-5 !text-[10px]">5</kbd>
     </span>
+  );
+}
+
+/** Loja de cosméticos no boletim: compra com `$` da carreira. */
+function Shop({ career, onBuy }: { career: Career; onBuy: (id: string, preco: number) => void }) {
+  return (
+    <div className="mt-5 border-t border-line pt-4 text-left">
+      <p className="mb-2 text-center font-mono text-[10px] uppercase tracking-[0.2em] text-ink-dim">
+        loja · a sua mesa
+      </p>
+      <div className="flex flex-col gap-1.5">
+        {COSMETICS.map((c) => {
+          const owned = career.owned.includes(c.id);
+          const canBuy = !owned && career.wallet >= c.preco;
+          return (
+            <div key={c.id} className="flex items-center gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm text-ink">{c.nome}</p>
+                <p className="truncate font-mono text-[10px] text-ink-dim">{c.desc}</p>
+              </div>
+              {owned ? (
+                <span className="font-mono text-[11px] text-pass">✓ seu</span>
+              ) : (
+                <button
+                  onClick={() => onBuy(c.id, c.preco)}
+                  disabled={!canBuy}
+                  className={`rounded-md px-2.5 py-1 font-mono text-[11px] tabular-nums transition-colors ${
+                    canBuy
+                      ? 'bg-amber/15 text-amber hover:bg-amber/25'
+                      : 'cursor-not-allowed text-ink-dim'
+                  }`}
+                >
+                  💰 {c.preco}
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
