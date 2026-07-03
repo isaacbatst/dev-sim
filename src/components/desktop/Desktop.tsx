@@ -4,7 +4,6 @@ import { positionName, levelProgress } from '@/data/positions';
 import { COSMETICS } from '@/data/cosmetics';
 import { MenuBar } from './MenuBar';
 import { InboxPanel } from './InboxPanel';
-import { StatusIcon } from './issueIcons';
 import { AppWindow } from './AppWindow';
 import { Dock } from './Dock';
 
@@ -82,20 +81,41 @@ export function Desktop({
                 shake={shake}
                 onFocusProgram={onFocusProgram}
               />
-              {/* Objetivo do passo: banner FORA da janela (na área do OS, abaixo
-                  da action bar) — fonte única da info. Quebra em várias linhas. */}
+              {/* A COMANDA (estilo CSD): papel INVERTIDO abaixo da janela — o único
+                  elemento claro (escuro no tema claro) → figura-fundo, salta sem
+                  caçar. Estrutura: eyebrow (id/prioridade) → título → passo atual. */}
               {objective && (
-                <div className="elev-2 mt-2.5 flex shrink-0 items-start gap-2.5 rounded-lg border border-edge bg-surface px-4 py-3 backdrop-blur-sm">
-                  {/* Caixa de uma linha (leading-relaxed = 1.625) centra o ícone
-                      opticamente com a 1ª linha — sem mt mágico, robusto ao wrap. */}
-                  <span className="flex h-[1.625em] shrink-0 items-center text-sm">
-                    <StatusIcon status="active" />
-                  </span>
-                  <p className="text-sm leading-relaxed text-ink">
+                <div
+                  className="mt-2.5 shrink-0 rounded-lg px-5 py-4 shadow-[0_12px_34px_-14px_rgba(0,0,0,0.65)]"
+                  style={{ background: 'var(--comanda-bg)', color: 'var(--comanda-ink)' }}
+                >
+                  {/* eyebrow: id + prioridade (máquina → mono) */}
+                  <div
+                    className="mb-1 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.15em]"
+                    style={{ color: 'var(--comanda-dim)' }}
+                  >
+                    <span>DEV-{active.id}</span>
+                    <span aria-hidden>·</span>
+                    <span>{active.priority}</span>
                     {active.taskCount > 1 && (
-                      <span className="font-semibold text-amber">{objective.title}: </span>
+                      <span className="ml-auto normal-case tracking-normal">
+                        passo {active.taskIndex + 1}/{active.taskCount}
+                      </span>
                     )}
-                    {objective.prose}
+                  </div>
+                  {/* título = a "ordem" (humano → grotesk, grande) */}
+                  <h3 className="font-grotesk text-xl font-bold leading-tight">{active.name}</h3>
+                  {/* passo atual, proeminente */}
+                  <p className="mt-1.5 flex gap-2 text-[15px] leading-snug">
+                    <span className="font-bold" style={{ color: 'var(--amber)' }} aria-hidden>
+                      ▸
+                    </span>
+                    <span>
+                      {active.taskCount > 1 && (
+                        <span className="font-semibold">{objective.title}: </span>
+                      )}
+                      {objective.prose}
+                    </span>
                   </p>
                 </div>
               )}

@@ -26,6 +26,11 @@
   --edge: transparent;
   --ink: #d8dbe4;
   --ink-dim: #7e8597;
+  /* Comanda (a "ordem" estilo CSD): INVERTE o entorno pra ser figura-fundo.
+     No escuro = papel claro/creme (o único elemento claro → salta). */
+  --comanda-bg: #f3eede;
+  --comanda-ink: #22201a;
+  --comanda-dim: #7c735f;
   --amber: #f5a623; /* primário: âmbar de fósforo */
   --teal: #4ec9b0; /* secundário: código          */
   --pass: #5fd07a;
@@ -61,6 +66,10 @@
   --edge: #d7d2c6; /* no claro o contorno é natural (papel) */
   --ink: #1f1b15;
   --ink-dim: #6b6556;
+  /* No claro o entorno já é papel → a comanda inverte pra ESCURA (destaca). */
+  --comanda-bg: #24211b;
+  --comanda-ink: #f3eede;
+  --comanda-dim: #a89e88;
   --amber: #cf4926; /* primário: vermelho-terracota */
   --teal: #1f7a6a; /* secundário: verde profundo   */
   --pass: #2e7d4f;
