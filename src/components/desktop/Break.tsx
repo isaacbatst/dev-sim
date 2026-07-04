@@ -93,6 +93,12 @@ export function useBreak(active: boolean, owned: string[]): BreakState {
     setTiltState(d);
   }, []);
 
+  // Timers de som do pescoço: os estalos individuais pendentes são CANCELADOS
+  // quando o combo fecha (senão caem em cima do mix e embola); e só existe um
+  // fecho de combo por vez.
+  const crackTs = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const comboT = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const roll = useCallback(
     (key: string) => {
       const d = DIRS[key];
@@ -122,13 +128,23 @@ export function useBreak(active: boolean, owned: string[]): BreakState {
       }
       if (combo) {
         seq.current.length = 0;
-        // o mix do combo já contém o estalo — não toca o individual junto
-        setTimeout(() => {
+        // o mix já contém o estalo: cancela TODOS os individuais pendentes
+        crackTs.current.forEach(clearTimeout);
+        crackTs.current = [];
+        // e garante um único fecho por vez
+        if (comboT.current) clearTimeout(comboT.current);
+        comboT.current = setTimeout(() => {
+          comboT.current = null;
           S.neckCombo();
           setRelief((r) => r + 1);
         }, 420);
       } else {
-        setTimeout(() => S.neckCrack(), 380); // um estalo POR aperto — não cancela
+        // um estalo POR aperto (não cancela os anteriores — série ao encadear)
+        const t = setTimeout(() => {
+          crackTs.current = crackTs.current.filter((x) => x !== t);
+          S.neckCrack();
+        }, 380);
+        crackTs.current.push(t);
       }
     },
     [setTilt],
