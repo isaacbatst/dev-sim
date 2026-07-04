@@ -80,21 +80,25 @@ export function useBreak(active: boolean, owned: string[]): BreakState {
     if (!active) setMode('mesa');
   }
 
+  // Alongamento natural: entra suave (~650ms), SEGURA no fundo (~1s) e solta
+  // devagar (~1s) — nada de tique mecânico. O estalo soa perto do ponto máximo.
+  const crackT = useRef<ReturnType<typeof setTimeout> | null>(null);
   const roll = useCallback((key: string) => {
     const d = DIRS[key];
     if (!d) return;
-    S.neckCrack();
     setTilt(d);
+    if (crackT.current) clearTimeout(crackT.current);
+    crackT.current = setTimeout(() => S.neckCrack(), 380);
     if (tiltT.current) clearTimeout(tiltT.current);
-    tiltT.current = setTimeout(() => setTilt({ dx: 0, dy: 0 }), 260);
+    tiltT.current = setTimeout(() => setTilt({ dx: 0, dy: 0 }), 1650);
     hitDirs.current.add(key);
     if (hitDirs.current.size >= 4) {
       hitDirs.current.clear();
-      S.sigh();
+      setTimeout(() => S.sigh(), 500);
       setRelief((r) => r + 1);
     }
     if (dirsT.current) clearTimeout(dirsT.current);
-    dirsT.current = setTimeout(() => hitDirs.current.clear(), 1800);
+    dirsT.current = setTimeout(() => hitDirs.current.clear(), 3200);
   }, []);
 
   const playNote = useCallback((idx: number) => {
