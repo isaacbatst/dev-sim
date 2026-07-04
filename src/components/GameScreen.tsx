@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { Desktop } from './desktop/Desktop';
-import { Workstation } from './desktop/Workstation';
-import { useBreak, DeskItems, BreakHud } from './desktop/Break';
+import { Room } from './desktop/Workstation';
+import { useBreak, BreakHud } from './desktop/Break';
 
 export function GameScreen() {
   const snapshot = useGameStore((s) => s.snapshot);
@@ -122,75 +122,49 @@ export function GameScreen() {
   }
 
   return (
-    // CÂMERA em 1ª pessoa: UMA cena só (monitor + mesa, 130dvh). Trabalhando,
-    // você está colado no monitor (scale 1, a mesa aparece só na beirada).
-    // Pausar = AFASTAR a cadeira: zoom out até a cena inteira caber.
-    <div className="relative h-dvh w-full overflow-hidden bg-[#06070b]">
-      {/* zoom (afastar/aproximar) */}
+    // MUNDO + CÂMERA: o Room é uma cena única pintada por inteiro (150dvh de
+    // parede→mesa, 152vw de largura); a câmera é só um transform sobre ela.
+    // Trabalho = enquadrado no monitor (scale 1, nítido); pausa = afastar a
+    // cadeira (zoom out até o quarto inteiro). Geometria em Workstation.tsx.
+    <div className="relative h-dvh w-full overflow-hidden bg-[#04050a]">
+      {/* câmera: zoom/enquadramento */}
       <div
         className="origin-top transition-transform duration-700 motion-reduce:transition-none"
         style={{
-          transform: onBreak ? 'scale(0.765)' : 'scale(1)',
+          transform: onBreak ? 'translateY(-7.1dvh) scale(0.71)' : 'translateY(-25dvh) scale(1)',
           transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)',
         }}
       >
-        {/* pescoço: SÓ a cena diegética inclina (o HUD fica fora, parado).
-            A cena tem SANGRIA em todas as direções (144vw de largura + parede
-            acima + chão abaixo): nem o zoom out nem a inclinação revelam área
-            sem pintura — é sempre uma extensão do cenário. */}
+        {/* pescoço: SÓ o mundo diegético inclina (o HUD fica fora, parado) */}
         <div
-          className="relative w-[144vw] -ml-[22vw] transition-transform duration-300"
+          className="w-[152vw] -ml-[26vw] transition-transform duration-300 motion-reduce:transition-none"
           style={{
             transform: `translateY(${brk.tilt.dy * -20}px) rotate(${brk.tilt.dx * -5}deg)`,
             transitionTimingFunction: 'cubic-bezier(0.2, 1.3, 0.4, 1)',
           }}
         >
-          {/* sangria: parede continua acima, chão continua abaixo */}
-          <div
-            aria-hidden
-            className="absolute inset-x-0 -top-[16dvh] h-[16dvh]"
-            style={{ background: '#171a24' }}
-          />
-          <div
-            aria-hidden
-            className="absolute inset-x-0 -bottom-[16dvh] h-[16dvh]"
-            style={{ background: '#0b0704' }}
-          />
-          <div className="h-dvh">
-            <Workstation clock={snapshot.clock}>
-              <Desktop
-                snapshot={snapshot}
-                day={day}
-                career={career}
-                dayResult={dayResult}
-                shake={shake}
-                floatScore={floatScore}
-                onFocusProgram={focusProgram}
-                onSelect={selectSlot}
-                onNextDay={nextDay}
-                onBuy={buyCosmetic}
-              />
-            </Workstation>
-          </div>
-          {/* a mesa continua abaixo do fold — no trabalho só a beirada aparece */}
-          <div
-            className="relative h-[30dvh]"
-            style={{ background: 'linear-gradient(180deg, #160f0a 0%, #1d1409 45%, #0b0704 100%)' }}
-          >
-            <div
-              aria-hidden
-              className="absolute inset-0 opacity-[0.05]"
-              style={{
-                backgroundImage:
-                  'repeating-linear-gradient(90deg, #000 0 2px, transparent 2px 34px)',
-              }}
+          <Room clock={snapshot.clock} owned={career.owned} brk={brk}>
+            <Desktop
+              snapshot={snapshot}
+              day={day}
+              career={career}
+              dayResult={dayResult}
+              shake={shake}
+              floatScore={floatScore}
+              onFocusProgram={focusProgram}
+              onSelect={selectSlot}
+              onNextDay={nextDay}
+              onBuy={buyCosmetic}
             />
-            <div className="absolute inset-x-0 -top-16 bottom-0">
-              <DeskItems owned={career.owned} brk={brk} />
-            </div>
-          </div>
+          </Room>
         </div>
       </div>
+      {/* vinheta da LENTE: efeito de câmera, fixo no viewport (não no mundo) */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{ boxShadow: 'inset 0 0 220px 70px rgba(0,0,0,0.55)' }}
+      />
       {/* HUD da pausa: parado, sem zoom e sem inclinação */}
       {onBreak && (
         <BreakHud
