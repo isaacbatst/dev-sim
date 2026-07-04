@@ -86,12 +86,12 @@ export function Desktop({
                   caçar. Estrutura: eyebrow (id/prioridade) → título → passo atual. */}
               {objective && (
                 <div
-                  className="mt-2.5 shrink-0 rounded-lg px-5 py-4 shadow-[0_12px_34px_-14px_rgba(0,0,0,0.65)]"
-                  style={{ background: 'var(--comanda-bg)', color: 'var(--comanda-ink)' }}
+                  className="comanda mt-2.5 shrink-0 rounded-lg px-5 pb-4 pt-3.5"
+                  style={{ color: 'var(--comanda-ink)' }}
                 >
                   {/* eyebrow: id + prioridade (máquina → mono) */}
                   <div
-                    className="mb-1 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.15em]"
+                    className="mb-2 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.15em]"
                     style={{ color: 'var(--comanda-dim)' }}
                   >
                     <span>DEV-{active.id}</span>
@@ -104,9 +104,9 @@ export function Desktop({
                     )}
                   </div>
                   {/* título = a "ordem" (humano → grotesk, grande) */}
-                  <h3 className="font-grotesk text-xl font-bold leading-tight">{active.name}</h3>
-                  {/* passo atual, proeminente */}
-                  <p className="mt-1.5 flex gap-2 text-[15px] leading-snug">
+                  <h3 className="font-grotesk text-2xl font-bold leading-none">{active.name}</h3>
+                  {/* passo atual, proeminente (corpo menor → hierarquia clara) */}
+                  <p className="mt-3 flex gap-2 text-sm leading-snug">
                     <span className="font-bold" style={{ color: 'var(--amber)' }} aria-hidden>
                       ▸
                     </span>
