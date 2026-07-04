@@ -224,8 +224,10 @@ export function playSound(event: SoundEvent): void {
     case 'tab':
     case 'open':
       // Abrir um programa é igual a selecionar uma task: um clique neutro,
-      // sem revelar acerto/erro no instante da ação.
-      tone(300, 0.03, { type: 'sine', gain: 0.07 });
+      // sem revelar acerto/erro no instante da ação. Corpo + "toc" de ruído
+      // pra ter presença (estava baixo demais).
+      tone(300, 0.055, { type: 'sine', gain: 0.2 });
+      noiseBurst(0.014, 1600, 0.07);
       break;
     case 'select':
       // Escolha confirmada: um toque seco e neutro, não um "ding" de vitória.
