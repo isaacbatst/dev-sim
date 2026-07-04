@@ -5,7 +5,7 @@ import { COSMETICS } from '@/data/cosmetics';
 import { MenuBar } from './MenuBar';
 import { InboxPanel } from './InboxPanel';
 import { AppWindow } from './AppWindow';
-import { Dock } from './Dock';
+import { Comanda } from './Comanda';
 
 /** Nota do dia → letra (boletim). Limiares chutados — afinar no playtest. */
 function dayGrade(score: number): string {
@@ -42,13 +42,6 @@ export function Desktop({
 }) {
   const { status, clock, delivered, expired, score, slots, active } = snapshot;
   const openCount = slots.filter(Boolean).length;
-  // Objetivo do passo atual — fonte ÚNICA da info da tarefa (a janela de Ticket
-  // saiu). Banner fora da janela, acima do programa; presente desde que se abre
-  // a demanda (inclusive antes de lançar o app).
-  const objective =
-    active && !active.wrongApp && !active.ready
-      ? (active.plan.find((p) => p.status === 'current') ?? active.plan[0])
-      : null;
 
   return (
     <div className="relative flex h-full flex-col overflow-hidden">
@@ -72,7 +65,7 @@ export function Desktop({
 
         <InboxPanel slots={slots} onSelect={onSelect} />
 
-        <section className="flex min-w-0 flex-1 items-start justify-center pb-16">
+        <section className="flex min-w-0 flex-1 items-start justify-center">
           {active ? (
             <div className="relative flex max-h-full w-full max-w-[44rem] flex-col">
               <AppWindow
@@ -81,51 +74,6 @@ export function Desktop({
                 shake={shake}
                 onFocusProgram={onFocusProgram}
               />
-              {/* A COMANDA (estilo CSD): papel INVERTIDO abaixo da janela — o único
-                  elemento claro (escuro no tema claro) → figura-fundo, salta sem
-                  caçar. Estrutura: eyebrow (id/prioridade) → título → passo atual. */}
-              {objective && (
-                <div
-                  className="comanda mt-2.5 shrink-0 rounded-lg px-5 py-4"
-                  style={{ color: 'var(--comanda-ink)' }}
-                >
-                  {/* eyebrow: id + prioridade (máquina → mono, token eyebrow = 700) */}
-                  <div
-                    className="mb-1.5 flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-[0.16em]"
-                    style={{ color: 'var(--comanda-dim)' }}
-                  >
-                    <span>DEV-{active.id}</span>
-                    <span aria-hidden>·</span>
-                    <span>{active.priority}</span>
-                    {active.taskCount > 1 && (
-                      <span className="ml-auto font-medium normal-case tracking-normal">
-                        passo {active.taskIndex + 1}/{active.taskCount}
-                      </span>
-                    )}
-                  </div>
-                  {/* título = a "ordem" (humano → grotesk). Degrau comanda-title:
-                      28px/700 (escala modular ~1.33; ver DESIGN_SYSTEM). */}
-                  <h3 className="font-grotesk text-[1.75rem] font-bold leading-[1.1] tracking-tight">
-                    {active.name}
-                  </h3>
-                  {/* passo atual (16px — o gap ≈ metade do título → ritmo) */}
-                  <p className="mt-3 flex gap-2 text-base leading-snug">
-                    <span
-                      className="mt-0.5 font-bold"
-                      style={{ color: 'var(--amber)' }}
-                      aria-hidden
-                    >
-                      ▸
-                    </span>
-                    <span>
-                      {active.taskCount > 1 && (
-                        <span className="font-semibold">{objective.title}: </span>
-                      )}
-                      {objective.prose}
-                    </span>
-                  </p>
-                </div>
-              )}
               {floatScore && (
                 <span className="animate-floatup pointer-events-none absolute -top-3 left-1/2 -translate-x-1/2 font-mono text-lg font-bold text-pass">
                   {floatScore}
@@ -150,12 +98,11 @@ export function Desktop({
             </div>
           )}
         </section>
-
-        <Dock
-          open={active?.openPrograms ?? []}
-          focused={active && active.focused !== 'details' ? active.focused : null}
-        />
       </main>
+
+      {/* Comanda: barra full-width na base do monitor, SEMPRE presente (altura
+          reservada → backlog/janela não dão resize quando a demanda abre/fecha). */}
+      <Comanda active={active} />
 
       {status !== 'playing' && (
         <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/85 p-6 backdrop-blur-sm">

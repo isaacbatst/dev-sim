@@ -151,33 +151,32 @@ export function AppWindow({
         </span>
       </div>
 
-      {/* Abas = programas abertos (alterna com Tab). O Ticket saiu da janela: o
-          objetivo vive só no banner acima — um lugar só pra essa informação. */}
-      {(active.openPrograms.length > 0 || wrongMeta) && (
-        <div className="flex items-center gap-1 border-b border-line bg-bg/40 px-2 py-1.5">
-          {active.openPrograms.map((id) => (
-            <ProgramTab
-              key={id}
-              label={APPS[id].name}
-              icon={APPS[id].icon}
-              active={active.focused === id}
-              onClick={() => onFocusProgram(id)}
-            />
-          ))}
-          {wrongMeta && (
-            <span className="flex items-center gap-1.5 rounded-md border border-line bg-surface-2 px-2.5 py-1 text-xs font-medium text-ink-dim">
-              <span aria-hidden>{wrongMeta.icon}</span>
-              {wrongMeta.name}
-              <span className="text-ink-dim">✕</span>
-            </span>
-          )}
-          {active.openPrograms.length > 1 && (
-            <span className="ml-auto hidden items-center gap-1 pr-1 text-[10px] text-ink-dim sm:flex">
-              <kbd className="keycap !h-5 !min-w-7 !text-[10px]">Tab</kbd> alterna
-            </span>
-          )}
-        </div>
-      )}
+      {/* Abas = programas abertos (alterna com Tab). SEMPRE presente com altura
+          fixa (vazia quando não há abas) — a janela não muda de tamanho quando
+          um programa abre/fecha. */}
+      <div className="flex min-h-9 items-center gap-1 border-b border-line bg-bg/40 px-2 py-1.5">
+        {active.openPrograms.map((id) => (
+          <ProgramTab
+            key={id}
+            label={APPS[id].name}
+            icon={APPS[id].icon}
+            active={active.focused === id}
+            onClick={() => onFocusProgram(id)}
+          />
+        ))}
+        {wrongMeta && (
+          <span className="flex items-center gap-1.5 rounded-md border border-line bg-surface-2 px-2.5 py-1 text-xs font-medium text-ink-dim">
+            <span aria-hidden>{wrongMeta.icon}</span>
+            {wrongMeta.name}
+            <span className="text-ink-dim">✕</span>
+          </span>
+        )}
+        {active.openPrograms.length > 1 && (
+          <span className="ml-auto hidden items-center gap-1 pr-1 text-[10px] text-ink-dim sm:flex">
+            <kbd className="keycap !h-5 !min-w-7 !text-[10px]">Tab</kbd> alterna
+          </span>
+        )}
+      </div>
 
       {/* corpo: conteúdo do programa em foco (ou o aberto por engano). Rola se a
           janela for espremida (tela baixa) — a ActionBar fica fixa acima do dock. */}

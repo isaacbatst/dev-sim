@@ -168,16 +168,10 @@ body {
    entorno pra ser figura-fundo (tokens --comanda-*). */
 .comanda {
   position: relative;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--comanda-bg) 78%, white) 0%,
-    var(--comanda-bg) 50%,
-    color-mix(in srgb, var(--comanda-bg) 82%, black) 100%
-  );
+  background: var(--comanda-bg);
   box-shadow:
-    0 16px 36px -16px rgba(0, 0, 0, 0.72),
-    0 2px 6px rgba(0, 0, 0, 0.25),
-    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+    0 -6px 24px -12px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 /* Grão: noise dessaturado (grosso). No papel CLARO (graveyard) usa multiply →
    pontinhos escuros; no kraft ESCURO (daybreak) usa screen → pontinhos claros.
