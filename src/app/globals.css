@@ -286,26 +286,6 @@ body {
   animation: windowin 0.18s ease;
 }
 
-/* Pausa: a visão "desce" do monitor pra mesa (câmera em 1ª pessoa). */
-@keyframes breakin {
-  0% {
-    opacity: 0;
-    transform: translateY(-3.5%) scale(1.04);
-  }
-  100% {
-    opacity: 1;
-    transform: none;
-  }
-}
-.animate-breakin {
-  animation: breakin 0.32s cubic-bezier(0.2, 0.8, 0.3, 1);
-}
-@media (prefers-reduced-motion: reduce) {
-  .animate-breakin {
-    animation: none;
-  }
-}
-
 @keyframes floatup {
   0% {
     opacity: 0;

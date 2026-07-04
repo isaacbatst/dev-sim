@@ -121,25 +121,36 @@ export function GameScreen() {
   }
 
   return (
-    <div className="relative h-dvh w-full">
-      <Workstation clock={snapshot.clock} owned={career.owned}>
-        <Desktop
-          snapshot={snapshot}
-          day={day}
-          career={career}
-          dayResult={dayResult}
-          shake={shake}
-          floatScore={floatScore}
-          onFocusProgram={focusProgram}
-          onSelect={selectSlot}
-          onNextDay={nextDay}
-          onBuy={buyCosmetic}
-        />
-      </Workstation>
-      {/* Pausa: cobre o viewport inteiro (a câmera desceu pra mesa). */}
-      {onBreak && snapshot.status === 'playing' && (
-        <Break clock={snapshot.clock} owned={career.owned} onResume={() => setBreak(false)} />
-      )}
+    // CÂMERA em 1ª pessoa: o mundo tem 2 telas de altura (monitor em cima, mesa
+    // embaixo). Pausar = o viewport DESLIZA pra baixo, contínuo, sem corte.
+    <div className="relative h-dvh w-full overflow-hidden">
+      <div
+        className="transition-transform duration-700 motion-reduce:transition-none"
+        style={{
+          transform: onBreak ? 'translateY(-100dvh)' : 'translateY(0)',
+          transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)',
+        }}
+      >
+        <div className="h-dvh">
+          <Workstation clock={snapshot.clock} owned={career.owned}>
+            <Desktop
+              snapshot={snapshot}
+              day={day}
+              career={career}
+              dayResult={dayResult}
+              shake={shake}
+              floatScore={floatScore}
+              onFocusProgram={focusProgram}
+              onSelect={selectSlot}
+              onNextDay={nextDay}
+              onBuy={buyCosmetic}
+            />
+          </Workstation>
+        </div>
+        <div className="h-dvh">
+          <Break clock={snapshot.clock} owned={career.owned} onResume={() => setBreak(false)} />
+        </div>
+      </div>
     </div>
   );
 }

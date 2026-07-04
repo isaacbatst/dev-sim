@@ -17,12 +17,15 @@ export function Break({
   const has = (id: string) => owned.includes(id);
 
   return (
-    <div className="animate-breakin absolute inset-0 z-40 flex flex-col overflow-hidden">
-      {/* a mesa em close (você olhou pra baixo) */}
+    <div className="relative flex h-full w-full flex-col overflow-hidden">
+      {/* a mesa em close (você olhou pra baixo). O topo EMENDA na cor da mesa do
+          Workstation (#160f0a) — o pan da câmera é contínuo, sem costura. */}
       <div
         aria-hidden
         className="absolute inset-0"
-        style={{ background: 'linear-gradient(180deg, #453423 0%, #2a1f15 55%, #140d08 100%)' }}
+        style={{
+          background: 'linear-gradient(180deg, #160f0a 0%, #3d2e1e 32%, #2a1f15 68%, #120c07 100%)',
+        }}
       />
       {/* veios da madeira */}
       <div
