@@ -45,8 +45,8 @@ export function GameScreen() {
   // O gate por foco vive no core (ações de trabalho exigem o programa em foco).
   useEffect(() => {
     const onDown = (e: KeyboardEvent) => {
-      // Esc alterna a pausa (levantar da mesa / voltar).
-      if (e.key === 'Escape') {
+      // "-" alterna a pausa (levantar da mesa / voltar). Pode a qualquer momento.
+      if (e.key === '-') {
         e.preventDefault();
         setBreak(!onBreakRef.current);
         return;

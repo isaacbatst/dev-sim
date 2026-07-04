@@ -1,5 +1,6 @@
 /**
- * PAUSA (Esc): a visão desce do monitor pra MESA — 1ª pessoa, diegético. O
+ * PAUSA ("-", a qualquer momento): a visão desce do monitor pra MESA — 1ª
+ * pessoa, diegético. O
  * expediente NÃO para (o relógio segue correndo, visível): pausar custa tempo,
  * é uma decisão. As atividades (regar/tecladinho/café) vão viver aqui; por ora
  * é a casca — a mesa com o que você possui, e Esc pra voltar.
@@ -138,7 +139,7 @@ export function Break({
           onClick={onResume}
           className="flex items-center gap-2 font-mono text-sm text-white/50 transition-colors hover:text-white/80"
         >
-          <kbd className="keycap !h-6 !min-w-9 !text-[11px]">Esc</kbd>
+          <kbd className="keycap !h-6 !min-w-6 !text-[11px]">-</kbd>
           voltar ao trabalho
         </button>
       </div>
