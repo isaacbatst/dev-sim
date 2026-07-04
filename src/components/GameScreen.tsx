@@ -134,14 +134,28 @@ export function GameScreen() {
           transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)',
         }}
       >
-        {/* pescoço: SÓ a cena diegética inclina (o HUD fica fora, parado) */}
+        {/* pescoço: SÓ a cena diegética inclina (o HUD fica fora, parado).
+            A cena tem SANGRIA em todas as direções (144vw de largura + parede
+            acima + chão abaixo): nem o zoom out nem a inclinação revelam área
+            sem pintura — é sempre uma extensão do cenário. */}
         <div
-          className="transition-transform duration-300"
+          className="relative w-[144vw] -ml-[22vw] transition-transform duration-300"
           style={{
             transform: `translateY(${brk.tilt.dy * -20}px) rotate(${brk.tilt.dx * -5}deg)`,
             transitionTimingFunction: 'cubic-bezier(0.2, 1.3, 0.4, 1)',
           }}
         >
+          {/* sangria: parede continua acima, chão continua abaixo */}
+          <div
+            aria-hidden
+            className="absolute inset-x-0 -top-[16dvh] h-[16dvh]"
+            style={{ background: '#171a24' }}
+          />
+          <div
+            aria-hidden
+            className="absolute inset-x-0 -bottom-[16dvh] h-[16dvh]"
+            style={{ background: '#0b0704' }}
+          />
           <div className="h-dvh">
             <Workstation clock={snapshot.clock}>
               <Desktop
