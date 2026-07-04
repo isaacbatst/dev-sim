@@ -41,20 +41,25 @@ export function Room({
 
   return (
     <div className="relative w-full" style={{ height: `${WORLD_H}dvh` }}>
-      {/* sangria além do mundo — só aparece de relance na inclinação máxima */}
+      {/* sangria além do mundo — o pitch (rotateX ±14°) e o giro revelam bem
+          mais cenário que o roll; teto acima, chão abaixo, generosos */}
       <div
         aria-hidden
         className="absolute inset-x-0"
         style={{
-          top: '-18dvh',
-          height: '18dvh',
-          background: 'linear-gradient(180deg, #05060a 0%, #12141d 100%)',
+          top: '-34dvh',
+          height: '34dvh',
+          background: 'linear-gradient(180deg, #030408 0%, #0a0c12 55%, #12141d 100%)',
         }}
       />
       <div
         aria-hidden
         className="absolute inset-x-0"
-        style={{ bottom: '-18dvh', height: '18dvh', background: '#0a0603' }}
+        style={{
+          bottom: '-34dvh',
+          height: '34dvh',
+          background: 'linear-gradient(180deg, #0a0603 0%, #050302 100%)',
+        }}
       />
 
       {/* PAREDE — contínua do topo do mundo até a emenda (um gradiente só) */}
