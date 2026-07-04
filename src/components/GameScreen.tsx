@@ -148,7 +148,12 @@ export function GameScreen() {
           </Workstation>
         </div>
         <div className="h-dvh">
-          <Break clock={snapshot.clock} owned={career.owned} onResume={() => setBreak(false)} />
+          <Break
+            clock={snapshot.clock}
+            owned={career.owned}
+            active={onBreak}
+            onResume={() => setBreak(false)}
+          />
         </div>
       </div>
     </div>
