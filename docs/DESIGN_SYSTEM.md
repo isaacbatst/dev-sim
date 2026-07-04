@@ -68,7 +68,13 @@ grotesk. Quando estiver na dúvida, é grotesk.
 | `body`    | 13px                                  | Prosa do ticket, linhas de lista                            |
 | `label`   | 14px, 500–600                         | Nome de tarefa, item de menu                                |
 | `title`   | 16–18px, 600 grotesk                  | Título da janela / do ticket                                |
+| `comanda` | 28px, 700 grotesk, leading 1.1        | Título da **comanda** (a ordem em foco, estilo CSD)         |
 | `hero`    | 24px+, 700 mono                       | Relógio grande, "17:00 — fim do expediente", wordmark devOS |
+
+> **Nota sobre `comanda` vs `hero`:** ambos são "grandes", mas a voz decide a
+> fonte, não o tamanho. `hero` é **mono** porque é máquina (relógio, wordmark).
+> `comanda` é **grotesk** porque é conteúdo humano (o nome do ticket). Escala
+> modular ~1.33 (perfeita quarta): eyebrow 10–12 → body 13–16 → comanda 28.
 
 - Números que mudam (relógio, contadores, `cursor / alvo`) → **sempre**
   `tabular-nums` (mono já ajuda). Evita o texto "tremer".
@@ -175,6 +181,7 @@ Não saia espalhando `shadow-xl` em tudo — se tudo tem sombra, nada flutua.
 | **Action bar**       | —      | Rodapé da janela. Lugar **único** do "o que apertar agora". Barra de 3px à esquerda na cor do app (accent). Sem o rótulo "ação".                             |
 | **Chip / label**     | —      | `rounded-full`, `border` + `bg` da mesma família a ~12% alpha. Prioridade, estados, contadores.                                                              |
 | **Comentário de CR** | —      | Cartão com avatar de iniciais (não emoji), nome `@tech-lead`, selo de estado, e a mensagem entre aspas.                                                      |
+| **Comanda**          | —      | A "ordem" em foco (estilo CSD), fora da janela. Papel **invertido** (`--comanda-*`: claro no escuro, escuro no claro → figura-fundo) com **grão** (multiply/screen) + gradiente + realce no topo. Estrutura: eyebrow (`DEV-id · prioridade`, mono) → título (`comanda` 28/700 grotesk) → passo atual (16px, ▸ âmbar). É o único elemento de alto contraste. |
 
 Convenções transversais:
 
@@ -289,6 +296,13 @@ pra hierarquia e pro grão.
 
 ## Changelog
 
+- **2026-07-04:** **Comanda** (a ordem em foco, estilo CSD) formalizada como
+  componente. Papel invertido (`--comanda-bg/ink/dim` por tema — claro no escuro,
+  escuro no claro → figura-fundo) com grão (multiply no claro / screen no escuro;
+  overlay era no-op no cinza-médio da turbulência), gradiente e realce no topo.
+  Novo degrau de escala `comanda` (28px/700 grotesk) — grande como `hero` mas
+  grotesk porque é conteúdo humano (nome do ticket), não máquina. Escala modular
+  ~1.33 pra proporção (eyebrow→body→comanda).
 - **2026-06-28:** **Claro/Escuro como aparências** (Escuro=Graveyard,
   Claro=Daybreak); Overclock descartado. Controle "Aparência" na menu bar
   (Claro/Escuro/Sistema), persistido + script anti-flash. **Bordas dos painéis no

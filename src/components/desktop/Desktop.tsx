@@ -86,29 +86,30 @@ export function Desktop({
                   caçar. Estrutura: eyebrow (id/prioridade) → título → passo atual. */}
               {objective && (
                 <div
-                  className="comanda mt-2.5 shrink-0 rounded-lg px-6 pb-5 pt-4"
+                  className="comanda mt-2.5 shrink-0 rounded-lg px-5 py-4"
                   style={{ color: 'var(--comanda-ink)' }}
                 >
-                  {/* eyebrow: id + prioridade (máquina → mono) */}
+                  {/* eyebrow: id + prioridade (máquina → mono, token eyebrow = 700) */}
                   <div
-                    className="mb-1.5 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.15em]"
+                    className="mb-1.5 flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-[0.16em]"
                     style={{ color: 'var(--comanda-dim)' }}
                   >
                     <span>DEV-{active.id}</span>
                     <span aria-hidden>·</span>
                     <span>{active.priority}</span>
                     {active.taskCount > 1 && (
-                      <span className="ml-auto normal-case tracking-normal">
+                      <span className="ml-auto font-medium normal-case tracking-normal">
                         passo {active.taskIndex + 1}/{active.taskCount}
                       </span>
                     )}
                   </div>
-                  {/* título = a "ordem" (humano → grotesk, GRANDE — domina como no CSD) */}
-                  <h3 className="font-grotesk text-[2rem] font-extrabold leading-[1.05] tracking-tight">
+                  {/* título = a "ordem" (humano → grotesk). Degrau comanda-title:
+                      28px/700 (escala modular ~1.33; ver DESIGN_SYSTEM). */}
+                  <h3 className="font-grotesk text-[1.75rem] font-bold leading-[1.1] tracking-tight">
                     {active.name}
                   </h3>
-                  {/* passo atual, proeminente (16px — lista de ingredientes do CSD) */}
-                  <p className="mt-2.5 flex gap-2 text-[17px] leading-snug">
+                  {/* passo atual (16px — o gap ≈ metade do título → ritmo) */}
+                  <p className="mt-3 flex gap-2 text-base leading-snug">
                     <span
                       className="mt-0.5 font-bold"
                       style={{ color: 'var(--amber)' }}
