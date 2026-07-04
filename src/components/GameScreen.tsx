@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { Desktop } from './desktop/Desktop';
 import { Workstation } from './desktop/Workstation';
-import { Break } from './desktop/Break';
+import { useBreak, DeskItems, BreakHud } from './desktop/Break';
 
 export function GameScreen() {
   const snapshot = useGameStore((s) => s.snapshot);
@@ -34,6 +34,7 @@ export function GameScreen() {
     onBreakRef.current = v;
     setOnBreak(v);
   };
+  const brk = useBreak(onBreak, career.owned);
 
   useEffect(() => start(), [start]);
 
@@ -121,41 +122,71 @@ export function GameScreen() {
   }
 
   return (
-    // CÂMERA em 1ª pessoa: o mundo tem 2 telas de altura (monitor em cima, mesa
-    // embaixo). Pausar = o viewport DESLIZA pra baixo, contínuo, sem corte.
-    <div className="relative h-dvh w-full overflow-hidden">
+    // CÂMERA em 1ª pessoa: UMA cena só (monitor + mesa, 130dvh). Trabalhando,
+    // você está colado no monitor (scale 1, a mesa aparece só na beirada).
+    // Pausar = AFASTAR a cadeira: zoom out até a cena inteira caber.
+    <div className="relative h-dvh w-full overflow-hidden bg-[#06070b]">
+      {/* zoom (afastar/aproximar) */}
       <div
-        className="transition-transform duration-700 motion-reduce:transition-none"
+        className="origin-top transition-transform duration-700 motion-reduce:transition-none"
         style={{
-          transform: onBreak ? 'translateY(-100dvh)' : 'translateY(0)',
+          transform: onBreak ? 'scale(0.765)' : 'scale(1)',
           transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)',
         }}
       >
-        <div className="h-dvh">
-          <Workstation clock={snapshot.clock} owned={career.owned}>
-            <Desktop
-              snapshot={snapshot}
-              day={day}
-              career={career}
-              dayResult={dayResult}
-              shake={shake}
-              floatScore={floatScore}
-              onFocusProgram={focusProgram}
-              onSelect={selectSlot}
-              onNextDay={nextDay}
-              onBuy={buyCosmetic}
+        {/* pescoço: SÓ a cena diegética inclina (o HUD fica fora, parado) */}
+        <div
+          className="transition-transform duration-300"
+          style={{
+            transform: `translateY(${brk.tilt.dy * -20}px) rotate(${brk.tilt.dx * -5}deg)`,
+            transitionTimingFunction: 'cubic-bezier(0.2, 1.3, 0.4, 1)',
+          }}
+        >
+          <div className="h-dvh">
+            <Workstation clock={snapshot.clock}>
+              <Desktop
+                snapshot={snapshot}
+                day={day}
+                career={career}
+                dayResult={dayResult}
+                shake={shake}
+                floatScore={floatScore}
+                onFocusProgram={focusProgram}
+                onSelect={selectSlot}
+                onNextDay={nextDay}
+                onBuy={buyCosmetic}
+              />
+            </Workstation>
+          </div>
+          {/* a mesa continua abaixo do fold — no trabalho só a beirada aparece */}
+          <div
+            className="relative h-[30dvh]"
+            style={{ background: 'linear-gradient(180deg, #160f0a 0%, #1d1409 45%, #0b0704 100%)' }}
+          >
+            <div
+              aria-hidden
+              className="absolute inset-0 opacity-[0.05]"
+              style={{
+                backgroundImage:
+                  'repeating-linear-gradient(90deg, #000 0 2px, transparent 2px 34px)',
+              }}
             />
-          </Workstation>
-        </div>
-        <div className="h-dvh">
-          <Break
-            clock={snapshot.clock}
-            owned={career.owned}
-            active={onBreak}
-            onResume={() => setBreak(false)}
-          />
+            <div className="absolute inset-x-0 -top-16 bottom-0">
+              <DeskItems owned={career.owned} brk={brk} />
+            </div>
+          </div>
         </div>
       </div>
+      {/* HUD da pausa: parado, sem zoom e sem inclinação */}
+      {onBreak && (
+        <BreakHud
+          clock={snapshot.clock}
+          mode={brk.mode}
+          owned={career.owned}
+          relief={brk.relief}
+          onResume={() => setBreak(false)}
+        />
+      )}
     </div>
   );
 }

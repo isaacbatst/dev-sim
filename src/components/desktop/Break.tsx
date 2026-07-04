@@ -4,12 +4,14 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import * as S from '@/store/breakSound';
 
 /**
- * PAUSA ("-", a qualquer momento): a câmera desce do monitor pra MESA — 1ª
- * pessoa, diegético. O expediente NÃO para (o relógio segue, visível): pausar
- * custa tempo, é decisão. As atividades vivem na mesa, sem falha e sem ritmo
- * julgado (tolerantes a latência):
- *   ←↑↓→ pescoço (sempre) · A–K tecladinho (se comprou) · C gole (se comprou)
- *   R regar → close da planta com a grade de terra (se comprou).
+ * PAUSA ("-", a qualquer momento): o personagem se AFASTA do computador — zoom
+ * out na MESMA cena (nada de troca de tela). O expediente não para: pausar
+ * custa tempo. Camadas:
+ *   - CENA (diegética, inclina com o pescoço, recebe o zoom): Workstation +
+ *     DeskItems (a mesa à frente, sempre visível — no trabalho só a beirada).
+ *   - HUD (BreakHud): relógio/dicas/voltar — NUNCA inclina nem escala.
+ * Atividades (sem falha, sem ritmo julgado): ←↑↓→ pescoço · A–K tecladinho ·
+ * C gole · R regar (grade de terra) · ⌫ volta à mesa.
  */
 
 const PIANO: { k: string; f: number }[] = [
@@ -37,41 +39,41 @@ const DIRS: Record<string, { dx: number; dy: number }> = {
   ArrowRight: { dx: 1, dy: 0 },
 };
 
-export function Break({
-  clock,
-  owned,
-  active,
-  onResume,
-}: {
-  clock: string;
-  owned: string[];
-  /** Só escuta teclado quando a pausa está de fato aberta. */
-  active: boolean;
-  onResume: () => void;
-}) {
-  const has = (id: string) => owned.includes(id);
+export type BreakMode = 'mesa' | 'planta';
 
-  const [mode, setMode] = useState<'mesa' | 'planta'>('mesa');
-  // pescoço: a visão inclina
+export interface BreakState {
+  mode: BreakMode;
+  tilt: { dx: number; dy: number };
+  relief: number;
+  notes: { id: number; idx: number }[];
+  setNotes: React.Dispatch<React.SetStateAction<{ id: number; idx: number }[]>>;
+  lit: Record<number, number>;
+  sipN: number;
+  wet: Record<string, number>;
+  setWet: React.Dispatch<React.SetStateAction<Record<string, number>>>;
+  leafN: number;
+  water: (k: string) => void;
+}
+
+/** Estado + teclado das pausas. Escuta na fase bubble (o GameScreen já engoliu
+ *  o jogo na captura) e só com a pausa aberta. */
+export function useBreak(active: boolean, owned: string[]): BreakState {
+  const [mode, setMode] = useState<BreakMode>('mesa');
   const [tilt, setTilt] = useState({ dx: 0, dy: 0 });
   const [relief, setRelief] = useState(0);
   const hitDirs = useRef<Set<string>>(new Set());
   const tiltT = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dirsT = useRef<ReturnType<typeof setTimeout> | null>(null);
-  // tecladinho: notas flutuando + tecla acesa
   const [notes, setNotes] = useState<{ id: number; idx: number }[]>([]);
   const [lit, setLit] = useState<Record<number, number>>({});
   const nonce = useRef(0);
-  // gole
   const [sipN, setSipN] = useState(0);
-  // regar: terra molhada absorve + folhas respiram
   const [wet, setWet] = useState<Record<string, number>>({});
   const [leafN, setLeafN] = useState(0);
   const waterCombo = useRef(0);
   const waterAt = useRef(0);
 
-  // Ao voltar pro trabalho, a próxima pausa reabre na mesa (padrão React de
-  // ajustar estado quando a prop muda — sem effect).
+  // Ao voltar pro trabalho, a próxima pausa reabre na mesa (ajuste na render).
   const [prevActive, setPrevActive] = useState(active);
   if (prevActive !== active) {
     setPrevActive(active);
@@ -119,14 +121,9 @@ export function Break({
     setLeafN((n) => n + 1);
   }, []);
 
-  const drinkSip = useCallback(() => {
-    S.sip();
-    setSipN((n) => n + 1);
-  }, []);
-
-  // Teclado da pausa (fase bubble — o GameScreen já engoliu o jogo na captura).
   useEffect(() => {
     if (!active) return;
+    const has = (id: string) => owned.includes(id);
     const onKey = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey || e.repeat) return;
       const k = e.key.toLowerCase();
@@ -145,14 +142,14 @@ export function Break({
         }
         return;
       }
-      // mesa (hub)
       if (k === 'r' && has('planta')) {
         e.preventDefault();
         return setMode('planta');
       }
       if (k === 'c' && has('cafe')) {
         e.preventDefault();
-        return drinkSip();
+        S.sip();
+        return setSipN((n) => n + 1);
       }
       if (PIANO_IDX[k] !== undefined && has('teclado')) {
         e.preventDefault();
@@ -162,146 +159,40 @@ export function Break({
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, mode, owned.join(','), roll, water, playNote, drinkSip]);
+  }, [active, mode, owned.join(','), roll, water, playNote]);
 
-  return (
-    <div className="relative flex h-full w-full flex-col overflow-hidden">
-      {/* a mesa em close (você olhou pra baixo). O topo EMENDA na cor da mesa do
-          Workstation (#160f0a) — o pan da câmera é contínuo, sem costura. */}
-      <div
-        aria-hidden
-        className="absolute inset-0"
-        style={{
-          background: 'linear-gradient(180deg, #160f0a 0%, #3d2e1e 32%, #2a1f15 68%, #120c07 100%)',
-        }}
-      />
-      <div
-        aria-hidden
-        className="absolute inset-0 opacity-[0.06]"
-        style={{
-          backgroundImage: 'repeating-linear-gradient(90deg, #000 0 2px, transparent 2px 34px)',
-        }}
-      />
-      {/* luz do monitor vindo de cima (a tela ficou lá em cima) */}
-      <div
-        aria-hidden
-        className="absolute inset-x-0 top-0 h-1/3 blur-3xl"
-        style={{
-          background: 'radial-gradient(60% 90% at 50% 0%, rgba(90,120,190,0.28), transparent 70%)',
-        }}
-      />
-
-      {/* conteúdo (inclina com o pescoço) */}
-      <div
-        className="relative flex h-full flex-col transition-transform duration-300"
-        style={{
-          transform: `translateY(${tilt.dy * -20}px) rotate(${tilt.dx * -5}deg)`,
-          transitionTimingFunction: 'cubic-bezier(0.2, 1.3, 0.4, 1)',
-        }}
-      >
-        {/* relógio: o dia continua correndo — o custo da pausa é visível */}
-        <div className="relative mt-12 flex flex-col items-center gap-1">
-          <span className="font-mono text-6xl font-bold tabular-nums text-white/85">{clock}</span>
-          <span className="font-mono text-[11px] uppercase tracking-[0.25em] text-white/40">
-            o expediente continua
-          </span>
-        </div>
-
-        {/* alívio da volta completa do pescoço */}
-        {relief > 0 && (
-          <span
-            key={relief}
-            className="animate-reliefring pointer-events-none absolute left-1/2 top-1/2 -ml-20 -mt-20 size-40 rounded-full border-2"
-            style={{ borderColor: 'var(--pass)' }}
-            aria-hidden
-          />
-        )}
-
-        {mode === 'planta' ? (
-          <Regar wet={wet} setWet={setWet} leafN={leafN} onWater={water} />
-        ) : (
-          <Mesa has={has} notes={notes} setNotes={setNotes} lit={lit} sipN={sipN} leafN={leafN} />
-        )}
-
-        {/* dicas + voltar */}
-        <div className="relative mb-8 flex items-center justify-center gap-6 font-mono text-xs text-white/45">
-          {mode === 'planta' ? (
-            <span className="flex items-center gap-1.5">
-              <kbd className="keycap !h-5 !min-w-7 !text-[10px]">⌫</kbd> voltar à mesa
-            </span>
-          ) : (
-            <span className="flex items-center gap-1.5">
-              <kbd className="keycap !h-5 !min-w-5 !text-[10px]">←</kbd>
-              <kbd className="keycap !h-5 !min-w-5 !text-[10px]">→</kbd>
-              alongar o pescoço
-            </span>
-          )}
-          <button
-            onClick={onResume}
-            className="flex items-center gap-1.5 transition-colors hover:text-white/80"
-          >
-            <kbd className="keycap !h-5 !min-w-5 !text-[10px]">-</kbd>
-            voltar ao trabalho
-          </button>
-        </div>
-      </div>
-
-      {/* vinheta */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0"
-        style={{ boxShadow: 'inset 0 0 220px 70px rgba(0,0,0,0.5)' }}
-      />
-    </div>
-  );
+  return { mode, tilt, relief, notes, setNotes, lit, sipN, wet, setWet, leafN, water };
 }
 
-/* ── a mesa (hub): itens + verbos ─────────────────────────────── */
+/* ── A MESA (camada diegética, sempre na cena — na frente do monitor) ── */
 
-function Mesa({
-  has,
-  notes,
-  setNotes,
-  lit,
-  sipN,
-  leafN,
-}: {
-  has: (id: string) => boolean;
-  notes: { id: number; idx: number }[];
-  setNotes: React.Dispatch<React.SetStateAction<{ id: number; idx: number }[]>>;
-  lit: Record<number, number>;
-  sipN: number;
-  leafN: number;
-}) {
+export function DeskItems({ owned, brk }: { owned: string[]; brk: BreakState }) {
+  const has = (id: string) => owned.includes(id);
+  const { mode, notes, setNotes, lit, sipN, wet, setWet, leafN, water } = brk;
+
   return (
-    <div
-      className="relative flex flex-1 items-center justify-center"
-      style={{ perspective: '900px' }}
-    >
-      <div
-        className="flex items-end gap-14"
-        style={{ transform: 'rotateX(28deg)', transformOrigin: 'center 70%' }}
-      >
-        {/* planta (se comprou) → R abre o regar */}
-        {has('planta') && (
-          <div className="flex flex-col items-center gap-3">
-            <Plant size={1} pulseKey={leafN} />
-            <Hint k="R" label="regar" />
-          </div>
-        )}
+    <div className="relative flex h-full items-start justify-center">
+      {/* grade de terra (regar): um "olhar de perto" no vaso, flutua sobre a mesa */}
+      {mode === 'planta' && (
+        <div className="absolute bottom-[70%] left-1/2 z-10 -translate-x-1/2">
+          <SoilGrid wet={wet} setWet={setWet} onWater={water} />
+        </div>
+      )}
 
-        {/* caneca (+ vapor/gole se comprou o café) */}
-        <div className="flex flex-col items-center gap-3">
+      <div style={{ perspective: '1100px' }}>
+        <div
+          className="flex items-end gap-16"
+          style={{ transform: 'rotateX(26deg)', transformOrigin: 'center 20%' }}
+        >
+          {has('planta') && <Plant size={1} pulseKey={leafN} highlight={mode === 'planta'} />}
+
           <div key={sipN} className={sipN > 0 ? 'animate-sipmug' : ''}>
             <Mug steaming={has('cafe')} />
           </div>
-          {has('cafe') && <Hint k="C" label="gole" />}
-        </div>
 
-        {/* teclado (tecladinho se comprou o mecânico) */}
-        <div className="flex flex-col items-center gap-3">
+          {/* teclado (tecladinho se comprou o mecânico) */}
           <div
-            className="relative h-36 w-[min(560px,52vw)] rounded-2xl"
+            className="relative h-32 w-[min(520px,46vw)] rounded-2xl"
             style={{
               background: 'linear-gradient(180deg, #191b24, #0c0e14)',
               boxShadow: has('teclado')
@@ -312,7 +203,6 @@ function Mesa({
                 : 'repeating-linear-gradient(90deg, rgba(255,255,255,0.04) 0 4.5%, transparent 4.5% 6.5%), repeating-linear-gradient(0deg, rgba(255,255,255,0.04) 0 24%, transparent 24% 32%)',
             }}
           >
-            {/* oitava acesa (A–K) + notas subindo */}
             {has('teclado') && (
               <div className="absolute inset-x-4 bottom-4 top-4 flex gap-1">
                 {PIANO.map((p, i) => (
@@ -338,104 +228,155 @@ function Mesa({
               </span>
             ))}
           </div>
-          {has('teclado') && <Hint k="A–K" label="tocar" wide />}
-        </div>
 
-        {/* mouse */}
-        <div
-          className="mb-3 h-16 w-11 shrink-0 rounded-[45%]"
-          style={{
-            background: 'linear-gradient(180deg, #1c1f29, #0d0f15)',
-            boxShadow: '0 22px 26px -10px rgba(0,0,0,0.75)',
-          }}
-        >
-          <div className="mx-auto mt-2.5 h-6 w-px bg-white/10" />
+          {/* mouse */}
+          <div
+            className="mb-2 h-14 w-10 shrink-0 rounded-[45%]"
+            style={{
+              background: 'linear-gradient(180deg, #1c1f29, #0d0f15)',
+              boxShadow: '0 22px 26px -10px rgba(0,0,0,0.75)',
+            }}
+          >
+            <div className="mx-auto mt-2 h-5 w-px bg-white/10" />
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-/* ── regar (close da planta + grade de terra) ─────────────────── */
+/* ── HUD da pausa (NÃO inclina, NÃO escala — fora da cena) ─────── */
 
-const DRY = '#5b4636';
-const WET = '#2f241b';
-
-function Regar({
-  wet,
-  setWet,
-  leafN,
-  onWater,
+export function BreakHud({
+  clock,
+  mode,
+  owned,
+  relief,
+  onResume,
 }: {
-  wet: Record<string, number>;
-  setWet: React.Dispatch<React.SetStateAction<Record<string, number>>>;
-  leafN: number;
-  onWater: (k: string) => void;
+  clock: string;
+  mode: BreakMode;
+  owned: string[];
+  relief: number;
+  onResume: () => void;
 }) {
+  const has = (id: string) => owned.includes(id);
   return (
-    <div className="relative flex flex-1 flex-col items-center justify-center gap-5">
-      <Plant size={1.6} pulseKey={leafN} />
-      <div
-        className="rounded-2xl p-2"
-        style={{ background: '#7a5c44', boxShadow: 'inset 0 3px 6px rgba(0,0,0,.35)' }}
-      >
-        <div className="flex flex-col gap-1.5">
-          {SOIL.map((row, ri) => (
-            <div key={ri} className="flex gap-1.5">
-              {row.map((k) => (
-                <button
-                  key={k}
-                  onPointerDown={() => onWater(k)}
-                  className="relative size-14 overflow-hidden rounded-lg"
-                  style={{ background: DRY }}
-                  aria-label={`regar ${k}`}
-                >
-                  {wet[k] !== undefined && (
-                    <>
-                      <span
-                        key={wet[k]}
-                        className="animate-waterabsorb absolute inset-0"
-                        style={{ background: WET }}
-                        onAnimationEnd={() =>
-                          setWet((w) => {
-                            const c = { ...w };
-                            delete c[k];
-                            return c;
-                          })
-                        }
-                      />
-                      <span
-                        key={`s${wet[k]}`}
-                        className="animate-watersplash absolute left-1/2 top-1 -ml-2 size-4 rounded-full border-2"
-                        style={{ borderColor: '#9fd0e6' }}
-                      />
-                    </>
-                  )}
-                  <kbd className="absolute bottom-0.5 right-1 font-mono text-[9px] uppercase text-white/40">
-                    {k}
-                  </kbd>
-                </button>
-              ))}
-            </div>
-          ))}
-        </div>
+    <div className="pointer-events-none absolute inset-0 z-30 flex flex-col">
+      {/* alívio da volta completa do pescoço */}
+      {relief > 0 && (
+        <span
+          key={relief}
+          className="animate-reliefring absolute left-1/2 top-1/2 -ml-20 -mt-20 size-40 rounded-full border-2"
+          style={{ borderColor: 'var(--pass)' }}
+          aria-hidden
+        />
+      )}
+      {/* rodapé: relógio + dicas + voltar */}
+      <div className="pointer-events-auto mt-auto flex items-center justify-center gap-6 pb-5 font-mono text-xs text-white/50">
+        <span className="tabular-nums text-white/75">{clock}</span>
+        <span className="uppercase tracking-[0.2em] text-white/35">o expediente continua</span>
+        {mode === 'planta' ? (
+          <Hint k="⌫" label="voltar à mesa" />
+        ) : (
+          <>
+            <Hint k="← →" label="pescoço" wide />
+            {has('planta') && <Hint k="R" label="regar" />}
+            {has('cafe') && <Hint k="C" label="gole" />}
+            {has('teclado') && <Hint k="A–K" label="tocar" wide />}
+          </>
+        )}
+        <button
+          onClick={onResume}
+          className="flex items-center gap-1.5 transition-colors hover:text-white/85"
+        >
+          <kbd className="keycap !h-5 !min-w-5 !text-[10px]">-</kbd>
+          voltar ao trabalho
+        </button>
       </div>
-      <p className="font-mono text-xs text-white/45">
-        cada tecla rega uma parte da terra — <span className="text-white/70">a terra absorve</span>
-      </p>
     </div>
   );
 }
 
 /* ── peças ────────────────────────────────────────────────────── */
 
-function Plant({ size, pulseKey }: { size: number; pulseKey: number }) {
+function SoilGrid({
+  wet,
+  setWet,
+  onWater,
+}: {
+  wet: Record<string, number>;
+  setWet: React.Dispatch<React.SetStateAction<Record<string, number>>>;
+  onWater: (k: string) => void;
+}) {
+  return (
+    <div
+      className="rounded-2xl p-2 shadow-[0_18px_40px_-12px_rgba(0,0,0,0.7)]"
+      style={{ background: '#7a5c44' }}
+    >
+      <div className="flex flex-col gap-1.5">
+        {SOIL.map((row, ri) => (
+          <div key={ri} className="flex gap-1.5">
+            {row.map((k) => (
+              <button
+                key={k}
+                onPointerDown={() => onWater(k)}
+                className="relative size-14 overflow-hidden rounded-lg"
+                style={{ background: '#5b4636' }}
+                aria-label={`regar ${k}`}
+              >
+                {wet[k] !== undefined && (
+                  <>
+                    <span
+                      key={wet[k]}
+                      className="animate-waterabsorb absolute inset-0"
+                      style={{ background: '#2f241b' }}
+                      onAnimationEnd={() =>
+                        setWet((w) => {
+                          const c = { ...w };
+                          delete c[k];
+                          return c;
+                        })
+                      }
+                    />
+                    <span
+                      key={`s${wet[k]}`}
+                      className="animate-watersplash absolute left-1/2 top-1 -ml-2 size-4 rounded-full border-2"
+                      style={{ borderColor: '#9fd0e6' }}
+                    />
+                  </>
+                )}
+                <kbd className="absolute bottom-0.5 right-1 font-mono text-[9px] uppercase text-white/40">
+                  {k}
+                </kbd>
+              </button>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function Plant({
+  size,
+  pulseKey,
+  highlight,
+}: {
+  size: number;
+  pulseKey: number;
+  highlight?: boolean;
+}) {
   const s = size;
   return (
     <div
       key={pulseKey}
       className={pulseKey > 0 ? 'animate-leafpulse relative shrink-0' : 'relative shrink-0'}
-      style={{ width: 96 * s, height: 128 * s }}
+      style={{
+        width: 96 * s,
+        height: 128 * s,
+        filter: highlight ? 'drop-shadow(0 0 18px rgba(94,208,122,0.35))' : undefined,
+      }}
     >
       {[-16, -5, 6, 17].map((x, i) => (
         <span
@@ -469,7 +410,7 @@ function Plant({ size, pulseKey }: { size: number; pulseKey: number }) {
 
 function Mug({ steaming }: { steaming: boolean }) {
   return (
-    <div className="relative mb-2 h-20 w-16 shrink-0">
+    <div className="relative mb-1 h-20 w-16 shrink-0">
       {steaming && (
         <div className="absolute -top-9 left-1/2 -translate-x-1/2">
           {[-7, 0, 7].map((x, i) => (
@@ -493,7 +434,7 @@ function Mug({ steaming }: { steaming: boolean }) {
 
 function Hint({ k, label, wide }: { k: string; label: string; wide?: boolean }) {
   return (
-    <span className="flex items-center gap-1.5 font-mono text-[11px] text-white/45">
+    <span className="flex items-center gap-1.5">
       <kbd className={`keycap !h-5 !text-[10px] ${wide ? '!min-w-10' : '!min-w-5'}`}>{k}</kbd>
       {label}
     </span>
