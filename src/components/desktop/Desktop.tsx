@@ -86,12 +86,12 @@ export function Desktop({
                   caçar. Estrutura: eyebrow (id/prioridade) → título → passo atual. */}
               {objective && (
                 <div
-                  className="comanda mt-2.5 shrink-0 rounded-lg px-5 pb-4 pt-3.5"
+                  className="comanda mt-2.5 shrink-0 rounded-lg px-6 pb-5 pt-4"
                   style={{ color: 'var(--comanda-ink)' }}
                 >
                   {/* eyebrow: id + prioridade (máquina → mono) */}
                   <div
-                    className="mb-2 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.15em]"
+                    className="mb-1.5 flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.15em]"
                     style={{ color: 'var(--comanda-dim)' }}
                   >
                     <span>DEV-{active.id}</span>
@@ -103,11 +103,17 @@ export function Desktop({
                       </span>
                     )}
                   </div>
-                  {/* título = a "ordem" (humano → grotesk, grande) */}
-                  <h3 className="font-grotesk text-2xl font-bold leading-none">{active.name}</h3>
-                  {/* passo atual, proeminente (corpo menor → hierarquia clara) */}
-                  <p className="mt-3 flex gap-2 text-sm leading-snug">
-                    <span className="font-bold" style={{ color: 'var(--amber)' }} aria-hidden>
+                  {/* título = a "ordem" (humano → grotesk, GRANDE — domina como no CSD) */}
+                  <h3 className="font-grotesk text-[2rem] font-extrabold leading-[1.05] tracking-tight">
+                    {active.name}
+                  </h3>
+                  {/* passo atual, proeminente (16px — lista de ingredientes do CSD) */}
+                  <p className="mt-2.5 flex gap-2 text-[17px] leading-snug">
+                    <span
+                      className="mt-0.5 font-bold"
+                      style={{ color: 'var(--amber)' }}
+                      aria-hidden
+                    >
                       ▸
                     </span>
                     <span>
