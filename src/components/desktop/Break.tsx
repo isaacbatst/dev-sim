@@ -194,6 +194,7 @@ export function useBreak(active: boolean, owned: string[]): BreakState {
 
   useEffect(() => {
     if (!active) return;
+    S.preload(); // samples prontos antes do 1º gesto
     const has = (id: string) => owned.includes(id);
     const onKey = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey || e.repeat) return;

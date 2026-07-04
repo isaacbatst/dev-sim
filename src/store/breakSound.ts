@@ -100,11 +100,44 @@ function noise(dur: number, opts: NoiseOpts): void {
   src.stop(t0 + dur);
 }
 
-/** Pescoço: estalo por direção. */
+// --- Pescoço: SAMPLE (public/sounds/neck-crack.wav) — síntese não convencia ---
+let crackBuf: AudioBuffer | null = null;
+let crackLoading = false;
+
+function loadCrack(c: AudioContext): void {
+  if (crackBuf || crackLoading) return;
+  crackLoading = true;
+  fetch('/sounds/neck-crack.wav')
+    .then((r) => r.arrayBuffer())
+    .then((ab) => c.decodeAudioData(ab))
+    .then((buf) => {
+      crackBuf = buf;
+    })
+    .catch(() => {
+      crackLoading = false; // permite tentar de novo
+    });
+}
+
+/** Pré-carrega os samples (chamar ao abrir a pausa, pro 1º estalo não falhar). */
+export function preload(): void {
+  const c = ac();
+  if (c) loadCrack(c);
+}
+
+/** Pescoço: estalo por direção (sample com leve variação de pitch). */
 export function neckCrack(): void {
-  noise(0.04, { type: 'highpass', freq: 2200, gain: 0.1 });
-  tone(150, 0.1, { type: 'sine', gain: 0.09, slideTo: 85 });
-  tone(300, 0.22, { type: 'sine', gain: 0.035, slideTo: 240, attack: 0.05 });
+  const c = ac();
+  if (!c || !master) return;
+  loadCrack(c);
+  if (!crackBuf) return;
+  const src = c.createBufferSource();
+  src.buffer = crackBuf;
+  src.playbackRate.value = 0.92 + Math.random() * 0.16; // variação natural
+  const g = c.createGain();
+  g.gain.value = 0.65;
+  src.connect(g);
+  g.connect(master);
+  src.start();
 }
 
 /** Alívio (volta completa do pescoço / fim do gole): sopro + "ahh". */
