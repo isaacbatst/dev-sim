@@ -100,44 +100,59 @@ function noise(dur: number, opts: NoiseOpts): void {
   src.stop(t0 + dur);
 }
 
-// --- Pescoço: SAMPLE (public/sounds/neck-crack.wav) — síntese não convencia ---
-let crackBuf: AudioBuffer | null = null;
-let crackLoading = false;
+// --- SAMPLES (public/sounds/) — síntese não convencia pros estalos.
+//     Créditos/licenças: public/sounds/CREDITS.md.
+const SAMPLES: Record<string, string> = {
+  crack: '/sounds/neck-crack.wav', // estalo por direção
+  neckCombo: '/sounds/neck-combo.wav', // fecho do combo circular (mix do Isaac)
+};
+const bufs: Record<string, AudioBuffer> = {};
+const loadingSet = new Set<string>();
 
-function loadCrack(c: AudioContext): void {
-  if (crackBuf || crackLoading) return;
-  crackLoading = true;
-  fetch('/sounds/neck-crack.wav')
+function loadSample(c: AudioContext, name: string): void {
+  if (bufs[name] || loadingSet.has(name)) return;
+  loadingSet.add(name);
+  fetch(SAMPLES[name])
     .then((r) => r.arrayBuffer())
     .then((ab) => c.decodeAudioData(ab))
     .then((buf) => {
-      crackBuf = buf;
+      bufs[name] = buf;
     })
     .catch(() => {
-      crackLoading = false; // permite tentar de novo
+      loadingSet.delete(name); // permite tentar de novo
     });
 }
 
-/** Pré-carrega os samples (chamar ao abrir a pausa, pro 1º estalo não falhar). */
-export function preload(): void {
-  const c = ac();
-  if (c) loadCrack(c);
-}
-
-/** Pescoço: estalo por direção (sample com leve variação de pitch). */
-export function neckCrack(): void {
+function playSample(name: string, gain: number, rate = 1): void {
   const c = ac();
   if (!c || !master) return;
-  loadCrack(c);
-  if (!crackBuf) return;
+  loadSample(c, name);
+  const buf = bufs[name];
+  if (!buf) return;
   const src = c.createBufferSource();
-  src.buffer = crackBuf;
-  src.playbackRate.value = 0.92 + Math.random() * 0.16; // variação natural
+  src.buffer = buf;
+  src.playbackRate.value = rate;
   const g = c.createGain();
-  g.gain.value = 0.65;
+  g.gain.value = gain;
   src.connect(g);
   g.connect(master);
   src.start();
+}
+
+/** Pré-carrega os samples (chamar ao abrir a pausa, pro 1º gesto não falhar). */
+export function preload(): void {
+  const c = ac();
+  if (c) for (const name of Object.keys(SAMPLES)) loadSample(c, name);
+}
+
+/** Pescoço: estalo por direção (leve variação de pitch pra não repetir). */
+export function neckCrack(): void {
+  playSample('crack', 0.65, 0.92 + Math.random() * 0.16);
+}
+
+/** Fecho do combo circular do pescoço (o mix crack+alívio). */
+export function neckCombo(): void {
+  playSample('neckCombo', 0.8);
 }
 
 /** Alívio (volta completa do pescoço / fim do gole): sopro + "ahh". */

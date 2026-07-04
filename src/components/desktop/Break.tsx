@@ -46,8 +46,6 @@ export interface BreakState {
   tilt: { dx: number; dy: number };
   /** Encadeou uma direção com o pescoço ainda inclinado (movimento emenda). */
   flowing: boolean;
-  /** Giro completo automático em curso (combo circular). */
-  spinning: boolean;
   relief: number;
   notes: { id: number; idx: number }[];
   setNotes: React.Dispatch<React.SetStateAction<{ id: number; idx: number }[]>>;
@@ -65,11 +63,9 @@ export function useBreak(active: boolean, owned: string[]): BreakState {
   const [mode, setMode] = useState<BreakMode>('mesa');
   const [tilt, setTiltState] = useState({ dx: 0, dy: 0 });
   const [flowing, setFlowing] = useState(false);
-  const [spinning, setSpinning] = useState(false);
   const [relief, setRelief] = useState(0);
   const tiltRef = useRef({ dx: 0, dy: 0 });
   const seq = useRef<{ a: number; t: number }[]>([]);
-  const spinTs = useRef<ReturnType<typeof setTimeout>[]>([]);
   const tiltT = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [notes, setNotes] = useState<{ id: number; idx: number }[]>([]);
   const [lit, setLit] = useState<Record<number, number>>({});
@@ -88,53 +84,17 @@ export function useBreak(active: boolean, owned: string[]): BreakState {
   }
 
   // Alongamento natural: entra suave (~650ms), SEGURA no fundo (~1s) e solta
-  // devagar (~1s) — nada de tique mecânico. O estalo soa perto do ponto máximo.
-  // COMBO CIRCULAR: as 4 setas em ordem de rotação (qualquer sentido, cada uma
-  // até 1.3s da anterior) emendam e disparam um GIRO completo automático da
-  // cabeça — o payoff (suspiro + anel de alívio).
-  const crackT = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // devagar (~1s) — nada de tique mecânico. CADA aperto agenda o SEU estalo
+  // (independente, ~380ms depois, perto do fundo do movimento) — encadear
+  // rápido toca todos, em série. COMBO CIRCULAR: as 4 setas em ordem de
+  // rotação (qualquer sentido) = suspiro + anel de alívio (sem giro automático).
   const setTilt = useCallback((d: { dx: number; dy: number }) => {
     tiltRef.current = d;
     setTiltState(d);
   }, []);
 
-  const startSpin = useCallback(
-    (rot: 1 | -1, fromAngle: number) => {
-      setSpinning(true);
-      if (tiltT.current) clearTimeout(tiltT.current);
-      if (crackT.current) clearTimeout(crackT.current);
-      spinTs.current.forEach(clearTimeout);
-      spinTs.current = [];
-      // percorre o círculo inteiro a partir do ângulo atual, no mesmo sentido
-      const ANGLES = [
-        { dx: 0, dy: -1 },
-        { dx: 1, dy: 0 },
-        { dx: 0, dy: 1 },
-        { dx: -1, dy: 0 },
-      ];
-      for (let i = 1; i <= 4; i++) {
-        spinTs.current.push(
-          setTimeout(() => setTilt(ANGLES[(fromAngle + rot * i + 8) % 4]), 60 + (i - 1) * 240),
-        );
-      }
-      spinTs.current.push(
-        setTimeout(
-          () => {
-            setTilt({ dx: 0, dy: 0 });
-            S.sigh();
-            setRelief((r) => r + 1);
-            setSpinning(false);
-          },
-          60 + 4 * 240,
-        ),
-      );
-    },
-    [setTilt],
-  );
-
   const roll = useCallback(
     (key: string) => {
-      if (spinning) return; // deixa o giro terminar
       const d = DIRS[key];
       if (!d) return;
       const ANGLE: Record<string, number> = {
@@ -147,8 +107,6 @@ export function useBreak(active: boolean, owned: string[]): BreakState {
       // emendou? (nova direção com o pescoço ainda inclinado)
       setFlowing(tiltRef.current.dx !== 0 || tiltRef.current.dy !== 0);
       setTilt(d);
-      if (crackT.current) clearTimeout(crackT.current);
-      crackT.current = setTimeout(() => S.neckCrack(), 380);
       if (tiltT.current) clearTimeout(tiltT.current);
       tiltT.current = setTimeout(() => setTilt({ dx: 0, dy: 0 }), 1650);
       // sequência circular (ordem de rotação, qualquer sentido)
@@ -157,15 +115,23 @@ export function useBreak(active: boolean, owned: string[]): BreakState {
       if (s.length && now - s[s.length - 1].t > 1300) s.length = 0;
       s.push({ a, t: now });
       if (s.length > 4) s.shift();
+      let combo = false;
       if (s.length === 4) {
         const deltas = [1, 2, 3].map((i) => (s[i].a - s[i - 1].a + 4) % 4);
-        if (deltas.every((x) => x === 1) || deltas.every((x) => x === 3)) {
-          s.length = 0;
-          startSpin(deltas[0] === 1 ? 1 : -1, a);
-        }
+        combo = deltas.every((x) => x === 1) || deltas.every((x) => x === 3);
+      }
+      if (combo) {
+        seq.current.length = 0;
+        // o mix do combo já contém o estalo — não toca o individual junto
+        setTimeout(() => {
+          S.neckCombo();
+          setRelief((r) => r + 1);
+        }, 420);
+      } else {
+        setTimeout(() => S.neckCrack(), 380); // um estalo POR aperto — não cancela
       }
     },
-    [spinning, setTilt, startSpin],
+    [setTilt],
   );
 
   const playNote = useCallback((idx: number) => {
@@ -237,7 +203,6 @@ export function useBreak(active: boolean, owned: string[]): BreakState {
     mode,
     tilt,
     flowing,
-    spinning,
     relief,
     notes,
     setNotes,

@@ -138,9 +138,8 @@ export function GameScreen() {
         {/* pescoço: SÓ o mundo diegético inclina (o HUD fica fora, parado).
             Alongamento, não tique: entra suave e assenta (650ms, sem quicar),
             segura (o timer no useBreak solta a ~1.65s) e volta devagar (1.1s).
-            Emendas: nova direção com o pescoço inclinado flui em 450ms; no GIRO
-            (combo circular) os passos viram um movimento contínuo (270ms,
-            quase-linear). Pivô abaixo do centro (gira como cabeça). */}
+            Emendas: nova direção com o pescoço inclinado flui em 450ms.
+            Pivô abaixo do centro (gira como cabeça). */}
         <div
           className="w-[170vw] -ml-[35vw] transition-transform motion-reduce:transition-none"
           style={{
@@ -150,20 +149,10 @@ export function GameScreen() {
             transform: `perspective(1200px) translate(${brk.tilt.dx * -12}px, ${brk.tilt.dy * -52}px) rotate(${brk.tilt.dx * -6}deg) rotateX(${brk.tilt.dy * -14}deg)`,
             transformOrigin: '50% 62%',
             transitionDuration:
-              brk.tilt.dx !== 0 || brk.tilt.dy !== 0
-                ? brk.spinning
-                  ? '270ms'
-                  : brk.flowing
-                    ? '450ms'
-                    : '650ms'
-                : brk.spinning
-                  ? '600ms'
-                  : '1100ms',
+              brk.tilt.dx !== 0 || brk.tilt.dy !== 0 ? (brk.flowing ? '450ms' : '650ms') : '1100ms',
             transitionTimingFunction:
               brk.tilt.dx !== 0 || brk.tilt.dy !== 0
-                ? brk.spinning
-                  ? 'cubic-bezier(0.4, 0, 0.6, 1)' // giro: quase-linear, contínuo
-                  : 'cubic-bezier(0.22, 0.9, 0.3, 1)' // entra: assenta macio
+                ? 'cubic-bezier(0.22, 0.9, 0.3, 1)' // entra: assenta macio
                 : 'cubic-bezier(0.45, 0.05, 0.25, 1)', // solta: lenta e uniforme
           }}
         >
