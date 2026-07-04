@@ -46,6 +46,8 @@ export interface BreakState {
   tilt: { dx: number; dy: number };
   /** Encadeou uma direção com o pescoço ainda inclinado (movimento emenda). */
   flowing: boolean;
+  /** Contra-giro automático do fecho do combo em curso. */
+  spinning: boolean;
   relief: number;
   notes: { id: number; idx: number }[];
   setNotes: React.Dispatch<React.SetStateAction<{ id: number; idx: number }[]>>;
@@ -63,9 +65,11 @@ export function useBreak(active: boolean, owned: string[]): BreakState {
   const [mode, setMode] = useState<BreakMode>('mesa');
   const [tilt, setTiltState] = useState({ dx: 0, dy: 0 });
   const [flowing, setFlowing] = useState(false);
+  const [spinning, setSpinning] = useState(false);
   const [relief, setRelief] = useState(0);
   const tiltRef = useRef({ dx: 0, dy: 0 });
   const seq = useRef<{ a: number; t: number }[]>([]);
+  const spinTs = useRef<ReturnType<typeof setTimeout>[]>([]);
   const tiltT = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [notes, setNotes] = useState<{ id: number; idx: number }[]>([]);
   const [lit, setLit] = useState<Record<number, number>>({});
@@ -94,13 +98,12 @@ export function useBreak(active: boolean, owned: string[]): BreakState {
   }, []);
 
   // Timers de som do pescoço: os estalos individuais pendentes são CANCELADOS
-  // quando o combo fecha (senão caem em cima do mix e embola); e só existe um
-  // fecho de combo por vez.
+  // quando o combo fecha (senão caem em cima do mix e embola).
   const crackTs = useRef<ReturnType<typeof setTimeout>[]>([]);
-  const comboT = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const roll = useCallback(
     (key: string) => {
+      if (spinning) return; // o contra-giro do combo termina sozinho
       const d = DIRS[key];
       if (!d) return;
       const ANGLE: Record<string, number> = {
@@ -121,23 +124,49 @@ export function useBreak(active: boolean, owned: string[]): BreakState {
       if (s.length && now - s[s.length - 1].t > 1300) s.length = 0;
       s.push({ a, t: now });
       if (s.length > 4) s.shift();
-      let combo = false;
+      let rot: 1 | -1 | 0 = 0;
       if (s.length === 4) {
         const deltas = [1, 2, 3].map((i) => (s[i].a - s[i - 1].a + 4) % 4);
-        combo = deltas.every((x) => x === 1) || deltas.every((x) => x === 3);
+        if (deltas.every((x) => x === 1)) rot = 1;
+        else if (deltas.every((x) => x === 3)) rot = -1;
       }
-      if (combo) {
+      if (rot !== 0) {
+        // COMBO: contra-giro automático no sentido INVERSO, junto com o mix
+        // (que já contém o estalo → cancela os individuais pendentes).
         seq.current.length = 0;
-        // o mix já contém o estalo: cancela TODOS os individuais pendentes
         crackTs.current.forEach(clearTimeout);
         crackTs.current = [];
-        // e garante um único fecho por vez
-        if (comboT.current) clearTimeout(comboT.current);
-        comboT.current = setTimeout(() => {
-          comboT.current = null;
-          S.neckCombo();
-          setRelief((r) => r + 1);
-        }, 420);
+        if (tiltT.current) clearTimeout(tiltT.current);
+        spinTs.current.forEach(clearTimeout);
+        spinTs.current = [];
+        setSpinning(true);
+        const ANGLES = [
+          { dx: 0, dy: -1 },
+          { dx: 1, dy: 0 },
+          { dx: 0, dy: 1 },
+          { dx: -1, dy: 0 },
+        ];
+        // som + primeiro passo do desenrolar juntos, aos 420ms
+        spinTs.current.push(
+          setTimeout(() => {
+            S.neckCombo();
+            setRelief((r) => r + 1);
+          }, 420),
+        );
+        for (let i = 1; i <= 4; i++) {
+          spinTs.current.push(
+            setTimeout(() => setTilt(ANGLES[(a - rot * i + 8) % 4]), 420 + (i - 1) * 240),
+          );
+        }
+        spinTs.current.push(
+          setTimeout(
+            () => {
+              setTilt({ dx: 0, dy: 0 });
+              setSpinning(false);
+            },
+            420 + 4 * 240,
+          ),
+        );
       } else {
         // um estalo POR aperto (não cancela os anteriores — série ao encadear)
         const t = setTimeout(() => {
@@ -147,7 +176,7 @@ export function useBreak(active: boolean, owned: string[]): BreakState {
         crackTs.current.push(t);
       }
     },
-    [setTilt],
+    [spinning, setTilt],
   );
 
   const playNote = useCallback((idx: number) => {
@@ -219,6 +248,7 @@ export function useBreak(active: boolean, owned: string[]): BreakState {
     mode,
     tilt,
     flowing,
+    spinning,
     relief,
     notes,
     setNotes,

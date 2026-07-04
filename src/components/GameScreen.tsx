@@ -149,10 +149,18 @@ export function GameScreen() {
             transform: `perspective(1200px) translate(${brk.tilt.dx * -12}px, ${brk.tilt.dy * -52}px) rotate(${brk.tilt.dx * -6}deg) rotateX(${brk.tilt.dy * -14}deg)`,
             transformOrigin: '50% 62%',
             transitionDuration:
-              brk.tilt.dx !== 0 || brk.tilt.dy !== 0 ? (brk.flowing ? '450ms' : '650ms') : '1100ms',
+              brk.tilt.dx !== 0 || brk.tilt.dy !== 0
+                ? brk.spinning
+                  ? '270ms' // contra-giro do combo: passos contínuos
+                  : brk.flowing
+                    ? '450ms'
+                    : '650ms'
+                : '1100ms',
             transitionTimingFunction:
               brk.tilt.dx !== 0 || brk.tilt.dy !== 0
-                ? 'cubic-bezier(0.22, 0.9, 0.3, 1)' // entra: assenta macio
+                ? brk.spinning
+                  ? 'cubic-bezier(0.4, 0, 0.6, 1)' // giro: quase-linear, emenda
+                  : 'cubic-bezier(0.22, 0.9, 0.3, 1)' // entra: assenta macio
                 : 'cubic-bezier(0.45, 0.05, 0.25, 1)', // solta: lenta e uniforme
           }}
         >
