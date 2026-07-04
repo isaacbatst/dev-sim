@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useGameStore } from '@/store/gameStore';
 import { Desktop } from './desktop/Desktop';
 import { Workstation } from './desktop/Workstation';
+import { Break } from './desktop/Break';
 
 export function GameScreen() {
   const snapshot = useGameStore((s) => s.snapshot);
@@ -25,11 +26,36 @@ export function GameScreen() {
   const [floatScore, setFloatScore] = useState<string | null>(null);
   const prev = useRef<{ delivered: number; errors: number }>({ delivered: 0, errors: 0 });
 
+  // Pausa (Esc): a visão sai do monitor pra mesa. O jogo NÃO congela (deadlines
+  // correm) — só o teclado deixa de ir pro jogo. Ref pra ler no handler estável.
+  const [onBreak, setOnBreak] = useState(false);
+  const onBreakRef = useRef(false);
+  const setBreak = (v: boolean) => {
+    onBreakRef.current = v;
+    setOnBreak(v);
+  };
+
   useEffect(() => start(), [start]);
+
+  // Fim do expediente encerra a pausa (o boletim assume a tela).
+  useEffect(() => {
+    if (snapshot && snapshot.status !== 'playing' && onBreakRef.current) setBreak(false);
+  }, [snapshot]);
 
   // O gate por foco vive no core (ações de trabalho exigem o programa em foco).
   useEffect(() => {
     const onDown = (e: KeyboardEvent) => {
+      // Esc alterna a pausa (levantar da mesa / voltar).
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        setBreak(!onBreakRef.current);
+        return;
+      }
+      // Na pausa você não está no monitor: o teclado não vai pro jogo.
+      if (onBreakRef.current) {
+        if (e.key === 'Tab') e.preventDefault();
+        return;
+      }
       // Ctrl/Cmd+P: aborta o print do navegador e abre o Quick Open.
       if ((e.ctrlKey || e.metaKey) && e.code === 'KeyP') {
         e.preventDefault();
@@ -95,19 +121,25 @@ export function GameScreen() {
   }
 
   return (
-    <Workstation clock={snapshot.clock} owned={career.owned}>
-      <Desktop
-        snapshot={snapshot}
-        day={day}
-        career={career}
-        dayResult={dayResult}
-        shake={shake}
-        floatScore={floatScore}
-        onFocusProgram={focusProgram}
-        onSelect={selectSlot}
-        onNextDay={nextDay}
-        onBuy={buyCosmetic}
-      />
-    </Workstation>
+    <div className="relative h-dvh w-full">
+      <Workstation clock={snapshot.clock} owned={career.owned}>
+        <Desktop
+          snapshot={snapshot}
+          day={day}
+          career={career}
+          dayResult={dayResult}
+          shake={shake}
+          floatScore={floatScore}
+          onFocusProgram={focusProgram}
+          onSelect={selectSlot}
+          onNextDay={nextDay}
+          onBuy={buyCosmetic}
+        />
+      </Workstation>
+      {/* Pausa: cobre o viewport inteiro (a câmera desceu pra mesa). */}
+      {onBreak && snapshot.status === 'playing' && (
+        <Break clock={snapshot.clock} owned={career.owned} onResume={() => setBreak(false)} />
+      )}
+    </div>
   );
 }

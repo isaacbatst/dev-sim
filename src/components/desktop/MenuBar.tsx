@@ -30,6 +30,9 @@ export function MenuBar({
       </nav>
 
       <div className="ml-auto flex items-center gap-3">
+        <span className="hidden items-center gap-1.5 font-mono text-[10px] text-ink-dim md:flex">
+          <kbd className="keycap !h-5 !min-w-7 !text-[10px]">Esc</kbd> pausa
+        </span>
         <ThemeControl />
         <SoundToggle />
         <span className="font-mono tabular-nums text-ink">{clock}</span>
