@@ -9,15 +9,9 @@ import { useGameStore } from '@/store/gameStore';
  * Ferramenta de dev — não é UI de jogo (a fadiga é diegética, sem medidor).
  */
 
-// Espelho das constantes do core (src/core/game.ts) — só pra exibir.
-const INFO = {
-  tiredAt: 150,
-  exhaustedAt: 210,
-  blinkP: { tired: '2.5%/min', exhausted: '6.3%/min' },
-  yawnPExh: '2.2%/min',
-  forgetPExh: '4%/min (1 por vez, cooldown 20min)',
-  stuckP: { tired: '5%/tecla', exhausted: '12%/tecla (cooldown 15min)' },
-};
+// Limiares (espelho do core) — as CHANCES vêm do snapshot (fatigue.rates).
+const INFO = { tiredAt: 150, exhaustedAt: 210 };
+const pct = (p: number) => `${(p * 100).toFixed(1)}%`;
 
 function fmtMin(min: number): string {
   const h = Math.floor(min / 60);
@@ -50,30 +44,33 @@ export function FatigueDebug({ snapshot, resting }: { snapshot: Snapshot; restin
       </div>
       <div>
         trabalhado: <b className="text-white/80">{fmtMin(f.min)}</b> · limiar {fmtMin(INFO.tiredAt)}{' '}
-        / {fmtMin(INFO.exhaustedAt)}
+        / {fmtMin(INFO.exhaustedAt)} · x=
+        <b className="text-white/80">{f.rates.x.toFixed(2)}</b>
         {resting && <b style={{ color: '#4ec9b0' }}> · EM PAUSA</b>}
       </div>
-      {/* barra (só no debug — no jogo é diegético) */}
+      {/* barra (só no debug — no jogo é diegético; escala aberta, sem teto) */}
       <div className="my-1 h-1 overflow-hidden rounded bg-white/10">
         <div
           className="h-full"
           style={{
-            width: `${Math.min(100, (f.min / 280) * 100)}%`,
+            width: `${Math.min(100, (f.min / 420) * 100)}%`,
             background: STAGE_COLOR[f.stage],
           }}
         />
       </div>
       <div className="text-white/50">
-        chances agora:{' '}
-        {f.stage === 'fresh' ? (
-          'nenhuma'
+        {f.rates.x <= 0 ? (
+          'chances agora: nenhuma'
         ) : (
           <>
-            piscada {INFO.blinkP[f.stage]} · emperrar {INFO.stuckP[f.stage]}
-            {f.stage === 'exhausted' && (
+            piscada {pct(f.rates.blinkPMin)}/min · emperrar {pct(f.rates.stuckPKey)}/tecla (cd{' '}
+            {f.rates.stuckCooldown.toFixed(0)}min)
+            {f.rates.forgetPMin > 0 && (
               <>
                 {' '}
-                · bocejo {INFO.yawnPExh} · esquecer {INFO.forgetPExh}
+                · bocejo {pct(f.rates.yawnPMin)}/min · esquecer {pct(f.rates.forgetPMin)}/min por{' '}
+                {f.rates.forgetDuration.toFixed(0)}min (cd {f.rates.forgetCooldown.toFixed(0)}min,
+                até {f.rates.maxForgotten} juntos)
               </>
             )}
           </>

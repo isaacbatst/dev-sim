@@ -1,3 +1,4 @@
+import type { FatigueStage } from '@/core/snapshot';
 import { SoundToggle } from './SoundToggle';
 import { ThemeControl } from './ThemeControl';
 
@@ -9,6 +10,7 @@ export function MenuBar({
   delivered,
   expired,
   score,
+  fatigue,
 }: {
   clock: string;
   day: number;
@@ -16,6 +18,7 @@ export function MenuBar({
   delivered: number;
   expired: number;
   score: number;
+  fatigue: FatigueStage;
 }) {
   return (
     <header className="flex items-center gap-4 border-b border-edge bg-surface/80 px-4 py-2 text-sm backdrop-blur">
@@ -30,8 +33,23 @@ export function MenuBar({
       </nav>
 
       <div className="ml-auto flex items-center gap-3">
-        <span className="hidden items-center gap-1.5 font-mono text-[10px] text-ink-dim md:flex">
-          <kbd className="keycap !h-5 !min-w-5 !text-[10px]">-</kbd> pausa
+        {/* Fadiga (descoberta): cansado → o hint acende em âmbar; exausto →
+            pulsa. Âmbar = "a ação de agora" — e agora a ação é pausar. */}
+        <span
+          className={`hidden items-center gap-1.5 font-mono text-[10px] md:flex ${
+            fatigue === 'exhausted'
+              ? 'animate-edgepulse text-amber'
+              : fatigue === 'tired'
+                ? 'text-amber'
+                : 'text-ink-dim'
+          }`}
+        >
+          <kbd
+            className={`keycap !h-5 !min-w-5 !text-[10px] ${fatigue !== 'fresh' ? 'keycap--current' : ''}`}
+          >
+            -
+          </kbd>{' '}
+          pausa
         </span>
         <ThemeControl />
         <SoundToggle />

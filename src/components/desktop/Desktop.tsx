@@ -60,6 +60,7 @@ export function Desktop({
         delivered={delivered}
         expired={expired}
         score={score}
+        fatigue={snapshot.fatigue.stage}
       />
 
       <main className="relative flex flex-1 gap-5 overflow-hidden p-5">

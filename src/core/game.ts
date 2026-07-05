@@ -52,17 +52,37 @@ const SPAWN_INTERVAL = 24;
 const CLOSE_KEY = 'x'; // fecha um programa aberto por engano (subjogo de abrir)
 
 // ── Fadiga (FOCO_FADIGA.md) — tudo em MINUTOS DE JOGO ─────────────────────
+// ESCALADA CONTÍNUA, SEM TETO: "exausto" é o começo do problema, não o fim.
+// As curvas escalam com x = horas de trabalho além do limiar de cansado —
+// às 5-6h sem pausa o dia fica comicamente disfuncional (ignorar não é viável).
 const FAT_TIRED = 150; // ~2h30 de trabalho contínuo → telegraph + lapsos leves
-const FAT_EXHAUSTED = 210; // ~3h30 → lapsos fortes
-// Chances por MINUTO DE JOGO (rolagem contínua no tick):
-const BLINK_P = { tired: 1 / 40, exhausted: 1 / 16 };
-const YAWN_P_EXH = 1 / 45;
-const FORGET_P_EXH = 1 / 25; // "tinha algo pra fazer?" — só exausto
-const FORGET_DURATION = 20; // min de jogo com o slot sumido
-const FORGET_COOLDOWN = 20; // min de jogo entre esquecimentos
-// Tecla emperrada: chance por TECLA elegível (execução, nunca julgado):
-const STUCK_P = { tired: 0.05, exhausted: 0.12 };
-const STUCK_COOLDOWN = 15; // min de jogo entre emperradas
+const FAT_EXHAUSTED = 210; // ~3h30 → lapsos fortes (x = 1)
+
+/** Horas de trabalho ALÉM do limiar de cansado (0 = fresco/limiar). */
+function overworkH(fatigueMin: number): number {
+  return Math.max(0, (fatigueMin - FAT_TIRED) / 60);
+}
+
+/** Curvas dos lapsos (probabilidades por MINUTO DE JOGO, salvo indicação). */
+export function fatigueRates(fatigueMin: number) {
+  const x = overworkH(fatigueMin);
+  return {
+    x,
+    /** piscada — cresce sempre */
+    blinkPMin: x <= 0 ? 0 : Math.min(0.35, 0.025 + 0.055 * x),
+    /** bocejo — só de exausto (x≥1) em diante */
+    yawnPMin: x < 1 ? 0 : Math.min(0.15, 0.022 + 0.025 * (x - 1)),
+    /** tecla emperrada — por TECLA elegível */
+    stuckPKey: x <= 0 ? 0 : Math.min(0.3, 0.05 + 0.06 * x),
+    stuckCooldown: Math.max(4, 12 - 3 * x),
+    /** "tinha algo pra fazer?" — só de exausto em diante, AGRESSIVO */
+    forgetPMin: x < 1 ? 0 : Math.min(0.25, 0.04 + 0.06 * (x - 1)),
+    forgetDuration: Math.min(70, 30 + 12 * (x - 1)),
+    forgetCooldown: Math.max(6, 16 - 5 * (x - 1)),
+    /** quantos slots podem estar esquecidos AO MESMO TEMPO */
+    maxForgotten: Math.min(3, 1 + Math.floor(Math.max(0, x - 1))),
+  };
+}
 
 const REVERSE_DIR = { up: 'down', down: 'up', left: 'right', right: 'left' } as const;
 
@@ -207,7 +227,7 @@ export class Game {
     return this.slots[i] !== null && this.forgottenUntil[i] > this.gameMinutes();
   }
 
-  /** Acumula fadiga (min de jogo) e rola os lapsos agendados por tempo. */
+  /** Acumula fadiga (min de jogo) e rola os lapsos — curvas SEM teto. */
   private tickFatigue(dt: number): void {
     if (this.resting) return;
     const dMin = dt * this.minPerSec;
@@ -221,59 +241,60 @@ export class Game {
       this.logFatigue('bocejo (telegraph — 2h30 sem pausa)');
     }
 
-    const stage = this.fatigueStage();
-    if (stage === 'fresh') return;
+    const r = fatigueRates(this.fatigueMin);
+    if (r.x <= 0) return;
 
-    // piscada pesada
-    const blinkP = BLINK_P[stage] * dMin;
-    if (Math.random() < blinkP) {
+    // piscada pesada (frequência escala sempre)
+    if (Math.random() < r.blinkPMin * dMin) {
       this.blinkN += 1;
-      this.logFatigue(`piscada (p=${(BLINK_P[stage] * 100).toFixed(1)}%/min)`);
+      this.logFatigue(`piscada (p=${(r.blinkPMin * 100).toFixed(1)}%/min)`);
     }
 
-    if (stage === 'exhausted') {
-      // bocejo ocasional
-      if (Math.random() < YAWN_P_EXH * dMin) {
-        this.yawnN += 1;
-        this.emit('yawn');
-        this.logFatigue(`bocejo (p=${(YAWN_P_EXH * 100).toFixed(1)}%/min)`);
-      }
-      // "tinha algo pra fazer?" — some um slot do backlog
-      const nowMin = this.gameMinutes();
-      const anyForgotten = this.slots.some((_, i) => this.isForgotten(i));
-      if (
-        !anyForgotten &&
-        nowMin - this.lastForgetAt >= FORGET_COOLDOWN &&
-        Math.random() < FORGET_P_EXH * dMin
-      ) {
-        // candidato: não ativo, não pronto, com folga de prazo (lapso rouba
-        // tempo, não pode condenar um ticket já no fio)
-        const cands = this.slots
-          .map((inst, i) => ({ inst, i }))
-          .filter(
-            ({ inst, i }) =>
-              inst !== null &&
-              i !== this.activeSlot &&
-              !inst.ready &&
-              inst.remaining / inst.deadline > 0.35,
-          );
-        if (cands.length > 0) {
-          const pick = cands[Math.floor(Math.random() * cands.length)];
-          this.forgottenUntil[pick.i] = nowMin + FORGET_DURATION;
-          this.lastForgetAt = nowMin;
-          this.logFatigue(
-            `esqueceu DEV-${pick.inst!.id} por ${FORGET_DURATION}min (p=${(FORGET_P_EXH * 100).toFixed(1)}%/min)`,
-          );
-        }
+    // bocejo ocasional
+    if (Math.random() < r.yawnPMin * dMin) {
+      this.yawnN += 1;
+      this.emit('yawn');
+      this.logFatigue(`bocejo (p=${(r.yawnPMin * 100).toFixed(1)}%/min)`);
+    }
+
+    // "tinha algo pra fazer?" — agressivo: dura mais, escala, e em fadiga alta
+    // vários slots podem estar esquecidos ao mesmo tempo
+    const nowMin = this.gameMinutes();
+    const forgottenCount = this.slots.filter((_, i) => this.isForgotten(i)).length;
+    if (
+      forgottenCount < r.maxForgotten &&
+      nowMin - this.lastForgetAt >= r.forgetCooldown &&
+      Math.random() < r.forgetPMin * dMin
+    ) {
+      // candidato: não ativo, não pronto, com folga de prazo (lapso rouba
+      // tempo, não pode condenar um ticket já no fio)
+      const cands = this.slots
+        .map((inst, i) => ({ inst, i }))
+        .filter(
+          ({ inst, i }) =>
+            inst !== null &&
+            i !== this.activeSlot &&
+            !this.isForgotten(i) &&
+            !inst.ready &&
+            inst.remaining / inst.deadline > 0.35,
+        );
+      if (cands.length > 0) {
+        const pick = cands[Math.floor(Math.random() * cands.length)];
+        const dur = Math.round(r.forgetDuration);
+        this.forgottenUntil[pick.i] = nowMin + dur;
+        this.lastForgetAt = nowMin;
+        this.logFatigue(
+          `esqueceu DEV-${pick.inst!.id} por ${dur}min (p=${(r.forgetPMin * 100).toFixed(1)}%/min)`,
+        );
       }
     }
   }
 
   /** Tecla emperrada: engole o input em contexto de EXECUÇÃO (nunca julgado). */
   private stickyKeySwallows(inst: TicketInstance, opening: AppId | null): boolean {
-    const stage = this.fatigueStage();
-    if (stage === 'fresh') return false;
-    if (this.fatigueMin - this.lastStuckAt < STUCK_COOLDOWN) return false;
+    const r = fatigueRates(this.fatigueMin);
+    if (r.stuckPKey <= 0) return false;
+    if (this.fatigueMin - this.lastStuckAt < r.stuckCooldown) return false;
     // elegível: passo de abrir OU segmento de execução (press/nav/mash/combo/file);
     // gauge/selection/triage/wait são julgados ou passivos — nunca emperram.
     const seg = this.currentSegment(inst);
@@ -281,11 +302,11 @@ export class Game {
       opening !== null ||
       (seg !== undefined && ['press', 'nav', 'mash', 'combo', 'file'].includes(seg.type));
     if (!eligible) return false;
-    if (Math.random() >= STUCK_P[stage]) return false;
+    if (Math.random() >= r.stuckPKey) return false;
     this.lastStuckAt = this.fatigueMin;
     this.stuckN += 1;
     this.emit('stuck');
-    this.logFatigue(`tecla emperrou (p=${(STUCK_P[stage] * 100).toFixed(0)}%/tecla)`);
+    this.logFatigue(`tecla emperrou (p=${(r.stuckPKey * 100).toFixed(0)}%/tecla)`);
     return true;
   }
 
@@ -713,6 +734,7 @@ export class Game {
         yawnN: this.yawnN,
         stuckN: this.stuckN,
         log: [...this.fatigueLog],
+        rates: fatigueRates(this.fatigueMin),
       },
       slots: this.slots.map((inst, i) => this.slotSnapshot(inst, i)),
       active: this.activeSnapshot(),

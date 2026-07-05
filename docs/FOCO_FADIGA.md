@@ -32,19 +32,31 @@
   não acumula). Só tempo na v1 — erros NÃO aceleram (previsível de balancear;
   reavaliar depois).
 
-## 3. A curva (horas de expediente)
+## 3. A curva (horas de expediente) — ESCALADA CONTÍNUA, SEM TETO
 
-| Trabalho contínuo | Estado | O que acontece |
+"Exausto" é o COMEÇO do problema, não o fim. As curvas escalam com
+`x = horas de trabalho além do limiar de cansado` (implementação:
+`fatigueRates()` em game.ts — fonte da verdade dos números):
+
+| Trabalho contínuo | x | O que acontece |
 | --- | --- | --- |
-| até ~2h30 | fresco | nada |
-| ~2h30 | **telegraph** | bocejo/piscada, sons abafados — "hora de pausar" dito pelo corpo |
-| 2h30–3h30 | lapsos leves | tecla emperra ocasional, blur sutil nas bordas |
-| 3h30+ | lapsos fortes | item do backlog some, piscadas; frequência crescente (~a cada 15–20min de jogo) |
+| até ~2h30 | 0 | nada |
+| ~2h30 | 0 | **telegraph**: bocejo; hint `- pausa` acende em âmbar |
+| 2h30–3h30 | 0–1 | lapsos leves crescendo; dessaturação/blur começam |
+| ~3h30 (exausto) | 1 | esquecimento entra; hint da pausa PULSA |
+| ~4h30 | 2 | piscada ~13%/min, esquecer ~10%/min por ~42min, 2 slots juntos |
+| ~5h30+ | 2.5+ | comicamente disfuncional: piscada ~20%/min, emperrar ~24%/tecla, até 3 slots esquecidos por ~55min — ignorar não é viável |
 
-- Ritmo emergente: começou 9h sem pausar → telegraph ~11h30 (pausa de "almoço");
-  cansa de novo ~15h (café da tarde) → **~2 pausas/dia** saem do horário, não de
-  timer arbitrário. Casa com a luz ambiente que já muda pelo relógio.
-- Ignorar não mata: só te deixa lento/atrapalhado → nota pior **via tempo** (§9).
+- **Peso perceptual contínuo (D):** dessaturação/blur/brilho escalam com x (sem
+  degraus); a piscada fica mais PESADA (fecha e reabre mais lenta, segura mais);
+  o som do jogo abafa progressivamente (lowpass no master, 18kHz → ~3.5kHz).
+- **Descoberta (E):** o hint `- pausa` da MenuBar acende em âmbar no telegraph e
+  pulsa quando exausto (âmbar = "a ação de agora" — e a ação é pausar).
+- **Esquecimento agressivo:** dura 30→70min (escala), cooldown encolhe 16→6min,
+  e o nº de slots esquecidos AO MESMO TEMPO cresce (1→3 com a fadiga).
+- Ritmo emergente: telegraph ~11h30 (pausa de "almoço"), de novo ~15h (café da
+  tarde) → **~2 pausas/dia** saem do horário. Ignorar não mata — mas o custo por
+  minuto cresce sem parar até a pausa ser a única decisão sensata.
 
 ## 4. Catálogo de lapsos
 

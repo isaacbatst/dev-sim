@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useGameStore } from '@/store/gameStore';
+import { setMuffle } from '@/store/sound';
 import { Desktop } from './desktop/Desktop';
 import { Room } from './desktop/Workstation';
 import { useBreak, BreakHud } from './desktop/Break';
@@ -43,16 +44,28 @@ export function GameScreen() {
   // Piscada pesada (fadiga): a UI diffa o contador do core e fecha as pálpebras.
   // SEM cleanup do timer: o efeito roda a cada snapshot (60fps) e o cleanup
   // cancelaria o "reabrir" no frame seguinte — olho ficava fechado pra sempre.
+  // A piscada PESA com a fadiga: segura mais e reabre mais devagar (D).
   const [blink, setBlink] = useState(false);
   const prevBlinkN = useRef(0);
   useEffect(() => {
     const n = snapshot?.fatigue.blinkN ?? 0;
     if (n > prevBlinkN.current) {
       prevBlinkN.current = n;
+      const x = snapshot?.fatigue.rates.x ?? 0;
       setBlink(true);
-      setTimeout(() => setBlink(false), 300); // fecha 110ms + segura ~190ms; reabre 240ms
+      setTimeout(() => setBlink(false), 300 + Math.min(450, 150 * x));
     } else if (n < prevBlinkN.current) {
       prevBlinkN.current = n; // novo dia (contador zerou)
+    }
+  }, [snapshot]);
+
+  // Som abafado (D): o lowpass do master desce conforme a fadiga escala.
+  const lastMuffleX = useRef(-1);
+  useEffect(() => {
+    const x = snapshot?.fatigue.rates.x ?? 0;
+    if (Math.abs(x - lastMuffleX.current) > 0.05) {
+      lastMuffleX.current = x;
+      setMuffle(x);
     }
   }, [snapshot]);
 
@@ -191,17 +204,16 @@ export function GameScreen() {
           }}
         >
           <Room clock={snapshot.clock} owned={career.owned} brk={brk}>
-            {/* Fadiga na TELA (diegético): cansado dessatura de leve; exausto
-                embaça sutilmente — o "foco" óptico indo embora. */}
+            {/* Fadiga na TELA (diegético, CONTÍNUO): dessaturação, blur e brilho
+                escalam com x (horas além do limiar) — o foco óptico indo embora,
+                cada vez mais, sem teto de estágio. */}
             <div
               className="h-full"
               style={{
                 filter:
-                  snapshot.fatigue.stage === 'exhausted'
-                    ? 'saturate(0.84) blur(0.4px) brightness(0.97)'
-                    : snapshot.fatigue.stage === 'tired'
-                      ? 'saturate(0.93) brightness(0.985)'
-                      : 'none',
+                  snapshot.fatigue.rates.x > 0
+                    ? `saturate(${Math.max(0.72, 1 - 0.09 * snapshot.fatigue.rates.x)}) blur(${Math.min(0.9, 0.3 * snapshot.fatigue.rates.x).toFixed(2)}px) brightness(${Math.max(0.92, 1 - 0.025 * snapshot.fatigue.rates.x)})`
+                    : 'none',
                 transition: 'filter 2s ease',
               }}
             >
@@ -228,32 +240,29 @@ export function GameScreen() {
         style={{ boxShadow: 'inset 0 0 220px 70px rgba(0,0,0,0.55)' }}
       />
       {/* piscada pesada (fadiga): PÁLPEBRAS — duas curvas fecham de cima e de
-          baixo (rápido) e reabrem devagar, como olho pesado de verdade */}
+          baixo (rápido) e reabrem devagar; quanto maior a fadiga, mais pesadas
+          (fecham e reabrem mais lentas — o x escala as durações) */}
       <div aria-hidden className="pointer-events-none absolute inset-0 z-40 overflow-hidden">
-        <div
-          className="absolute top-0 bg-black"
-          style={{
+        {(() => {
+          const x = snapshot.fatigue.rates.x;
+          const closeMs = 110 + Math.min(70, 22 * x);
+          const openMs = 240 + Math.min(180, 60 * x);
+          const lid = (top: boolean) => ({
             left: '-20%',
             right: '-20%',
             height: '58%',
-            borderRadius: '0 0 50% 50% / 0 0 30% 30%',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.85)',
-            transform: blink ? 'translateY(0)' : 'translateY(-104%)',
-            transition: `transform ${blink ? 110 : 240}ms ${blink ? 'ease-in' : 'ease-out'}`,
-          }}
-        />
-        <div
-          className="absolute bottom-0 bg-black"
-          style={{
-            left: '-20%',
-            right: '-20%',
-            height: '58%',
-            borderRadius: '50% 50% 0 0 / 30% 30% 0 0',
-            boxShadow: '0 -10px 30px rgba(0,0,0,0.85)',
-            transform: blink ? 'translateY(0)' : 'translateY(104%)',
-            transition: `transform ${blink ? 110 : 240}ms ${blink ? 'ease-in' : 'ease-out'}`,
-          }}
-        />
+            borderRadius: top ? '0 0 50% 50% / 0 0 30% 30%' : '50% 50% 0 0 / 30% 30% 0 0',
+            boxShadow: `0 ${top ? '' : '-'}10px 30px rgba(0,0,0,0.85)`,
+            transform: blink ? 'translateY(0)' : `translateY(${top ? '-' : ''}104%)`,
+            transition: `transform ${blink ? closeMs : openMs}ms ${blink ? 'ease-in' : 'ease-out'}`,
+          });
+          return (
+            <>
+              <div className="absolute top-0 bg-black" style={lid(true)} />
+              <div className="absolute bottom-0 bg-black" style={lid(false)} />
+            </>
+          );
+        })()}
       </div>
       {/* overlay de debug da fadiga (?debug=1) */}
       {debug && <FatigueDebug snapshot={snapshot} resting={onBreak} />}

@@ -9,6 +9,8 @@ import type { SoundEvent } from '@/core/snapshot';
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
+/** Fadiga (D): lowpass no master — o mundo soa cada vez mais abafado. */
+let muffle: BiquadFilterNode | null = null;
 let muted = false;
 
 // Combo de digitação: teclas rápidas em sequência sobem de tom (feedback de ritmo).
@@ -33,7 +35,12 @@ function audio(): AudioContext | null {
     ctx = new AC();
     master = ctx.createGain();
     master.gain.value = 0.42;
-    master.connect(ctx.destination);
+    muffle = ctx.createBiquadFilter();
+    muffle.type = 'lowpass';
+    muffle.frequency.value = 18000; // aberto (sem fadiga)
+    muffle.Q.value = 0.5;
+    master.connect(muffle);
+    muffle.connect(ctx.destination);
   }
   if (ctx.state === 'suspended') void ctx.resume();
   return ctx;
@@ -280,6 +287,17 @@ export function playSound(event: SoundEvent): void {
 export function setMuted(value: boolean): void {
   muted = value;
   if (muted) stopHold();
+}
+
+/**
+ * Fadiga (peso perceptual contínuo): `x` = horas além do limiar de cansado.
+ * O corte do lowpass desce de 18kHz (fresco) até ~3.5kHz (x=3) — os sons do
+ * trabalho ficam progressivamente surdos, como ouvido cansado.
+ */
+export function setMuffle(x: number): void {
+  if (!muffle || !ctx) return;
+  const cutoff = 18000 * Math.exp(-0.55 * Math.min(3, Math.max(0, x)));
+  muffle.frequency.setTargetAtTime(Math.max(3200, cutoff), ctx.currentTime, 0.4);
 }
 
 export function isMuted(): boolean {

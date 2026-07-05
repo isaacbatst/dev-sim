@@ -185,6 +185,19 @@ export interface FatigueSnapshot {
   stuckN: number;
   /** Últimos eventos (para o overlay de debug). */
   log: string[];
+  /** Curvas ATUAIS (escalada contínua) — a UI deriva peso perceptual e o
+   *  debug exibe os números reais. `x` = horas além do limiar de cansado. */
+  rates: {
+    x: number;
+    blinkPMin: number;
+    yawnPMin: number;
+    stuckPKey: number;
+    stuckCooldown: number;
+    forgetPMin: number;
+    forgetDuration: number;
+    forgetCooldown: number;
+    maxForgotten: number;
+  };
 }
 
 export interface ActiveTicketSnapshot {
