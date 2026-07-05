@@ -87,6 +87,23 @@ export class GameLoop {
     this.sync();
   }
 
+  /** Fadiga: a UI avisa quando entra/sai da pausa. */
+  setResting(v: boolean): void {
+    this.game.setResting(v);
+  }
+
+  /** Fadiga: ritual completado na pausa → restaura. */
+  restoreFatigue(): void {
+    this.game.restore();
+    this.sync();
+  }
+
+  /** Debug (?debug=1): injeta minutos de fadiga. */
+  debugFatigue(min: number): void {
+    this.game.debugFatigue(min);
+    this.sync();
+  }
+
   private frame = (ts: number): void => {
     // dt = tempo real decorrido, SEM clamp: o RAF é estrangulado a ~1fps em
     // segundo plano; clampear faria o relógio/deadlines/CR rastejarem. Assim o

@@ -27,7 +27,9 @@ export type SoundEvent =
   | 'tab' // troca de foco / seleção de slot
   | 'holdStart' // começou a segurar (hold)
   | 'holdEnd' // soltou / hold concluído
-  | 'mash'; // batida rítmica (mash) — tom sobe com o ritmo
+  | 'mash' // batida rítmica (mash) — tom sobe com o ritmo
+  | 'stuck' // fadiga: tecla emperrou (input engolido)
+  | 'yawn'; // fadiga: bocejo (telegraph)
 
 /** Qual "app" do desktop a tarefa atual representa (UI diegética). */
 export type AppId = 'editor' | 'browser' | 'slack' | 'mail' | 'meet';
@@ -166,6 +168,23 @@ export interface SlotSnapshot {
   deadlineRemaining: number | null;
   /** Fração 0..1 do prazo restante (para a barra de urgência). */
   deadlineFrac: number;
+  /** Fadiga: "tinha algo pra fazer?" — o slot some do backlog temporariamente. */
+  forgotten: boolean;
+}
+
+/** Estado de fadiga (FOCO_FADIGA.md): tudo em minutos de JOGO. */
+export type FatigueStage = 'fresh' | 'tired' | 'exhausted';
+
+export interface FatigueSnapshot {
+  /** Minutos de jogo trabalhados desde a última restauração. */
+  min: number;
+  stage: FatigueStage;
+  /** Contadores de lapsos (a UI diffa pra reagir; debug mostra). */
+  blinkN: number;
+  yawnN: number;
+  stuckN: number;
+  /** Últimos eventos (para o overlay de debug). */
+  log: string[];
 }
 
 export interface ActiveTicketSnapshot {
@@ -218,6 +237,8 @@ export interface Snapshot {
   score: number;
   /** Erros acumulados no ticket ativo (para feedback de erro na UI). */
   activeErrors: number;
+  /** Fadiga do dia (FOCO_FADIGA.md). */
+  fatigue: FatigueSnapshot;
   slots: (SlotSnapshot | null)[];
   active: ActiveTicketSnapshot | null;
 }

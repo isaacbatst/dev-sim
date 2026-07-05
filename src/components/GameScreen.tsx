@@ -5,6 +5,7 @@ import { useGameStore } from '@/store/gameStore';
 import { Desktop } from './desktop/Desktop';
 import { Room } from './desktop/Workstation';
 import { useBreak, BreakHud } from './desktop/Break';
+import { FatigueDebug } from './desktop/FatigueDebug';
 
 export function GameScreen() {
   const snapshot = useGameStore((s) => s.snapshot);
@@ -21,6 +22,8 @@ export function GameScreen() {
   const cycleFocus = useGameStore((s) => s.cycleFocus);
   const quickOpen = useGameStore((s) => s.quickOpen);
   const buyCosmetic = useGameStore((s) => s.buyCosmetic);
+  const setResting = useGameStore((s) => s.setResting);
+  const restoreFatigue = useGameStore((s) => s.restoreFatigue);
 
   const [shake, setShake] = useState(false);
   const [floatScore, setFloatScore] = useState<string | null>(null);
@@ -33,8 +36,29 @@ export function GameScreen() {
   const setBreak = (v: boolean) => {
     onBreakRef.current = v;
     setOnBreak(v);
+    setResting(v); // fadiga não acumula na pausa
   };
-  const brk = useBreak(onBreak, career.owned);
+  const brk = useBreak(onBreak, career.owned, restoreFatigue);
+
+  // Piscada pesada (fadiga): a UI diffa o contador do core e fecha as pálpebras.
+  const [blink, setBlink] = useState(false);
+  const prevBlinkN = useRef(0);
+  useEffect(() => {
+    const n = snapshot?.fatigue.blinkN ?? 0;
+    if (n > prevBlinkN.current) {
+      prevBlinkN.current = n;
+      setBlink(true);
+      const t = setTimeout(() => setBlink(false), 240);
+      return () => clearTimeout(t);
+    }
+    prevBlinkN.current = n;
+  }, [snapshot]);
+
+  // Overlay de debug da fadiga (?debug=1). Sem risco de mismatch SSR: o 1º
+  // render (cliente e servidor) mostra só o "carregando" (snapshot null).
+  const [debug] = useState(
+    () => typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('debug'),
+  );
 
   useEffect(() => start(), [start]);
 
@@ -165,18 +189,33 @@ export function GameScreen() {
           }}
         >
           <Room clock={snapshot.clock} owned={career.owned} brk={brk}>
-            <Desktop
-              snapshot={snapshot}
-              day={day}
-              career={career}
-              dayResult={dayResult}
-              shake={shake}
-              floatScore={floatScore}
-              onFocusProgram={focusProgram}
-              onSelect={selectSlot}
-              onNextDay={nextDay}
-              onBuy={buyCosmetic}
-            />
+            {/* Fadiga na TELA (diegético): cansado dessatura de leve; exausto
+                embaça sutilmente — o "foco" óptico indo embora. */}
+            <div
+              className="h-full"
+              style={{
+                filter:
+                  snapshot.fatigue.stage === 'exhausted'
+                    ? 'saturate(0.84) blur(0.4px) brightness(0.97)'
+                    : snapshot.fatigue.stage === 'tired'
+                      ? 'saturate(0.93) brightness(0.985)'
+                      : 'none',
+                transition: 'filter 2s ease',
+              }}
+            >
+              <Desktop
+                snapshot={snapshot}
+                day={day}
+                career={career}
+                dayResult={dayResult}
+                shake={shake}
+                floatScore={floatScore}
+                onFocusProgram={focusProgram}
+                onSelect={selectSlot}
+                onNextDay={nextDay}
+                onBuy={buyCosmetic}
+              />
+            </div>
           </Room>
         </div>
       </div>
@@ -186,6 +225,17 @@ export function GameScreen() {
         className="pointer-events-none absolute inset-0"
         style={{ boxShadow: 'inset 0 0 220px 70px rgba(0,0,0,0.55)' }}
       />
+      {/* piscada pesada (fadiga): as pálpebras fecham por um instante */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 z-40 bg-black"
+        style={{
+          opacity: blink ? 0.94 : 0,
+          transition: `opacity ${blink ? 90 : 180}ms ease`,
+        }}
+      />
+      {/* overlay de debug da fadiga (?debug=1) */}
+      {debug && <FatigueDebug snapshot={snapshot} resting={onBreak} />}
       {/* HUD da pausa: parado, sem zoom e sem inclinação */}
       {onBreak && (
         <BreakHud

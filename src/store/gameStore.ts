@@ -105,6 +105,10 @@ interface GameState {
   quickOpen: () => void;
   /** Compra um cosmético: desconta `$` e adiciona a `owned` (persiste). */
   buyCosmetic: (id: string, preco: number) => void;
+  /** Fadiga: avisa pausa aberta/fechada; ritual restaura; debug injeta minutos. */
+  setResting: (v: boolean) => void;
+  restoreFatigue: () => void;
+  debugFatigue: (min: number) => void;
 }
 
 let loop: GameLoop | null = null;
@@ -186,6 +190,9 @@ export const useGameStore = create<GameState>((set, get) => {
     focusProgram: (id) => loop?.focusProgram(id),
     cycleFocus: (dir) => loop?.cycleFocus(dir),
     quickOpen: () => loop?.quickOpen(),
+    setResting: (v) => loop?.setResting(v),
+    restoreFatigue: () => loop?.restoreFatigue(),
+    debugFatigue: (min) => loop?.debugFatigue(min),
     buyCosmetic: (id, preco) => {
       const c = { ...get().career };
       if (c.owned.includes(id) || c.wallet < preco) return;

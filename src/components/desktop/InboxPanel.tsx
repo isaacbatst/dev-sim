@@ -32,7 +32,9 @@ export function InboxPanel({
       {/* Lista de issues */}
       <div className="flex flex-col p-1">
         {slots.map((slot, i) =>
-          slot ? (
+          // Fadiga "tinha algo pra fazer?": slot esquecido renderiza IGUAL ao
+          // vazio — você olha e não tem nada lá (e volta sozinho).
+          slot && !slot.forgotten ? (
             <button
               key={i}
               onClick={() => onSelect(i)}

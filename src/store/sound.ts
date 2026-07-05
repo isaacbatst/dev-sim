@@ -264,6 +264,16 @@ export function playSound(event: SoundEvent): void {
     case 'holdEnd':
       stopHold();
       break;
+    case 'stuck':
+      // Fadiga: tecla emperrou — "thunk" surdo e mole (input engolido, não erro).
+      tone(110, 0.09, { type: 'sine', gain: 0.14, slideTo: 85, cutoff: 500 });
+      noiseBurst(0.018, 420, 0.05);
+      break;
+    case 'yawn':
+      // Fadiga: bocejo — sopro descendente longo e macio (o telegraph).
+      tone(320, 0.9, { type: 'sine', gain: 0.05, slideTo: 150, attack: 0.25, cutoff: 900 });
+      noiseBurst(0.5, 700, 0.02);
+      break;
   }
 }
 

@@ -60,8 +60,10 @@ export interface BreakState {
 }
 
 /** Estado + teclado das pausas. Escuta na fase bubble (o GameScreen já engoliu
- *  o jogo na captura) e só com a pausa aberta. */
-export function useBreak(active: boolean, owned: string[]): BreakState {
+ *  o jogo na captura) e só com a pausa aberta. `onRitual` = completou um gesto
+ *  de restauração (FOCO_FADIGA.md §5): pescoço = combo circular; regar = todas
+ *  as células; café = 3 goles; tocar = 8 notas. Efeito idêntico pra todos. */
+export function useBreak(active: boolean, owned: string[], onRitual?: () => void): BreakState {
   const [mode, setMode] = useState<BreakMode>('mesa');
   const [tilt, setTiltState] = useState({ dx: 0, dy: 0 });
   const [flowing, setFlowing] = useState(false);
@@ -80,12 +82,39 @@ export function useBreak(active: boolean, owned: string[]): BreakState {
   const waterCombo = useRef(0);
   const waterAt = useRef(0);
 
+  // Progresso dos RITUAIS de restauração (por pausa).
+  const wateredCells = useRef<Set<string>>(new Set());
+  const sipCount = useRef(0);
+  const noteCount = useRef(0);
+
   // Ao voltar pro trabalho, a próxima pausa reabre na mesa (ajuste na render).
   const [prevActive, setPrevActive] = useState(active);
   if (prevActive !== active) {
     setPrevActive(active);
     if (!active) setMode('mesa');
   }
+
+  // Progresso de ritual zera ao fechar a pausa (cada pausa recomeça os gestos).
+  useEffect(() => {
+    if (!active) {
+      wateredCells.current.clear();
+      sipCount.current = 0;
+      noteCount.current = 0;
+    }
+  }, [active]);
+
+  /** Ritual completado: restaura a fadiga + feedback de alívio (o pescoço já
+   *  tem o próprio — contra-giro + mix). */
+  const completeRitual = useCallback(
+    (withSigh: boolean) => {
+      onRitual?.();
+      if (withSigh) {
+        S.sigh();
+        setRelief((r) => r + 1);
+      }
+    },
+    [onRitual],
+  );
 
   // Alongamento natural: entra suave (~650ms), SEGURA no fundo (~1s) e solta
   // devagar (~1s) — nada de tique mecânico. CADA aperto agenda o SEU estalo
@@ -146,11 +175,13 @@ export function useBreak(active: boolean, owned: string[]): BreakState {
           { dx: 0, dy: 1 },
           { dx: -1, dy: 0 },
         ];
-        // som + primeiro passo do desenrolar juntos, aos 420ms
+        // som + primeiro passo do desenrolar juntos, aos 420ms. O combo é o
+        // RITUAL do pescoço (grátis) → restaura a fadiga.
         spinTs.current.push(
           setTimeout(() => {
             S.neckCombo();
             setRelief((r) => r + 1);
+            completeRitual(false); // feedback próprio (contra-giro + mix)
           }, 420),
         );
         for (let i = 1; i <= 4; i++) {
@@ -176,32 +207,50 @@ export function useBreak(active: boolean, owned: string[]): BreakState {
         crackTs.current.push(t);
       }
     },
-    [spinning, setTilt],
+    [spinning, setTilt, completeRitual],
   );
 
-  const playNote = useCallback((idx: number) => {
-    S.pianoNote(PIANO[idx].f);
-    const id = ++nonce.current;
-    setNotes((ns) => [...ns, { id, idx }]);
-    setLit((l) => ({ ...l, [idx]: id }));
-    setTimeout(() => {
-      setLit((l) => {
-        if (l[idx] !== id) return l;
-        const c = { ...l };
-        delete c[idx];
-        return c;
-      });
-    }, 180);
-  }, []);
+  const playNote = useCallback(
+    (idx: number) => {
+      S.pianoNote(PIANO[idx].f);
+      const id = ++nonce.current;
+      setNotes((ns) => [...ns, { id, idx }]);
+      setLit((l) => ({ ...l, [idx]: id }));
+      setTimeout(() => {
+        setLit((l) => {
+          if (l[idx] !== id) return l;
+          const c = { ...l };
+          delete c[idx];
+          return c;
+        });
+      }, 180);
+      // ritual: 8 notas tocadas
+      noteCount.current += 1;
+      if (noteCount.current >= 8) {
+        noteCount.current = 0;
+        completeRitual(true);
+      }
+    },
+    [completeRitual],
+  );
 
-  const water = useCallback((k: string) => {
-    const now = performance.now();
-    waterCombo.current = now - waterAt.current < 350 ? Math.min(waterCombo.current + 1, 12) : 0;
-    waterAt.current = now;
-    S.waterDrop(waterCombo.current);
-    setWet((w) => ({ ...w, [k]: (w[k] ?? 0) + 1 }));
-    setLeafN((n) => n + 1);
-  }, []);
+  const water = useCallback(
+    (k: string) => {
+      const now = performance.now();
+      waterCombo.current = now - waterAt.current < 350 ? Math.min(waterCombo.current + 1, 12) : 0;
+      waterAt.current = now;
+      S.waterDrop(waterCombo.current);
+      setWet((w) => ({ ...w, [k]: (w[k] ?? 0) + 1 }));
+      setLeafN((n) => n + 1);
+      // ritual: todas as células regadas
+      wateredCells.current.add(k);
+      if (wateredCells.current.size >= SOILKEYS.length) {
+        wateredCells.current.clear();
+        completeRitual(true);
+      }
+    },
+    [completeRitual],
+  );
 
   useEffect(() => {
     if (!active) return;
@@ -232,7 +281,14 @@ export function useBreak(active: boolean, owned: string[]): BreakState {
       if (k === 'c' && has('cafe')) {
         e.preventDefault();
         S.sip();
-        return setSipN((n) => n + 1);
+        setSipN((n) => n + 1);
+        // ritual: 3 goles
+        sipCount.current += 1;
+        if (sipCount.current >= 3) {
+          sipCount.current = 0;
+          setTimeout(() => completeRitual(true), 500); // depois do "ahh" do gole
+        }
+        return;
       }
       if (PIANO_IDX[k] !== undefined && has('teclado')) {
         e.preventDefault();
