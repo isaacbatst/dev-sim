@@ -1,0 +1,91 @@
+# Foco / Fadiga — o que empurra pra pausa
+
+> **Status:** design fechado (conversa de 2026-07-04), v1 pronta pra construir.
+> Complementa as PAUSAS (Break.tsx: mesa, atividades, combo do pescoço) e conversa
+> com DIRECAO_GAMEPLAY §8 (ritmo do dia) e §9 (nota/tempo como moeda). Princípios
+> das memórias: diegético > medidores; 1ª pessoa; pausas gostosas, nunca imposto.
+
+---
+
+## 1. Princípios (as regras que não se quebram)
+
+1. **Diegético, sem medidor.** Não existe barra "Foco: 40%". O cansaço se manifesta
+   como **lapsos** — falhas suas (corpo/mente/olhos), reconhecíveis da vida de dev.
+2. **Eventos discretos, não debuff constante.** Lapsos pontuais que escalam em
+   FREQUÊNCIA — cada um é uma piada de reconhecimento, não "tudo 20% pior".
+3. **Lapso rouba TEMPO, nunca julga.** Só acontece em momentos de execução
+   (navegar, abrir, teclar); **nunca** em momento julgado (soltar o gauge,
+   escolher opção, despachar veredicto). A fadiga atrasa; não erra por você.
+   Se o jogo causa o erro, o jogador sente trapaça — quebra tudo.
+4. **Tempo DE JOGO, não real.** Agendamento/limiares em minutos de expediente
+   (9:00→17:00 = 480min) → vale pra qualquer duração real de dia (`?day=`).
+   Exceção: duração PERCEPTUAL de micro-efeito (piscada ~200ms) fica em tempo
+   real. Regra: **agenda em tempo de jogo, percepção em tempo real.**
+5. **Restauração por RITUAL, plana.** Restaurar exige um gesto ativo completado
+   (pausa nunca é tempo morto de espera), e o efeito é IDÊNTICO para todos os
+   rituais — cosmético dá variedade horizontal de ritual, nunca restauração
+   melhor (§6: identidade, nunca poder; senão café de 💰80 vira pay-to-win).
+
+## 2. Motor
+
+- Fadiga = **minutos de jogo trabalhados desde a última restauração** (a pausa
+  não acumula). Só tempo na v1 — erros NÃO aceleram (previsível de balancear;
+  reavaliar depois).
+
+## 3. A curva (horas de expediente)
+
+| Trabalho contínuo | Estado | O que acontece |
+| --- | --- | --- |
+| até ~2h30 | fresco | nada |
+| ~2h30 | **telegraph** | bocejo/piscada, sons abafados — "hora de pausar" dito pelo corpo |
+| 2h30–3h30 | lapsos leves | tecla emperra ocasional, blur sutil nas bordas |
+| 3h30+ | lapsos fortes | item do backlog some, piscadas; frequência crescente (~a cada 15–20min de jogo) |
+
+- Ritmo emergente: começou 9h sem pausar → telegraph ~11h30 (pausa de "almoço");
+  cansa de novo ~15h (café da tarde) → **~2 pausas/dia** saem do horário, não de
+  timer arbitrário. Casa com a luz ambiente que já muda pelo relógio.
+- Ignorar não mata: só te deixa lento/atrapalhado → nota pior **via tempo** (§9).
+
+## 4. Catálogo de lapsos
+
+**V1 (construir):**
+- **Bocejo/piscada** (telegraph + lapso forte): tela escurece 150–250ms reais;
+  bocejo com áudio + a visão "estica" (linguagem de câmera do pescoço).
+- **Tecla emperra** (motor): o keycap afunda e não registra; precisa do 2º toque.
+  Só em teclas de execução (press/nav/mash) — NUNCA no soltar de hold/gauge.
+- **"Tinha algo pra fazer?"** (cognitivo): um item do BACKLOG some — o slot fica
+  vazio como se nunca tivesse nada — e volta sozinho (~10min de jogo). Não dá
+  pra selecionar enquanto esquecido. (A comanda NÃO é afetada.)
+
+**Backlog de ideias (depois):** dedo pesado (input ~200ms atrasado — cuidado com
+a regra 3), digitei-no-app-errado (foco escorrega pra outra aba), esqueci o
+atalho (keycaps viram `?`), perdi a linha (realce some, alvo não muda), blur/
+dessaturação progressivos, Slack fantasma (pings de distração), "o PC tá lento"
+(micro-freeze… mas o relógio continua).
+
+## 5. Restauração (rituais)
+
+Completar **um** ritual → fresco de novo (reset total). Todos ~4–8s de gesto,
+mesmo efeito:
+
+| Ritual | Requer | Gesto |
+| --- | --- | --- |
+| **Pescoço** | nada (todos têm) | estalar os 4 lados = o **combo circular** (contra-giro + mix já são o feedback de restaurado) |
+| **Regar** | planta (💰) | molhar todas as células da terra |
+| **Café** | café (💰) | 3 goles (a caneca esvazia) |
+| **Tocar** | teclado (💰) | ~8 notas |
+
+- Feedback de restaurado: alívio (anel/suspiro) + visão limpa na hora (blur some,
+  sons crocantes) — sentido, não anunciado.
+- Refazer ritual sem estar cansado = só o prazer (nenhum stack/bônus).
+- O relógio segue correndo na pausa: o custo da pausa continua sendo tempo (§9);
+  o ritual dá o quê fazer nesse tempo.
+
+## 6. Em aberto
+
+- Números finos (limiar 2h30, frequências, duração do esquecimento) — playtest.
+- Erros acelerarem a fadiga (v2?).
+- Lapsos extras do catálogo; fadiga × personalidade do dia (dia intenso cansa
+  mais rápido?) — cruzar com PERSONALIDADE_DO_DIA.md quando ela entrar.
+- "Café que acorda" como efeito mecânico: se um dia existir, é **perk** (§7,
+  destravado por promoção, um por turno) — nunca o cosmético.
