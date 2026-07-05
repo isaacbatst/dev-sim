@@ -45,6 +45,14 @@ export function Desktop({
 
   return (
     <div className="relative flex h-full flex-col overflow-hidden">
+      {/* Wallpaper na TELA INTEIRA do monitor (inclusive a faixa da comanda):
+          gradiente + grão sutil (textura orgânica, anti-AI). */}
+      <div aria-hidden className="absolute inset-0 -z-10" style={{ background: 'var(--wall)' }} />
+      <div
+        aria-hidden
+        className="bg-noise pointer-events-none absolute inset-0 -z-10 opacity-[0.05] mix-blend-soft-light"
+      />
+
       <MenuBar
         clock={clock}
         day={day}
@@ -54,15 +62,7 @@ export function Desktop({
         score={score}
       />
 
-      {/* Wallpaper: gradiente + grade técnica sutil + brilho do humor */}
       <main className="relative flex flex-1 gap-5 overflow-hidden p-5">
-        <div aria-hidden className="absolute inset-0 -z-10" style={{ background: 'var(--wall)' }} />
-        {/* Grão sutil no lugar da grade técnica — textura orgânica, anti-AI. */}
-        <div
-          aria-hidden
-          className="bg-noise pointer-events-none absolute inset-0 -z-10 opacity-[0.05] mix-blend-soft-light"
-        />
-
         <InboxPanel slots={slots} onSelect={onSelect} />
 
         <section className="flex min-w-0 flex-1 items-start justify-center">

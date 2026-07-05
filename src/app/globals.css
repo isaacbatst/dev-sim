@@ -26,11 +26,12 @@
   --edge: transparent;
   --ink: #d8dbe4;
   --ink-dim: #7e8597;
-  /* Comanda (a "ordem" estilo CSD): INVERTE o entorno pra ser figura-fundo.
-     No escuro = papel claro/creme (o único elemento claro → salta). */
-  --comanda-bg: #f3eede;
-  --comanda-ink: #22201a;
-  --comanda-dim: #7c735f;
+  /* Comanda (a "ordem" em foco): INVERSE-VIDEO do próprio tema (statusline de
+     terminal) — fundo na família do --ink, texto na do --bg. Continua o único
+     elemento claro (figura-fundo), mas fala a língua do devOS, não papel. */
+  --comanda-bg: #dde0e9;
+  --comanda-ink: #14161f;
+  --comanda-dim: #5d6374;
   --amber: #f5a623; /* primário: âmbar de fósforo */
   --teal: #4ec9b0; /* secundário: código          */
   --pass: #5fd07a;
@@ -66,10 +67,11 @@
   --edge: #d7d2c6; /* no claro o contorno é natural (papel) */
   --ink: #1f1b15;
   --ink-dim: #6b6556;
-  /* No claro o entorno já é papel → a comanda inverte pra ESCURA (destaca). */
-  --comanda-bg: #24211b;
-  --comanda-ink: #f3eede;
-  --comanda-dim: #a89e88;
+  /* No claro o entorno já é papel → a comanda inverte pra TINTA (o --ink do
+     tema), texto na família do --surface. Mesma lógica de inverse-video. */
+  --comanda-bg: #1f1b15;
+  --comanda-ink: #f6f4ee;
+  --comanda-dim: #9b9384;
   --amber: #cf4926; /* primário: vermelho-terracota */
   --teal: #1f7a6a; /* secundário: verde profundo   */
   --pass: #2e7d4f;
@@ -162,16 +164,18 @@ body {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-/* ── Comanda (a "ordem" estilo CSD) ─────────────────────────────
-   Papel FÍSICO, não bloco chapado: gradiente (luz batendo de cima),
-   grão de papel, realce no topo + sombra de card na mesa. Inverte o
-   entorno pra ser figura-fundo (tokens --comanda-*). */
+/* ── Comanda (a "ordem" em foco) ────────────────────────────────
+   Inverse-video do tema (tokens --comanda-*): painel claro no escuro
+   (escuro no claro), com o material do devOS — realce de 1px no topo
+   (macOS), sombra de elevação e grão SUTIL (nível do wallpaper, não
+   textura de papel). Figura-fundo sem sair da ficção de software. */
 .comanda {
   position: relative;
   background: var(--comanda-bg);
   box-shadow:
-    0 -6px 24px -12px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    0 14px 34px -14px rgba(0, 0, 0, 0.6),
+    0 3px 10px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 /* Grão: noise dessaturado (grosso). No papel CLARO (graveyard) usa multiply →
    pontinhos escuros; no kraft ESCURO (daybreak) usa screen → pontinhos claros.
@@ -183,12 +187,12 @@ body {
   border-radius: inherit;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size: 120px 120px;
-  opacity: 0.45;
+  opacity: 0.1;
   mix-blend-mode: multiply;
   pointer-events: none;
 }
 [data-theme='daybreak'] .comanda::after {
-  opacity: 0.35;
+  opacity: 0.08;
   mix-blend-mode: screen;
 }
 

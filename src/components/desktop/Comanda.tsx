@@ -1,19 +1,19 @@
 import type { ActiveTicketSnapshot } from '@/core/snapshot';
 
 /**
- * A COMANDA (a "ordem" em foco, estilo CSD). Papel INVERTIDO (tokens --comanda-*:
- * claro no escuro, escuro no claro → figura-fundo) com grão + realce no topo.
- * Barra full-width na base do monitor, SEMPRE presente (altura reservada) — o
- * layout de backlog/janela não dá resize quando a demanda abre/fecha. Fica
- * aberta inclusive com programa errado (a ordem não some porque você errou).
+ * A COMANDA (a "ordem" em foco, o CSD do devOS). INVERSE-VIDEO do tema (tokens
+ * --comanda-*: claro no escuro, escuro no claro → figura-fundo), mas na língua
+ * do OS: painel na GRADE (margens + raio, como backlog/janela), realce no topo,
+ * grão sutil. SEMPRE presente (altura reservada) — o layout não dá resize
+ * quando a demanda abre/fecha; fica aberta inclusive com programa errado.
  */
 export function Comanda({ active }: { active: ActiveTicketSnapshot | null }) {
-  // Sem demanda em foco: o papel some, mas o ESPAÇO fica reservado (sem resize).
-  if (!active) return <div aria-hidden className="min-h-[9.5rem] w-full shrink-0" />;
+  // Sem demanda em foco: o painel some, mas o ESPAÇO fica reservado (sem resize).
+  if (!active) return <div aria-hidden className="mx-5 mb-5 min-h-[9.5rem] shrink-0" />;
 
   return (
     <div
-      className="comanda flex min-h-[9.5rem] w-full shrink-0 flex-col justify-center px-8 py-4"
+      className="comanda mx-5 mb-5 flex min-h-[9.5rem] shrink-0 flex-col justify-center rounded-xl px-7 py-4"
       style={{ color: 'var(--comanda-ink)' }}
     >
       <Order active={active} />

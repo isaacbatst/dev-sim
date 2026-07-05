@@ -146,7 +146,10 @@ export function Room({
             <div className="absolute inset-[3px] rounded-full bg-sky-300/30" />
           </div>
           <div
-            className="relative overflow-hidden rounded-[10px] ring-1 ring-black/70"
+            // `isolate`: a tela cria o próprio stacking context — o wallpaper do
+            // Desktop (-z-10) fica DENTRO do monitor (sem isso ele escapava pra
+            // trás da parede do quarto e sumia; visível no tema claro).
+            className="isolate relative overflow-hidden rounded-[10px] ring-1 ring-black/70"
             style={{ width: 'min(1100px, 93vw)', height: 'min(74vh, 740px)' }}
           >
             {children}

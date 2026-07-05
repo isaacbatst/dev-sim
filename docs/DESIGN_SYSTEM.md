@@ -181,7 +181,7 @@ Não saia espalhando `shadow-xl` em tudo — se tudo tem sombra, nada flutua.
 | **Action bar**       | —      | Rodapé da janela. Lugar **único** do "o que apertar agora". Barra de 3px à esquerda na cor do app (accent). Sem o rótulo "ação".                             |
 | **Chip / label**     | —      | `rounded-full`, `border` + `bg` da mesma família a ~12% alpha. Prioridade, estados, contadores.                                                              |
 | **Comentário de CR** | —      | Cartão com avatar de iniciais (não emoji), nome `@tech-lead`, selo de estado, e a mensagem entre aspas.                                                      |
-| **Comanda**          | —      | A "ordem" em foco (estilo CSD), fora da janela. Papel **invertido** (`--comanda-*`: claro no escuro, escuro no claro → figura-fundo) com **grão** (multiply/screen) + gradiente + realce no topo. Estrutura: eyebrow (`DEV-id · prioridade`, mono) → título (`comanda` 28/700 grotesk) → passo atual (16px, ▸ âmbar). É o único elemento de alto contraste. |
+| **Comanda**          | —      | A "ordem" em foco (o CSD do devOS), barra na base da tela. **Inverse-video do tema** (`--comanda-*`: fundo na família do `--ink`, texto na do `--bg` — claro no escuro, tinta no claro): figura-fundo SEM sair da ficção de software (nada de papel kraft). Na grade do OS (margens + `rounded-xl`), realce de 1px no topo, grão sutil (~10%, nível do wallpaper). Estrutura: eyebrow (`DEV-id · prioridade`, mono) → título (`comanda` 28/700 grotesk) → passo atual (16px, ▸ âmbar). Único elemento de alto contraste; espaço SEMPRE reservado (sem resize). |
 
 Convenções transversais:
 
@@ -296,6 +296,14 @@ pra hierarquia e pro grão.
 
 ## Changelog
 
+- **2026-07-05:** **Comanda re-materializada: kraft → inverse-video do tema.**
+  O papel creme/grão era objeto FÍSICO num mundo 100% software (não conversava).
+  Agora: fundo derivado do `--ink` do tema (statusline de terminal invertida),
+  texto na família do `--bg`, grão reduzido a ~10% (nível do wallpaper), e de
+  full-bleed → painel na grade do OS (margens + raio). Fix junto: `isolate` na
+  tela do monitor (o wallpaper `-z-10` escapava pra trás da parede do quarto
+  desde o refactor mundo+câmera — visível só no tema claro); wallpaper movido
+  pro root do Desktop (cobre a faixa da comanda).
 - **2026-07-04:** **Comanda** (a ordem em foco, estilo CSD) formalizada como
   componente. Papel invertido (`--comanda-bg/ink/dim` por tema — claro no escuro,
   escuro no claro → figura-fundo) com grão (multiply no claro / screen no escuro;
