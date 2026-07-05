@@ -41,6 +41,8 @@ export function GameScreen() {
   const brk = useBreak(onBreak, career.owned, restoreFatigue);
 
   // Piscada pesada (fadiga): a UI diffa o contador do core e fecha as pálpebras.
+  // SEM cleanup do timer: o efeito roda a cada snapshot (60fps) e o cleanup
+  // cancelaria o "reabrir" no frame seguinte — olho ficava fechado pra sempre.
   const [blink, setBlink] = useState(false);
   const prevBlinkN = useRef(0);
   useEffect(() => {
@@ -48,10 +50,10 @@ export function GameScreen() {
     if (n > prevBlinkN.current) {
       prevBlinkN.current = n;
       setBlink(true);
-      const t = setTimeout(() => setBlink(false), 240);
-      return () => clearTimeout(t);
+      setTimeout(() => setBlink(false), 240);
+    } else if (n < prevBlinkN.current) {
+      prevBlinkN.current = n; // novo dia (contador zerou)
     }
-    prevBlinkN.current = n;
   }, [snapshot]);
 
   // Overlay de debug da fadiga (?debug=1). Sem risco de mismatch SSR: o 1º
