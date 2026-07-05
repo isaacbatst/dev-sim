@@ -58,7 +58,7 @@ const FAT_EXHAUSTED = 210; // ~3h30 → lapsos fortes
 const BLINK_P = { tired: 1 / 40, exhausted: 1 / 16 };
 const YAWN_P_EXH = 1 / 45;
 const FORGET_P_EXH = 1 / 25; // "tinha algo pra fazer?" — só exausto
-const FORGET_DURATION = 10; // min de jogo com o slot sumido
+const FORGET_DURATION = 20; // min de jogo com o slot sumido
 const FORGET_COOLDOWN = 20; // min de jogo entre esquecimentos
 // Tecla emperrada: chance por TECLA elegível (execução, nunca julgado):
 const STUCK_P = { tired: 0.05, exhausted: 0.12 };

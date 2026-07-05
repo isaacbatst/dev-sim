@@ -50,7 +50,7 @@ export function GameScreen() {
     if (n > prevBlinkN.current) {
       prevBlinkN.current = n;
       setBlink(true);
-      setTimeout(() => setBlink(false), 240);
+      setTimeout(() => setBlink(false), 300); // fecha 110ms + segura ~190ms; reabre 240ms
     } else if (n < prevBlinkN.current) {
       prevBlinkN.current = n; // novo dia (contador zerou)
     }
@@ -227,15 +227,34 @@ export function GameScreen() {
         className="pointer-events-none absolute inset-0"
         style={{ boxShadow: 'inset 0 0 220px 70px rgba(0,0,0,0.55)' }}
       />
-      {/* piscada pesada (fadiga): as pálpebras fecham por um instante */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 z-40 bg-black"
-        style={{
-          opacity: blink ? 0.94 : 0,
-          transition: `opacity ${blink ? 90 : 180}ms ease`,
-        }}
-      />
+      {/* piscada pesada (fadiga): PÁLPEBRAS — duas curvas fecham de cima e de
+          baixo (rápido) e reabrem devagar, como olho pesado de verdade */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 z-40 overflow-hidden">
+        <div
+          className="absolute top-0 bg-black"
+          style={{
+            left: '-20%',
+            right: '-20%',
+            height: '58%',
+            borderRadius: '0 0 50% 50% / 0 0 30% 30%',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.85)',
+            transform: blink ? 'translateY(0)' : 'translateY(-104%)',
+            transition: `transform ${blink ? 110 : 240}ms ${blink ? 'ease-in' : 'ease-out'}`,
+          }}
+        />
+        <div
+          className="absolute bottom-0 bg-black"
+          style={{
+            left: '-20%',
+            right: '-20%',
+            height: '58%',
+            borderRadius: '50% 50% 0 0 / 30% 30% 0 0',
+            boxShadow: '0 -10px 30px rgba(0,0,0,0.85)',
+            transform: blink ? 'translateY(0)' : 'translateY(104%)',
+            transition: `transform ${blink ? 110 : 240}ms ${blink ? 'ease-in' : 'ease-out'}`,
+          }}
+        />
+      </div>
       {/* overlay de debug da fadiga (?debug=1) */}
       {debug && <FatigueDebug snapshot={snapshot} resting={onBreak} />}
       {/* HUD da pausa: parado, sem zoom e sem inclinação */}
