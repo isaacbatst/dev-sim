@@ -35,30 +35,67 @@ Substitui o `careerTitle` atual (por day-count) por **posição ganha por nota a
 
 ---
 
-## 2. Dois canais de recompensa (separados por NATUREZA)
+## 2. Três canais de recompensa (separados por NATUREZA e por PACE)
 
-| Canal | O que dá | Como se obtém | Por quê |
+**Decisão (2026-07-05):** tasks NÃO destravam por promoção — variedade mecânica é
+combustível de CURTO prazo (precisa vir rápido, senão o jogo enjoa na semana 1),
+enquanto cargo é prestígio de LONGO prazo (Tech Lead em 5 dias barateia a
+identidade). **Dois paces diferentes = dois trilhos.**
+
+| Canal | O que dá | Como se obtém | Pace |
 |---|---|---|---|
-| **Comprar (`$`)** | cosmético / identidade — mesa/setup (planta, teclado, monitor…) | gasta `$` (derivado da nota) no que **quer** | faz sentido *escolher e possuir*; agência + share |
-| **Destravar (promoção)** | **perks** (§7) + **tasks** (conteúdo/complexidade) | **liberado ao subir de posição** | não se *compra* um jeito de jogar nem um tipo de trabalho — eles **abrem** conforme você cresce |
+| **Comprar (`$`)** | cosmético / identidade — mesa/setup (planta, teclado, café…) | gasta `$` (da nota) no que **quer** | livre |
+| **Árvore de tasks** | novos TIPOS de demanda (mecânicas) | **escolhe 1 por dia** no boletim, entre os nós elegíveis da árvore (§3) | RÁPIDO — sandbox completo em ~1,5 semana |
+| **Promoção (cargo)** | **perks** (§7) + prestígio/título | nota acumulada, limiares LONGOS | LENTO — o arco da campanha |
 
-- **Perks** (§7 — *mutators* double-edged): unlock = **entra no arsenal**; você **ativa um por
-  run**. Mais unlocks = mais **variedade** de jeitos de jogar (horizontal), **nunca acúmulo de
-  poder**. Ex.: "trabalhar de madrugada" (a hora extra/fadiga como perk).
-- **Tasks:** novos **tipos/mecânicas** abrem por rank.
+- **Perks** (§7 — *mutators* double-edged): unlock = **entra no arsenal**; ativa **um por
+  turno**. Podem ser raros/lentos sem frustrar, porque a variedade vem da árvore.
+- **Limiares de cargo esticados** (placeholder, afinar jogando): Júnior 400 (dia 1–2, o
+  gostinho), Pleno 1.500 (~1 semana), Sênior 4.000 (~2 semanas), Tech Lead 8.000 (~1 mês),
+  Staff 14.000, Principal 22.000.
 
 ---
 
-## 3. Task-unlock = o currículo de dificuldade (a sacada)
+## 3. A árvore de tasks — escolha diária (a sacada revisada)
 
-Destravar **tasks** por promoção é o que **acompanha o nível do jogador** — mantém no *flow*
-(nem entediante, nem esmagador). Consequência elegante:
+O boletim de fim de dia oferece **"nova demanda desbloqueada — escolha uma"**: 2–3 cards
+(nós elegíveis pela árvore de pré-requisitos), cada um com nome + uma linha + o gesto.
+Escolheu → entra no pool de amanhã.
 
-> **O onboarding deixa de ser um caso especial.** É só o **"rank 0"**: dia 1 = poucas tasks
-> simples + números gentis; sobe de posição → mais tipos/mecânicas entram no pool. Uma
-> **curva contínua de unlock**, não um interruptor onboarding/regular.
+**Por quê assim:**
+1. **Ritual de retorno garantido** — todo boletim tem um presente; "amanhã escolho um
+   brinquedo novo" é gancho de D1 melhor que marcos que caem no meio do dia.
+2. **Agência = identidade** — "destravei o review antes do refactor" (a escolha empodera;
+   gera conversa entre jogadores).
+3. **§6 intacto** — tasks são conteúdo horizontal; ordem livre não desequilibra.
+4. **A árvore já era necessária**: multis dependem das tasks componentes (pré-requisitos
+   naturais).
 
-O que a gente ia construir separado (onboarding) **já nasce dentro da progressão**.
+> **O onboarding continua não sendo caso especial:** dia 1 = o conjunto inicial (6 tipos
+> simples); a árvore é a curva contínua de unlock.
+
+**Conjunto inicial (dia 1):** `meeting`, `email`, `slack`, `study`, `test_feature`,
+`document` — o estagiário vive de reunião/e-mail/estudo; ganhar acesso ao código é a
+primeira ESCOLHA (não promoção).
+
+**A árvore (proposta em trabalho — equilibrar):** ver §3.1. Persistência: `unlockedTasks`
+no localStorage.
+
+### 3.1 Rascunho da árvore (em discussão)
+
+```
+raízes (1ª escolha, fim do dia 1 — "código, UI ou review?"):
+  fix_typo            ui_update           review_pr
+     │                   │                   │
+     ├─ fix_bug          └─ new_ui_feature   └─ refactor
+     │     └─ fix_login_bug                       └─ refactor_module
+     └─ deploy_hotfix
+```
+
+- 3 raízes = 3 sabores de identidade (consertador / designer / revisor-arquiteto).
+- Mecânica NOVA no início de cada ramo (nav+fix / scrub / triage); multis como capstones.
+- Desequilíbrios conhecidos (trabalhar): ramo A com 4 nós vs B com 2; futuros arquétipos
+  (modelagem de dados, API, escrever teste) engordam B/C.
 
 ---
 
