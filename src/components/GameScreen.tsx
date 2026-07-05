@@ -212,7 +212,7 @@ export function GameScreen() {
               style={{
                 filter:
                   snapshot.fatigue.rates.x > 0
-                    ? `saturate(${Math.max(0.72, 1 - 0.09 * snapshot.fatigue.rates.x)}) blur(${Math.min(0.9, 0.3 * snapshot.fatigue.rates.x).toFixed(2)}px) brightness(${Math.max(0.92, 1 - 0.025 * snapshot.fatigue.rates.x)})`
+                    ? `saturate(${Math.max(0.72, 1 - 0.09 * snapshot.fatigue.rates.x)}) blur(${Math.min(1.6, 0.6 * snapshot.fatigue.rates.x).toFixed(2)}px) brightness(${Math.max(0.92, 1 - 0.025 * snapshot.fatigue.rates.x)})`
                     : 'none',
                 transition: 'filter 2s ease',
               }}

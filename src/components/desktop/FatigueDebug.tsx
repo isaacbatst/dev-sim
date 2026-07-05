@@ -80,13 +80,13 @@ export function FatigueDebug({ snapshot, resting }: { snapshot: Snapshot; restin
         piscadas <b className="text-white/80">{f.blinkN}</b> · bocejos{' '}
         <b className="text-white/80">{f.yawnN}</b> · emperradas{' '}
         <b className="text-white/80">{f.stuckN}</b>
-        {forgotten.length > 0 && (
-          <span style={{ color: '#ff5c57' }}>
-            {' '}
-            · esquecido: {forgotten.map((s) => `DEV-${s!.id}`).join(', ')}
-          </span>
-        )}
       </div>
+      {forgotten.length > 0 && (
+        <div style={{ color: '#ff5c57' }}>
+          esquecidos:{' '}
+          {forgotten.map((s) => `DEV-${s!.id} (volta em ${s!.forgottenRemaining}min)`).join(' · ')}
+        </div>
+      )}
       {f.log.length > 0 && (
         <div className="mt-1.5 border-t border-white/10 pt-1 text-white/45">
           {f.log

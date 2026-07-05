@@ -68,13 +68,13 @@ export function fatigueRates(fatigueMin: number) {
   const x = overworkH(fatigueMin);
   return {
     x,
-    /** piscada — cresce sempre */
-    blinkPMin: x <= 0 ? 0 : Math.min(0.35, 0.025 + 0.055 * x),
+    /** piscada — cresce sempre (rara: pontua, não metralha) */
+    blinkPMin: x <= 0 ? 0 : Math.min(0.18, 0.015 + 0.03 * x),
     /** bocejo — só de exausto (x≥1) em diante */
     yawnPMin: x < 1 ? 0 : Math.min(0.15, 0.022 + 0.025 * (x - 1)),
-    /** tecla emperrada — por TECLA elegível */
-    stuckPKey: x <= 0 ? 0 : Math.min(0.3, 0.05 + 0.06 * x),
-    stuckCooldown: Math.max(4, 12 - 3 * x),
+    /** tecla emperrada — por TECLA elegível (o lapso mais frequente) */
+    stuckPKey: x <= 0 ? 0 : Math.min(0.45, 0.08 + 0.1 * x),
+    stuckCooldown: Math.max(3, 10 - 3 * x),
     /** "tinha algo pra fazer?" — só de exausto em diante, AGRESSIVO */
     forgetPMin: x < 1 ? 0 : Math.min(0.25, 0.04 + 0.06 * (x - 1)),
     forgetDuration: Math.min(70, 30 + 12 * (x - 1)),
@@ -964,6 +964,9 @@ export class Game {
       deadlineRemaining: inst.ready ? null : Math.ceil(inst.remaining),
       deadlineFrac: inst.ready ? 1 : Math.max(0, Math.min(1, inst.remaining / inst.deadline)),
       forgotten: this.isForgotten(index),
+      forgottenRemaining: this.isForgotten(index)
+        ? Math.ceil(this.forgottenUntil[index] - this.gameMinutes())
+        : null,
     };
   }
 

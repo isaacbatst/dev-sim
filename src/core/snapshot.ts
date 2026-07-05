@@ -170,6 +170,8 @@ export interface SlotSnapshot {
   deadlineFrac: number;
   /** Fadiga: "tinha algo pra fazer?" — o slot some do backlog temporariamente. */
   forgotten: boolean;
+  /** Minutos de JOGO até o slot esquecido voltar (null se não esquecido). */
+  forgottenRemaining: number | null;
 }
 
 /** Estado de fadiga (FOCO_FADIGA.md): tudo em minutos de JOGO. */
