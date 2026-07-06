@@ -296,6 +296,17 @@ pra hierarquia e pro grão.
 
 ## Changelog
 
+- **2026-07-06 (c):** **Pausa vira GAME UI (prompts ancorados no mundo), não
+  modal.** O painel/pastilha central parecia modal de site. Agora: cada ritual
+  é um PROMPT no seu lugar — o pescoço é um cluster de keycaps de seta em cruz
+  no centro (sem caixa; escopo `hud-night` pros keycaps ficarem escuros sobre
+  qualquer cena), e planta/caneca/teclado ganham chips `[tecla] rótulo + pips`
+  ANCORADOS nos objetos DA CENA (inclinam com o pescoço — diegético, estilo
+  "aperte E pra interagir"). Progresso = PIPS (●●○), não "n/m" de site; texto
+  flutuante leva text-shadow forte no lugar de caixa. Rodapé da pausa enxuto
+  (relógio + voltar). Regra que fica: HUD sobre o quarto usa `hud-night`;
+  afford de interação = keycap; progresso de gesto = pips.
+
 - **2026-07-06 (b):** **Card de escolha da daily corrigido — a lombada violava o
   Do Not Use.** A 1ª versão usava listra lateral 3px na cor do ramo + hover
   âmbar-wash (borda+fundo+texto) — exatamente os "tells" nº 1 e 2 da lista.

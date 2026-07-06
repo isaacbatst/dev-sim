@@ -333,7 +333,6 @@ export function GameScreen() {
         <BreakHud
           clock={snapshot.clock}
           mode={brk.mode}
-          owned={career.owned}
           relief={brk.relief}
           neckProgress={brk.neckProgress}
           neckNexts={brk.neckNexts}

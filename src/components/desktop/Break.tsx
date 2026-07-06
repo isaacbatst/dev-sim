@@ -42,6 +42,8 @@ const DIRS: Record<string, { dx: number; dy: number }> = {
 export type BreakMode = 'mesa' | 'planta';
 
 export interface BreakState {
+  /** Pausa aberta? (prompts da cena só aparecem na pausa) */
+  active: boolean;
   mode: BreakMode;
   tilt: { dx: number; dy: number };
   /** Encadeou uma direção com o pescoço ainda inclinado (movimento emenda). */
@@ -54,6 +56,10 @@ export interface BreakState {
   neckNexts: number[];
   /** Ângulos já apertados na sequência atual (o HUD afunda esses keycaps). */
   neckHits: number[];
+  /** Progresso dos rituais de objeto (pips nos prompts da cena). */
+  waterN: number;
+  sipDoneN: number;
+  noteDoneN: number;
   relief: number;
   notes: { id: number; idx: number }[];
   setNotes: React.Dispatch<React.SetStateAction<{ id: number; idx: number }[]>>;
@@ -77,6 +83,9 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
   const [neckProgress, setNeckProgress] = useState(0);
   const [neckNexts, setNeckNexts] = useState<number[]>([]);
   const [neckHits, setNeckHits] = useState<number[]>([]);
+  const [waterN, setWaterN] = useState(0);
+  const [sipDoneN, setSipDoneN] = useState(0);
+  const [noteDoneN, setNoteDoneN] = useState(0);
   const [relief, setRelief] = useState(0);
   const tiltRef = useRef({ dx: 0, dy: 0 });
   const seq = useRef<{ a: number; t: number }[]>([]);
@@ -97,14 +106,19 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
   const sipCount = useRef(0);
   const noteCount = useRef(0);
 
-  // Ao voltar pro trabalho, a próxima pausa reabre na mesa (ajuste na render).
+  // Ao voltar pro trabalho: próxima pausa reabre na mesa e o progresso de
+  // ritual zera (cada pausa recomeça os gestos). Estados ajustam na render
+  // (padrão sancionado); refs limpam em effect (não se toca ref na render).
   const [prevActive, setPrevActive] = useState(active);
   if (prevActive !== active) {
     setPrevActive(active);
-    if (!active) setMode('mesa');
+    if (!active) {
+      setMode('mesa');
+      setWaterN(0);
+      setSipDoneN(0);
+      setNoteDoneN(0);
+    }
   }
-
-  // Progresso de ritual zera ao fechar a pausa (cada pausa recomeça os gestos).
   useEffect(() => {
     if (!active) {
       wateredCells.current.clear();
@@ -268,8 +282,10 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
       }, 180);
       // ritual: 8 notas tocadas
       noteCount.current += 1;
+      setNoteDoneN(noteCount.current);
       if (noteCount.current >= 8) {
         noteCount.current = 0;
+        setNoteDoneN(0);
         completeRitual(true);
       }
     },
@@ -286,8 +302,10 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
       setLeafN((n) => n + 1);
       // ritual: todas as células regadas
       wateredCells.current.add(k);
+      setWaterN(wateredCells.current.size);
       if (wateredCells.current.size >= SOILKEYS.length) {
         wateredCells.current.clear();
+        setWaterN(0);
         completeRitual(true);
       }
     },
@@ -326,9 +344,13 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
         setSipN((n) => n + 1);
         // ritual: 3 goles
         sipCount.current += 1;
+        setSipDoneN(sipCount.current);
         if (sipCount.current >= 3) {
           sipCount.current = 0;
-          setTimeout(() => completeRitual(true), 500); // depois do "ahh" do gole
+          setTimeout(() => {
+            setSipDoneN(0);
+            completeRitual(true);
+          }, 500); // depois do "ahh" do gole
         }
         return;
       }
@@ -343,6 +365,7 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
   }, [active, mode, owned.join(','), roll, water, playNote]);
 
   return {
+    active,
     mode,
     tilt,
     flowing,
@@ -350,6 +373,9 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
     neckProgress,
     neckNexts,
     neckHits,
+    waterN,
+    sipDoneN,
+    noteDoneN,
     relief,
     notes,
     setNotes,
@@ -367,6 +393,9 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
 export function DeskItems({ owned, brk }: { owned: string[]; brk: BreakState }) {
   const has = (id: string) => owned.includes(id);
   const { mode, notes, setNotes, lit, sipN, wet, setWet, leafN, water } = brk;
+  // Prompts ancorados nos objetos (game UI): só na pausa, e não em modo planta
+  // (a grade de terra assume). Vivem NA CENA — inclinam com o pescoço.
+  const prompts = brk.active && mode === 'mesa';
 
   return (
     <div className="relative flex h-full items-start justify-center">
@@ -382,10 +411,18 @@ export function DeskItems({ owned, brk }: { owned: string[]; brk: BreakState }) 
           className="flex items-end gap-16"
           style={{ transform: 'rotateX(26deg)', transformOrigin: 'center 20%' }}
         >
-          {has('planta') && <Plant size={1} pulseKey={leafN} highlight={mode === 'planta'} />}
+          {has('planta') && (
+            <div className="relative">
+              <Plant size={1} pulseKey={leafN} highlight={mode === 'planta'} />
+              {prompts && <ObjectPrompt k="R" label="regar" total={12} done={brk.waterN} />}
+            </div>
+          )}
 
-          <div key={sipN} className={sipN > 0 ? 'animate-sipmug' : ''}>
+          <div key={sipN} className={`relative ${sipN > 0 ? 'animate-sipmug' : ''}`}>
             <Mug steaming={has('cafe')} />
+            {prompts && has('cafe') && (
+              <ObjectPrompt k="C" label="café" total={3} done={brk.sipDoneN} />
+            )}
           </div>
 
           {/* teclado (tecladinho se comprou o mecânico) */}
@@ -425,6 +462,9 @@ export function DeskItems({ owned, brk }: { owned: string[]; brk: BreakState }) 
                 ♪
               </span>
             ))}
+            {prompts && has('teclado') && (
+              <ObjectPrompt k="A–K" label="tocar" total={8} done={brk.noteDoneN} />
+            )}
           </div>
 
           {/* mouse */}
@@ -448,7 +488,6 @@ export function DeskItems({ owned, brk }: { owned: string[]; brk: BreakState }) 
 export function BreakHud({
   clock,
   mode,
-  owned,
   relief,
   neckProgress,
   neckNexts,
@@ -458,7 +497,6 @@ export function BreakHud({
 }: {
   clock: string;
   mode: BreakMode;
-  owned: string[];
   relief: number;
   neckProgress: number;
   neckNexts: number[];
@@ -466,7 +504,6 @@ export function BreakHud({
   spinning: boolean;
   onResume: () => void;
 }) {
-  const has = (id: string) => owned.includes(id);
   return (
     <div className="pointer-events-none absolute inset-0 z-30 flex flex-col">
       {/* alívio da volta completa do pescoço */}
@@ -478,26 +515,22 @@ export function BreakHud({
           aria-hidden
         />
       )}
-      {/* o RITUAL do pescoço: mostrador circular CENTRAL — keycaps de seta em
-          roda, o próximo aceso (--current), o arco enchendo. É a instrução. */}
+      {/* o RITUAL do pescoço: prompt central de teclas (game UI, sem caixa) */}
       {mode === 'mesa' && (
         <div className="absolute inset-0 flex items-center justify-center">
-          <NeckDial progress={neckProgress} nexts={neckNexts} hits={neckHits} spinning={spinning} />
+          <NeckCluster
+            progress={neckProgress}
+            nexts={neckNexts}
+            hits={neckHits}
+            spinning={spinning}
+          />
         </div>
       )}
-      {/* rodapé: relógio + dicas + voltar */}
+      {/* rodapé: relógio + voltar (os rituais têm prompts NOS objetos da cena) */}
       <div className="pointer-events-auto mt-auto flex items-center justify-center gap-6 pb-5 font-mono text-xs text-white/50">
         <span className="tabular-nums text-white/75">{clock}</span>
         <span className="uppercase tracking-[0.2em] text-white/35">o expediente continua</span>
-        {mode === 'planta' ? (
-          <Hint k="⌫" label="voltar à mesa" />
-        ) : (
-          <>
-            {has('planta') && <Hint k="R" label="regar" />}
-            {has('cafe') && <Hint k="C" label="gole" />}
-            {has('teclado') && <Hint k="A–K" label="tocar" wide />}
-          </>
-        )}
+        {mode === 'planta' && <Hint k="⌫" label="voltar à mesa" />}
         <button
           onClick={onResume}
           className="flex items-center gap-1.5 transition-colors hover:text-white/85"
@@ -512,12 +545,11 @@ export function BreakHud({
 
 /* ── peças ────────────────────────────────────────────────────── */
 
-/** Mostrador do combo do pescoço, na LINGUAGEM da casa: as setas são KEYCAPS
- *  (a assinatura tátil do devOS) em roda; o próximo do giro acende `--current`
- *  (âmbar, "aperte agora" — um só por vez); o arco fecha a volta. Pastilha com
- *  os tokens hud-night + elevação. Sem texto de tutorial: o mostrador É a
- *  instrução. */
-function NeckDial({
+/** Prompt do pescoço — GAME UI, não modal: as teclas de seta flutuam em cruz
+ *  no centro (sem caixa; o keycap já é sólido e legível sobre qualquer cena).
+ *  Apertada afunda (--done), a próxima do giro pulsa (--current), pips embaixo
+ *  marcam a volta. Some sozinho: é prompt de interação, não painel. */
+function NeckCluster({
   progress,
   nexts,
   hits,
@@ -528,65 +560,97 @@ function NeckDial({
   hits: number[];
   spinning: boolean;
 }) {
-  const R = 52;
-  const C = 2 * Math.PI * R;
-  const frac = Math.min(1, progress / 4);
-  const ARROWS = ['↑', '→', '↓', '←'];
-  const POS: React.CSSProperties[] = [
-    { top: 0, left: '50%', transform: 'translateX(-50%)' },
-    { right: 0, top: '50%', transform: 'translateY(-50%)' },
-    { bottom: 0, left: '50%', transform: 'translateX(-50%)' },
-    { left: 0, top: '50%', transform: 'translateY(-50%)' },
-  ];
   const done = spinning || progress >= 4;
+  // hud-night: o cluster flutua sobre o QUARTO/monitor — keycaps sempre escuros
+  const cap = (i: number, g: string) => (
+    <kbd
+      className={`keycap ${
+        !done && nexts.includes(i)
+          ? 'keycap--current animate-edgepulse'
+          : done || hits.includes(i)
+            ? 'keycap--done'
+            : ''
+      }`}
+    >
+      {g}
+    </kbd>
+  );
+  return (
+    <div className="hud-night flex flex-col items-center gap-2.5" aria-hidden>
+      {/* cruz de setas (o cluster físico do teclado, virado pro giro) */}
+      <div className="flex flex-col items-center gap-1.5">
+        {cap(0, '↑')}
+        <div className="flex items-center gap-14">
+          {cap(3, '←')}
+          {cap(1, '→')}
+        </div>
+        {cap(2, '↓')}
+      </div>
+      <Pips total={4} done={done ? 4 : progress} />
+      <span
+        className="font-mono text-[10px] uppercase tracking-[0.2em]"
+        style={{
+          color: done ? 'var(--pass)' : 'rgba(255,255,255,0.75)',
+          textShadow: '0 1px 10px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.9)',
+        }}
+      >
+        {done ? 'pescoço solto ✓' : 'gire o pescoço'}
+      </span>
+    </div>
+  );
+}
+
+/** Pips de progresso de ritual (linguagem de jogo, não "n/m" de site). */
+function Pips({ total, done }: { total: number; done: number }) {
+  return (
+    <span className="flex items-center gap-1" aria-hidden>
+      {Array.from({ length: total }, (_, i) => (
+        <span
+          key={i}
+          className="size-1.5 rounded-full transition-colors"
+          style={{
+            background: i < done ? 'var(--pass)' : 'rgba(255,255,255,0.25)',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.8)',
+          }}
+        />
+      ))}
+    </span>
+  );
+}
+
+/** Prompt ancorado num objeto da mesa (game UI: "aperte X pra interagir").
+ *  Vive NA CENA (inclina com o pescoço, recebe o zoom) — diegético. */
+function ObjectPrompt({
+  k,
+  label,
+  total,
+  done,
+}: {
+  k: string;
+  label: string;
+  total: number;
+  done: number;
+}) {
   return (
     <div
-      className="hud-night flex flex-col items-center gap-2.5 rounded-xl px-6 py-5"
-      style={{
-        background: 'color-mix(in srgb, var(--surface) 92%, transparent)',
-        boxShadow:
-          '0 24px 60px -18px rgba(0,0,0,0.7), 0 4px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)',
-      }}
+      className="pointer-events-none absolute -top-16 left-1/2 flex -translate-x-1/2 flex-col items-center gap-1.5"
       aria-hidden
     >
-      <div className="relative size-40">
-        <svg viewBox="0 0 160 160" className="absolute inset-0 size-full -rotate-90">
-          <circle cx="80" cy="80" r={R} fill="none" stroke="var(--line)" strokeWidth="2.5" />
-          <circle
-            cx="80"
-            cy="80"
-            r={R}
-            fill="none"
-            stroke={done ? 'var(--pass)' : 'var(--amber)'}
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeDasharray={C}
-            strokeDashoffset={C * (1 - (done ? 1 : frac))}
-            style={{ transition: 'stroke-dashoffset 220ms ease, stroke 220ms ease' }}
-          />
-        </svg>
-        {ARROWS.map((g, i) => {
-          const isNext = !done && nexts.includes(i);
-          const isHit = !done && hits.includes(i);
-          return (
-            <kbd
-              key={g}
-              className={`keycap absolute ${
-                isNext ? 'keycap--current animate-edgepulse' : done || isHit ? 'keycap--done' : ''
-              }`}
-              style={POS[i]}
-            >
-              {g}
-            </kbd>
-          );
-        })}
-        <span className="absolute inset-0 flex items-center justify-center font-mono text-[11px] tabular-nums text-ink-dim">
-          {done ? <span className="text-pass">✓</span> : `${progress}/4`}
+      <div className="flex items-center gap-2">
+        <kbd className={`keycap !h-6 !min-w-6 !text-[11px] ${done > 0 ? 'keycap--current' : ''}`}>
+          {k}
+        </kbd>
+        <span
+          className="whitespace-nowrap font-mono text-[10px] uppercase tracking-[0.18em]"
+          style={{
+            color: 'rgba(255,255,255,0.8)',
+            textShadow: '0 1px 10px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.9)',
+          }}
+        >
+          {label}
         </span>
       </div>
-      <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink-dim">
-        {done ? 'pescoço solto' : 'gire o pescoço'}
-      </span>
+      <Pips total={total} done={done} />
     </div>
   );
 }

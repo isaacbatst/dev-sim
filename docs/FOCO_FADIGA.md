@@ -85,7 +85,7 @@ mesmo efeito:
 
 | Ritual | Requer | Gesto |
 | --- | --- | --- |
-| **Pescoço** | nada (todos têm) | o **combo circular**: uma volta completa (4 setas em ordem; o mostrador central guia — keycaps em roda + arco); contra-giro + mix são o feedback |
+| **Pescoço** | nada (todos têm) | o **combo circular**: uma volta completa (4 setas em ordem; o CLUSTER de keycaps central guia — apertada afunda, próxima pulsa, pips); contra-giro + mix são o feedback |
 | **Regar** | planta (💰) | molhar todas as células da terra |
 | **Café** | café (💰) | 3 goles (a caneca esvazia) |
 | **Tocar** | teclado (💰) | ~8 notas |
