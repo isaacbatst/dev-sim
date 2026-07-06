@@ -10,8 +10,9 @@ import * as S from '@/store/breakSound';
  *   - CENA (diegética, inclina com o pescoço, recebe o zoom): Workstation +
  *     DeskItems (a mesa à frente, sempre visível — no trabalho só a beirada).
  *   - HUD (BreakHud): relógio/dicas/voltar — NUNCA inclina nem escala.
- * Atividades (sem falha, sem ritmo julgado): ←↑↓→ pescoço · A–K tecladinho ·
- * C gole · R regar (grade de terra) · ⌫ volta à mesa.
+ * Atividades (sem falha, sem ritmo julgado), cada uma um MODO ou gesto direto:
+ * P pescoço (setas dentro do modo) · R regar (grade de terra) · C gole ·
+ * A–K tecladinho · ⌫ volta à mesa.
  */
 
 const PIANO: { k: string; f: number }[] = [
@@ -39,7 +40,7 @@ const DIRS: Record<string, { dx: number; dy: number }> = {
   ArrowRight: { dx: 1, dy: 0 },
 };
 
-export type BreakMode = 'mesa' | 'planta';
+export type BreakMode = 'mesa' | 'planta' | 'pescoco';
 
 export interface BreakState {
   /** Pausa aberta? (prompts da cena só aparecem na pausa) */
@@ -319,9 +320,16 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
     const onKey = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey || e.repeat) return;
       const k = e.key.toLowerCase();
-      if (DIRS[e.key]) {
-        e.preventDefault();
-        return roll(e.key);
+      if (mode === 'pescoco') {
+        if (e.key === 'Backspace') {
+          e.preventDefault();
+          return setMode('mesa');
+        }
+        if (DIRS[e.key]) {
+          e.preventDefault();
+          return roll(e.key);
+        }
+        return;
       }
       if (mode === 'planta') {
         if (e.key === 'Backspace') {
@@ -333,6 +341,10 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
           return water(k);
         }
         return;
+      }
+      if (k === 'p') {
+        e.preventDefault();
+        return setMode('pescoco');
       }
       if (k === 'r' && has('planta')) {
         e.preventDefault();
@@ -515,49 +527,42 @@ export function BreakHud({
           aria-hidden
         />
       )}
-      {/* PESCOÇO: a pausa abre sem nada selecionado — todos os rituais são
-          prompts de mesmo peso. Parado, o pescoço é um prompt compacto perto
-          de "você" (base da tela); começou a girar → o cluster assume o centro. */}
-      {mode === 'mesa' &&
-        (neckProgress > 0 || spinning ? (
-          <div className="beat-in absolute inset-0 flex items-center justify-center">
-            <NeckCluster
-              progress={neckProgress}
-              nexts={neckNexts}
-              hits={neckHits}
-              spinning={spinning}
-            />
-          </div>
-        ) : (
-          <div className="hud-night absolute inset-x-0 bottom-16 flex justify-center">
-            <div className="flex flex-col items-center gap-1.5" aria-hidden>
-              <div className="flex items-center gap-2">
-                <span className="flex items-center gap-1">
-                  {['↑', '→', '↓', '←'].map((g) => (
-                    <kbd key={g} className="keycap !h-6 !min-w-6 !text-[11px]">
-                      {g}
-                    </kbd>
-                  ))}
-                </span>
-                <span
-                  className="font-mono text-[10px] uppercase tracking-[0.18em]"
-                  style={{
-                    color: 'rgba(255,255,255,0.8)',
-                    textShadow: '0 1px 10px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.9)',
-                  }}
-                >
-                  pescoço
-                </span>
-              </div>
-              <Pips total={4} done={0} />
+      {/* PESCOÇO como MODO (igual à planta): na mesa é um prompt [P] de mesmo
+          peso dos outros; P entra no modo → o cluster assume o centro; ⌫ sai. */}
+      {mode === 'pescoco' && (
+        <div className="beat-in absolute inset-0 flex items-center justify-center">
+          <NeckCluster
+            progress={neckProgress}
+            nexts={neckNexts}
+            hits={neckHits}
+            spinning={spinning}
+          />
+        </div>
+      )}
+      {mode === 'mesa' && (
+        <div className="hud-night absolute inset-x-0 bottom-16 flex justify-center">
+          <div className="flex flex-col items-center gap-1.5" aria-hidden>
+            <div className="flex items-center gap-2">
+              <kbd className="keycap !h-6 !min-w-6 !text-[11px]">P</kbd>
+              <span
+                className="font-mono text-[10px] uppercase tracking-[0.18em]"
+                style={{
+                  color: 'rgba(255,255,255,0.8)',
+                  textShadow: '0 1px 10px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.9)',
+                }}
+              >
+                pescoço
+              </span>
             </div>
+            <Pips total={4} done={0} />
           </div>
-        ))}
+        </div>
+      )}
       {/* rodapé: relógio + voltar (os rituais têm prompts NOS objetos da cena) */}
       <div className="pointer-events-auto mt-auto flex items-center justify-center gap-6 pb-5 font-mono text-xs text-white/50">
         <span className="tabular-nums text-white/75">{clock}</span>
         <span className="uppercase tracking-[0.2em] text-white/35">o expediente continua</span>
-        {mode === 'planta' && <Hint k="⌫" label="voltar à mesa" />}
+        {mode !== 'mesa' && <Hint k="⌫" label="voltar à mesa" />}
         <button
           onClick={onResume}
           className="flex items-center gap-1.5 transition-colors hover:text-white/85"
