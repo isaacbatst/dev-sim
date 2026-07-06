@@ -75,12 +75,12 @@ export function fatigueRates(fatigueMin: number) {
     /** bocejo — só de exausto (x≥1) em diante */
     yawnPMin: x < 1 ? 0 : Math.min(0.15, 0.022 + 0.025 * (x - 1)),
     /** tecla emperrada — por TECLA elegível (o lapso mais frequente) */
-    stuckPKey: x <= 0 ? 0 : Math.min(0.5, 0.2 + 0.1 * x),
-    stuckCooldown: Math.max(3, 10 - 3 * x),
+    stuckPKey: x <= 0 ? 0 : Math.min(0.8, 0.4 + 0.2 * x),
+    stuckCooldown: Math.max(1.5, 5 - 1.5 * x),
     /** "tinha algo pra fazer?" — o lapso que ESCALA de verdade */
-    forgetPMin: x < 1 ? 0 : Math.min(0.32, 0.05 + 0.1 * (x - 1)),
+    forgetPMin: x < 1 ? 0 : Math.min(0.64, 0.1 + 0.2 * (x - 1)),
     forgetDuration: Math.min(90, 30 + 18 * (x - 1)),
-    forgetCooldown: Math.max(5, 14 - 6 * (x - 1)),
+    forgetCooldown: Math.max(2.5, 7 - 3 * (x - 1)),
     /** quantos slots podem estar esquecidos AO MESMO TEMPO */
     maxForgotten: Math.min(3, 1 + Math.floor(Math.max(0, 1.4 * (x - 1)))),
   };

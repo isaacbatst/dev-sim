@@ -44,8 +44,8 @@
 | ~2h30 | 0 | **telegraph**: bocejo; hint `- pausa` acende em âmbar |
 | 2h30–3h30 | 0–1 | lapsos leves crescendo; dessaturação/blur começam |
 | ~3h30 (exausto) | 1 | esquecimento entra; hint da pausa PULSA |
-| ~4h30 | 2 | desfoques frequentes (pico ~2.8px), esquecer ~15%/min por ~48min, 2 slots juntos |
-| ~5h30+ | 2.5+ | comicamente disfuncional: emperrar ~45%/tecla (base 20%), esquecer ~20%/min por ~57min, até 3 slots esquecidos — ignorar não é viável |
+| ~4h30 | 2 | desfoques frequentes (pico ~2.8px), esquecer ~30%/min por ~48min, 2 slots juntos |
+| ~5h30+ | 2.5+ | comicamente disfuncional: emperrar ~80%/tecla (base 40%), esquecer ~40%/min por ~57min, até 3 slots esquecidos — ignorar não é viável |
 
 - **Peso perceptual (D):** dessaturação/brilho CONTÍNUOS escalam com x; o
   DESFOQUE é um LAPSO discreto (`defocusN`): a vista sai de foco em **1s REAL**
@@ -54,7 +54,7 @@
 - **Descoberta (E):** o hint `- pausa` da MenuBar acende em âmbar no telegraph e
   pulsa quando exausto (âmbar = "a ação de agora" — e a ação é pausar).
 - **Esquecimento agressivo (o lapso que ESCALA):** dura 30→90min, cooldown
-  encolhe 14→5min, e o nº de slots esquecidos AO MESMO TEMPO cresce (1→3).
+  encolhe 7→2.5min, e o nº de slots esquecidos AO MESMO TEMPO cresce (1→3).
   A piscada é rara de propósito — o peso vem do blur + esquecimento.
 - Ritmo emergente: telegraph ~11h30 (pausa de "almoço"), de novo ~15h (café da
   tarde) → **~2 pausas/dia** saem do horário. Ignorar não mata — mas o custo por
