@@ -2,6 +2,8 @@
 
 import type { Snapshot } from '@/core/snapshot';
 import { useGameStore } from '@/store/gameStore';
+import { muffleCutoffHz } from '@/store/sound';
+import { screenFx } from './fatigueFx';
 
 /**
  * Overlay de DEBUG da fadiga (`?debug=1`): estado, chances ativas, contadores,
@@ -76,6 +78,14 @@ export function FatigueDebug({ snapshot, resting }: { snapshot: Snapshot; restin
           </>
         )}
       </div>
+      {/* peso perceptual (D) — os valores REAIS aplicados (fatigueFx/sound) */}
+      {f.rates.x > 0 && (
+        <div className="text-white/50">
+          peso: blur <b className="text-white/80">{screenFx(f.rates.x).blur.toFixed(2)}px</b> · sat{' '}
+          <b className="text-white/80">{screenFx(f.rates.x).saturate.toFixed(2)}</b> · lowpass{' '}
+          <b className="text-white/80">{(muffleCutoffHz(f.rates.x) / 1000).toFixed(1)}kHz</b>
+        </div>
+      )}
       <div className="mt-1">
         piscadas <b className="text-white/80">{f.blinkN}</b> · bocejos{' '}
         <b className="text-white/80">{f.yawnN}</b> · emperradas{' '}

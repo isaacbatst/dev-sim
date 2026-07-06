@@ -294,10 +294,14 @@ export function setMuted(value: boolean): void {
  * O corte do lowpass desce de 18kHz (fresco) até ~3.5kHz (x=3) — os sons do
  * trabalho ficam progressivamente surdos, como ouvido cansado.
  */
+/** Corte do lowpass (Hz) por fadiga — puro, pro debug exibir o valor real. */
+export function muffleCutoffHz(x: number): number {
+  return Math.max(3200, 18000 * Math.exp(-0.55 * Math.min(3, Math.max(0, x))));
+}
+
 export function setMuffle(x: number): void {
   if (!muffle || !ctx) return;
-  const cutoff = 18000 * Math.exp(-0.55 * Math.min(3, Math.max(0, x)));
-  muffle.frequency.setTargetAtTime(Math.max(3200, cutoff), ctx.currentTime, 0.4);
+  muffle.frequency.setTargetAtTime(muffleCutoffHz(x), ctx.currentTime, 0.4);
 }
 
 export function isMuted(): boolean {

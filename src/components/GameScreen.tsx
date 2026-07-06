@@ -9,6 +9,7 @@ import { useBreak, BreakHud } from './desktop/Break';
 import { FatigueDebug } from './desktop/FatigueDebug';
 import { Boletim } from './desktop/Boletim';
 import { Daily } from './desktop/Daily';
+import { screenFx } from './desktop/fatigueFx';
 
 export function GameScreen() {
   const snapshot = useGameStore((s) => s.snapshot);
@@ -222,8 +223,9 @@ export function GameScreen() {
         >
           <Room clock={snapshot.clock} owned={career.owned} brk={brk}>
             {/* Fadiga na TELA (diegético, CONTÍNUO): dessaturação, blur e brilho
-                escalam com x (horas além do limiar) — o foco óptico indo embora,
-                cada vez mais, sem teto de estágio. */}
+                escalam com x — SEM transição CSS: o valor muda a cada frame e
+                a transição reiniciada 60x/s nunca alcança o alvo (o blur levava
+                muitos segundos pra aparecer). Só o "dormir" do monitor transiciona. */}
             <div
               className="h-full"
               style={{
@@ -232,10 +234,9 @@ export function GameScreen() {
                     ? // Manhã (daily) e fim do expediente: o monitor "dorme" —
                       // você ainda não sentou / já se afastou da mesa.
                       'brightness(0.3) saturate(0.5)'
-                    : snapshot.fatigue.rates.x > 0
-                      ? `saturate(${Math.max(0.72, 1 - 0.09 * snapshot.fatigue.rates.x)}) blur(${Math.min(2.4, 1.1 * snapshot.fatigue.rates.x).toFixed(2)}px) brightness(${Math.max(0.92, 1 - 0.025 * snapshot.fatigue.rates.x)})`
-                      : 'none',
-                transition: 'filter 1.2s ease',
+                    : screenFx(snapshot.fatigue.rates.x).filter,
+                transition:
+                  dailyOpen || snapshot.status !== 'playing' ? 'filter 1.5s ease' : 'none',
               }}
             >
               <Desktop
