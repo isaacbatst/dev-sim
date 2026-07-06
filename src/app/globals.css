@@ -410,6 +410,65 @@ body {
   animation: stamp 0.3s ease;
 }
 
+/* ── Boletim (HUD de fim de expediente): batidas sequenciadas ── */
+/* O boletim flutua sobre o QUARTO (sempre escuro), não sobre o monitor — os
+   tokens do tema não valem aqui. Escopo fixo mundo-escuro (como o Terminal),
+   com os accents do tema graveyard. Vale nos DOIS temas do devOS. */
+.hud-night {
+  --surface: #161922;
+  --surface-2: #1f2430;
+  --line: #2b3140;
+  --edge: transparent;
+  --ink: #d8dbe4;
+  --ink-dim: #7e8597;
+  --amber: #f5a623;
+  --pass: #5fd07a;
+  --fail: #ff5c57;
+}
+
+@keyframes beatin {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.beat-in {
+  animation: beatin 0.42s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .beat-in {
+    animation: none;
+  }
+}
+
+/* O carimbo da nota: bate na página e assenta levemente torto. */
+@keyframes carimbo {
+  0% {
+    opacity: 0;
+    transform: scale(1.7) rotate(-14deg);
+  }
+  55% {
+    opacity: 1;
+    transform: scale(0.94) rotate(-5deg);
+  }
+  100% {
+    transform: scale(1) rotate(-6deg);
+  }
+}
+.carimbo-in {
+  animation: carimbo 0.36s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .carimbo-in {
+    animation: none;
+    transform: rotate(-6deg);
+  }
+}
+
 @keyframes edgepulse {
   0%,
   100% {

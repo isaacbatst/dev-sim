@@ -7,6 +7,7 @@ import { Desktop } from './desktop/Desktop';
 import { Room } from './desktop/Workstation';
 import { useBreak, BreakHud } from './desktop/Break';
 import { FatigueDebug } from './desktop/FatigueDebug';
+import { Boletim } from './desktop/Boletim';
 
 export function GameScreen() {
   const snapshot = useGameStore((s) => s.snapshot);
@@ -167,11 +168,15 @@ export function GameScreen() {
     // Trabalho = enquadrado no monitor (scale 1, nítido); pausa = afastar a
     // cadeira (zoom out até o quarto inteiro). Geometria em Workstation.tsx.
     <div className="relative h-dvh w-full overflow-hidden bg-[#04050a]">
-      {/* câmera: zoom/enquadramento */}
+      {/* câmera: zoom/enquadramento. Fim do expediente = o mesmo gesto da pausa
+          (afastar da mesa); o boletim chega como HUD sobre a cena recuada. */}
       <div
         className="origin-top transition-transform duration-700 motion-reduce:transition-none"
         style={{
-          transform: onBreak ? 'translateY(-7.1dvh) scale(0.71)' : 'translateY(-25dvh) scale(1)',
+          transform:
+            onBreak || snapshot.status !== 'playing'
+              ? 'translateY(-7.1dvh) scale(0.71)'
+              : 'translateY(-25dvh) scale(1)',
           transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)',
         }}
       >
@@ -212,9 +217,13 @@ export function GameScreen() {
               className="h-full"
               style={{
                 filter:
-                  snapshot.fatigue.rates.x > 0
-                    ? `saturate(${Math.max(0.72, 1 - 0.09 * snapshot.fatigue.rates.x)}) blur(${Math.min(1.6, 0.6 * snapshot.fatigue.rates.x).toFixed(2)}px) brightness(${Math.max(0.92, 1 - 0.025 * snapshot.fatigue.rates.x)})`
-                    : 'none',
+                  snapshot.status !== 'playing'
+                    ? // Fim do expediente: o monitor "dorme" — a tela apaga
+                      // enquanto você se afasta (e o boletim lê melhor por cima).
+                      'brightness(0.3) saturate(0.5)'
+                    : snapshot.fatigue.rates.x > 0
+                      ? `saturate(${Math.max(0.72, 1 - 0.09 * snapshot.fatigue.rates.x)}) blur(${Math.min(1.6, 0.6 * snapshot.fatigue.rates.x).toFixed(2)}px) brightness(${Math.max(0.92, 1 - 0.025 * snapshot.fatigue.rates.x)})`
+                      : 'none',
                 transition: 'filter 2s ease',
               }}
             >
@@ -222,14 +231,10 @@ export function GameScreen() {
                 snapshot={snapshot}
                 day={day}
                 career={career}
-                dayResult={dayResult}
                 shake={shake}
                 floatScore={floatScore}
                 onFocusProgram={focusProgram}
                 onSelect={selectSlot}
-                onNextDay={nextDay}
-                onBuy={buyCosmetic}
-                onPickTask={pickTask}
               />
             </div>
           </Room>
@@ -266,6 +271,20 @@ export function GameScreen() {
           );
         })()}
       </div>
+      {/* Boletim de fim de expediente: HUD sobre a cena recuada (fora da câmera).
+          key={day} zera as batidas a cada dia. */}
+      {snapshot.status !== 'playing' && (
+        <Boletim
+          key={day}
+          snapshot={snapshot}
+          day={day}
+          career={career}
+          dayResult={dayResult}
+          onNextDay={nextDay}
+          onBuy={buyCosmetic}
+          onPickTask={pickTask}
+        />
+      )}
       {/* overlay de debug da fadiga (?debug=1) */}
       {debug && <FatigueDebug snapshot={snapshot} resting={onBreak} />}
       {/* HUD da pausa: parado, sem zoom e sem inclinação */}

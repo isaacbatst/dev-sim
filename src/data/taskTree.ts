@@ -13,9 +13,22 @@ import type { TicketTemplate } from '@/core/domain/types';
 /** Pool do dia 1 — o estagiário vive de reunião/e-mail/estudo; código é escolha. */
 export const INITIAL_TASKS = ['meeting', 'email', 'slack', 'study', 'test_feature', 'document'];
 
+/** Os 4 ramos = 4 identidades de dev. Cores dos accents que o devOS já usa
+ *  (ops = o verde do Terminal). */
+export type BranchId = 'consertador' | 'construtor' | 'arquiteto' | 'ops';
+
+export const BRANCHES: Record<BranchId, { nome: string; cor: string }> = {
+  consertador: { nome: 'Consertador', cor: '#ff8a7a' },
+  construtor: { nome: 'Construtor', cor: '#5b9bff' },
+  arquiteto: { nome: 'Arquiteto', cor: '#c084fc' },
+  ops: { nome: 'Ops', cor: '#5fd07a' },
+};
+
 export interface TreeNode {
   /** Id do ticket (TICKETS). */
   id: string;
+  /** Ramo/identidade a que o nó pertence. */
+  branch: BranchId;
   /** Pré-requisitos (ids de nós da árvore). Vazio = raiz. */
   requires: string[];
   /** O gesto/graça, numa linha (copy do card de escolha). */
@@ -24,65 +37,96 @@ export interface TreeNode {
 
 export const TASK_TREE: TreeNode[] = [
   // A · Consertador
-  { id: 'fix_typo', requires: [], gesto: 'navegue até a linha e conserte — seu primeiro commit' },
-  { id: 'fix_bug', requires: ['fix_typo'], gesto: 'pesquise no Chrome, copie e cole a correção' },
+  {
+    id: 'fix_typo',
+    branch: 'consertador',
+    requires: [],
+    gesto: 'navegue até a linha e conserte — seu primeiro commit',
+  },
+  {
+    id: 'fix_bug',
+    branch: 'consertador',
+    requires: ['fix_typo'],
+    gesto: 'pesquise no Chrome, copie e cole a correção',
+  },
   {
     id: 'fix_login_bug',
+    branch: 'consertador',
     requires: ['fix_bug'],
     gesto: 'investigue e corrija o bug do login (multi)',
   },
   {
     id: 'deploy_hotfix',
+    branch: 'consertador',
     requires: ['fix_typo'],
     gesto: 'urgência: avise o time no Slack e corrija na hora (multi ⚡)',
   },
   // B · Construtor
-  { id: 'ui_update', requires: [], gesto: 'disque cores e tamanhos com ← → (preview ao vivo)' },
+  {
+    id: 'ui_update',
+    branch: 'construtor',
+    requires: [],
+    gesto: 'disque cores e tamanhos com ← → (preview ao vivo)',
+  },
   {
     id: 'new_ui_feature',
+    branch: 'construtor',
     requires: ['ui_update'],
     gesto: 'pesquise e implemente a mudança visual (multi)',
   },
   {
     id: 'modulo_novo',
+    branch: 'construtor',
     requires: ['ui_update'],
     gesto: 'crie o arquivo e escreva o módulo — a receita N → escrever → salvar',
   },
   {
     id: 'servico_novo',
+    branch: 'construtor',
     requires: ['modulo_novo'],
     gesto: 'a receita longa: módulo + subir réplicas no Terminal (multi)',
   },
   // C · Arquiteto
-  { id: 'review_pr', requires: [], gesto: 'despache os comentários do PR — J/K/L' },
+  {
+    id: 'review_pr',
+    branch: 'arquiteto',
+    requires: [],
+    gesto: 'despache os comentários do PR — J/K/L',
+  },
   {
     id: 'refactor',
+    branch: 'arquiteto',
     requires: ['review_pr'],
     gesto: 'segure e solte na zona certa (precisão, sem exagerar)',
   },
   {
     id: 'refactor_module',
+    branch: 'arquiteto',
     requires: ['refactor'],
     gesto: 'estude, refatore e teste o módulo inteiro (multi)',
   },
   {
     id: 'spike',
+    branch: 'arquiteto',
     requires: ['review_pr'],
     gesto: 'timebox: pesquise, rascunhe e entregue direto — sem CR, joga fora',
   },
   // D · Ops
   {
     id: 'bump_dep',
+    branch: 'ops',
     requires: [],
     gesto: 'suba a versão no package.json e instale — J → B → I',
   },
   {
     id: 'rotate_keys',
+    branch: 'ops',
     requires: ['bump_dep'],
     gesto: 'gere e aplique a nova key no .env — segredo não vai pra PR',
   },
   {
     id: 'infra_manutencao',
+    branch: 'ops',
     requires: ['rotate_keys'],
     gesto: 'o Terminal: digite comandos de verdade — rst api, up × réplicas',
   },

@@ -1,50 +1,31 @@
 import type { Snapshot } from '@/core/snapshot';
-import type { Career, DayResult } from '@/store/gameStore';
-import { positionName, levelProgress } from '@/data/positions';
-import { COSMETICS } from '@/data/cosmetics';
-import { TICKETS } from '@/data/tickets';
-import { eligibleNodes } from '@/data/taskTree';
+import type { Career } from '@/store/gameStore';
+import { positionName } from '@/data/positions';
 import { MenuBar } from './MenuBar';
 import { InboxPanel } from './InboxPanel';
 import { AppWindow } from './AppWindow';
 import { Comanda } from './Comanda';
 
-/** Nota do dia → letra (boletim). Limiares chutados — afinar no playtest. */
-function dayGrade(score: number): string {
-  if (score >= 600) return 'S';
-  if (score >= 400) return 'A';
-  if (score >= 250) return 'B';
-  if (score >= 120) return 'C';
-  return 'D';
-}
-
-/** A área de trabalho inteira. Apresentação pura — sem lógica de jogo. */
+/** A área de trabalho inteira. Apresentação pura — sem lógica de jogo.
+ *  O boletim de fim de dia NÃO mora aqui: é HUD (Boletim.tsx), fora do monitor. */
 export function Desktop({
   snapshot,
   day,
   career,
-  dayResult,
   shake,
   floatScore,
   onFocusProgram,
   onSelect,
-  onNextDay,
-  onBuy,
-  onPickTask,
 }: {
   snapshot: Snapshot;
   day: number;
   career: Career;
-  dayResult: DayResult | null;
   shake: boolean;
   floatScore: string | null;
   onFocusProgram: (id: import('@/core/snapshot').ProgramId) => void;
   onSelect: (index: number) => void;
-  onNextDay: () => void;
-  onBuy: (id: string, preco: number) => void;
-  onPickTask: (id: string) => void;
 }) {
-  const { status, clock, delivered, expired, score, slots, active } = snapshot;
+  const { clock, delivered, expired, score, slots, active } = snapshot;
   const openCount = slots.filter(Boolean).length;
 
   return (
@@ -108,77 +89,6 @@ export function Desktop({
       {/* Comanda: barra full-width na base do monitor, SEMPRE presente (altura
           reservada → backlog/janela não dão resize quando a demanda abre/fecha). */}
       <Comanda active={active} />
-
-      {status !== 'playing' && (
-        <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/85 p-6 backdrop-blur-sm">
-          {/* Fim de dia = boletim/carreira — o artefato de share (POSICIONAMENTO §3/§5). */}
-          <div className="elev-2 w-full max-w-sm rounded-xl border border-edge bg-surface p-6 text-center">
-            <p className="font-code text-[11px] uppercase tracking-[0.25em] text-ink-dim">
-              Dia {day} · 17:00
-            </p>
-            <h2 className="mt-1 font-code text-2xl font-bold text-ink">fim do expediente</h2>
-
-            {/* Promoção (o marco) ou a posição atual */}
-            {dayResult?.promotedTo ? (
-              <p className="mt-4 text-sm leading-relaxed text-ink">
-                <span className="font-semibold text-amber">Promovido</span> a{' '}
-                <span className="font-semibold text-amber">
-                  {positionName(dayResult.promotedTo)}
-                </span>{' '}
-                🎉
-              </p>
-            ) : (
-              <p className="mt-4 text-sm leading-relaxed text-ink">
-                Fechou o dia como{' '}
-                <span className="font-semibold text-amber">{positionName(career.level)}</span>.
-              </p>
-            )}
-
-            {/* Nota do dia */}
-            <div className="mt-5 flex items-center justify-center gap-3">
-              <span className="font-code text-5xl font-bold leading-none text-amber">
-                {dayGrade(score)}
-              </span>
-              <span className="text-left">
-                <span className="block font-mono text-lg tabular-nums text-ink">{score}</span>
-                <span className="block font-mono text-[10px] uppercase tracking-wider text-ink-dim">
-                  nota do dia
-                </span>
-              </span>
-            </div>
-
-            <div className="mt-4 flex justify-center gap-4 font-mono text-xs">
-              <span className="text-pass">✓ {delivered} entregues</span>
-              {expired > 0 && <span className="text-fail">✕ {expired} perdidas</span>}
-            </div>
-
-            {/* Árvore de tasks: a escolha do dia (o presente do boletim — §3) */}
-            <TaskPick career={career} day={day} onPick={onPickTask} />
-
-            {/* Barra pra próxima posição (o caminho a percorrer) */}
-            <CareerBar career={career} />
-
-            <div className="mt-4 flex items-center justify-center gap-4 font-mono text-[11px] text-ink-dim">
-              <span>
-                🔥 <span className="text-ink">{career.streak}</span> dias seguidos
-              </span>
-              <span>
-                💰 <span className="text-ink tabular-nums">{Math.round(career.wallet)}</span>
-              </span>
-            </div>
-
-            {/* Loja: gasta $ em cosméticos da mesa (identidade, nunca poder §6). */}
-            <Shop career={career} onBuy={onBuy} />
-
-            <button
-              onClick={onNextDay}
-              className="mt-5 rounded-lg border border-amber px-5 py-2 font-grotesk font-semibold text-amber transition-colors hover:bg-amber/10"
-            >
-              Próximo dia →
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -189,120 +99,5 @@ function KeyHintInline() {
       <kbd className="keycap !h-5 !min-w-5 !text-[10px]">1</kbd>–
       <kbd className="keycap !h-5 !min-w-5 !text-[10px]">5</kbd>
     </span>
-  );
-}
-
-/** Árvore de tasks (PROGRESSAO §3): 1 escolha/dia entre os nós elegíveis —
- *  cards com o nome e o GESTO numa linha; escolheu, entra no pool de amanhã. */
-function TaskPick({
-  career,
-  day,
-  onPick,
-}: {
-  career: Career;
-  day: number;
-  onPick: (id: string) => void;
-}) {
-  const pickedToday = career.lastPickDay >= day;
-  const eligible = eligibleNodes(career.unlockedTasks);
-  if (pickedToday) {
-    const last = career.unlockedTasks[career.unlockedTasks.length - 1];
-    const name = last ? (TICKETS[last]?.name ?? last) : null;
-    if (!name) return null;
-    return (
-      <div className="mt-5 border-t border-line pt-4">
-        <p className="font-mono text-[11px] text-ink-dim">
-          <span className="text-pass">✓</span> amanhã no backlog:{' '}
-          <span className="text-ink">{name}</span>
-        </p>
-      </div>
-    );
-  }
-  if (eligible.length === 0) return null;
-  return (
-    <div className="mt-5 border-t border-line pt-4 text-left">
-      <p className="mb-2 text-center font-mono text-[10px] uppercase tracking-[0.2em] text-amber">
-        nova demanda desbloqueada — escolha uma
-      </p>
-      <div className="flex flex-col gap-1.5">
-        {eligible.map((n) => (
-          <button
-            key={n.id}
-            onClick={() => onPick(n.id)}
-            className="group rounded-md border border-line/60 bg-bg/40 px-3 py-2 text-left transition-colors hover:border-amber/60 hover:bg-amber/10"
-          >
-            <p className="text-sm font-semibold text-ink group-hover:text-amber">
-              {TICKETS[n.id]?.name ?? n.id}
-            </p>
-            <p className="mt-0.5 font-mono text-[10px] leading-relaxed text-ink-dim">{n.gesto}</p>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/** Loja de cosméticos no boletim: compra com `$` da carreira. */
-function Shop({ career, onBuy }: { career: Career; onBuy: (id: string, preco: number) => void }) {
-  return (
-    <div className="mt-5 border-t border-line pt-4 text-left">
-      <p className="mb-2 text-center font-mono text-[10px] uppercase tracking-[0.2em] text-ink-dim">
-        loja · a sua mesa
-      </p>
-      <div className="flex flex-col gap-1.5">
-        {COSMETICS.map((c) => {
-          const owned = career.owned.includes(c.id);
-          const canBuy = !owned && career.wallet >= c.preco;
-          return (
-            <div key={c.id} className="flex items-center gap-2">
-              <div className="min-w-0 flex-1">
-                <p className="text-sm text-ink">{c.nome}</p>
-                <p className="truncate font-mono text-[10px] text-ink-dim">{c.desc}</p>
-              </div>
-              {owned ? (
-                <span className="font-mono text-[11px] text-pass">✓ seu</span>
-              ) : (
-                <button
-                  onClick={() => onBuy(c.id, c.preco)}
-                  disabled={!canBuy}
-                  className={`rounded-md px-2.5 py-1 font-mono text-[11px] tabular-nums transition-colors ${
-                    canBuy
-                      ? 'bg-amber/15 text-amber hover:bg-amber/25'
-                      : 'cursor-not-allowed text-ink-dim'
-                  }`}
-                >
-                  💰 {c.preco}
-                </button>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-/** Barra do progresso pra próxima posição — o caminho a percorrer. */
-function CareerBar({ career }: { career: Career }) {
-  const { level, frac, toNext } = levelProgress(career.careerTotal);
-  return (
-    <div className="mt-5 text-left">
-      <div className="mb-1 flex items-center justify-between font-mono text-[10px] text-ink-dim">
-        <span className="text-ink">{positionName(level)}</span>
-        {toNext !== null ? (
-          <span>
-            {positionName(level + 1)} · faltam {toNext}
-          </span>
-        ) : (
-          <span>topo da carreira</span>
-        )}
-      </div>
-      <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
-        <div
-          className="h-full rounded-full bg-amber transition-[width]"
-          style={{ width: `${frac * 100}%` }}
-        />
-      </div>
-    </div>
   );
 }

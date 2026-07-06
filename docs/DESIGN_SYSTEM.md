@@ -296,6 +296,20 @@ pra hierarquia e pro grão.
 
 ## Changelog
 
+- **2026-07-06:** **Boletim vira HUD com batidas (Boletim.tsx).** Fim do
+  expediente = o MESMO gesto da pausa: a câmera recua da mesa, o monitor
+  "dorme" (brightness 0.3) e o boletim flutua sobre o quarto escurecido — sem
+  caixa/modal, tipografia direto na cena. Apresentação em 4 BATIDAS (~700ms,
+  tick sonoro; Enter/clique pula; reduced-motion mostra tudo): 17:00 → a nota
+  (CARIMBO torto `carimbo-in` + count-up) → promoção (rara) → carreira
+  enchendo o ganho do dia ao vivo + streak/carteira → a escolha da árvore por
+  último (o presente). Loja recolhida atrás de toggle. **Escopo `hud-night`**:
+  o boletim flutua sobre o QUARTO (sempre escuro), não sobre o monitor — os
+  tokens do tema não valem ali; o escopo fixa os neutros do graveyard (mesmo
+  princípio do Terminal sempre-escuro). Cards da escolha com a LOMBADA do ramo
+  (borda 3px + eyebrow na cor: Consertador coral `#ff8a7a`, Construtor azul,
+  Arquiteto roxo, Ops verde-Terminal) + overlay "a árvore" (4 colunas, estados
+  ● seu / ◇ escolhível pulsando / ○ exige o anterior — glifos, não emoji).
 - **2026-07-05:** **Comanda re-materializada: kraft → inverse-video do tema.**
   O papel creme/grão era objeto FÍSICO num mundo 100% software (não conversava).
   Agora: fundo derivado do `--ink` do tema (statusline de terminal invertida),
