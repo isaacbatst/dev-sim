@@ -528,7 +528,7 @@ function NeckDial({
   hits: number[];
   spinning: boolean;
 }) {
-  const R = 44;
+  const R = 52;
   const C = 2 * Math.PI * R;
   const frac = Math.min(1, progress / 4);
   const ARROWS = ['↑', '→', '↓', '←'];
@@ -549,12 +549,12 @@ function NeckDial({
       }}
       aria-hidden
     >
-      <div className="relative size-32">
-        <svg viewBox="0 0 128 128" className="absolute inset-0 size-full -rotate-90">
-          <circle cx="64" cy="64" r={R} fill="none" stroke="var(--line)" strokeWidth="2.5" />
+      <div className="relative size-40">
+        <svg viewBox="0 0 160 160" className="absolute inset-0 size-full -rotate-90">
+          <circle cx="80" cy="80" r={R} fill="none" stroke="var(--line)" strokeWidth="2.5" />
           <circle
-            cx="64"
-            cy="64"
+            cx="80"
+            cy="80"
             r={R}
             fill="none"
             stroke={done ? 'var(--pass)' : 'var(--amber)'}
@@ -571,7 +571,7 @@ function NeckDial({
           return (
             <kbd
               key={g}
-              className={`keycap absolute !h-7 !min-w-7 !text-xs ${
+              className={`keycap absolute ${
                 isNext ? 'keycap--current animate-edgepulse' : done || isHit ? 'keycap--done' : ''
               }`}
               style={POS[i]}
