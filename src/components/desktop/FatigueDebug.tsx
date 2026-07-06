@@ -4,6 +4,7 @@ import type { Snapshot } from '@/core/snapshot';
 import { useGameStore } from '@/store/gameStore';
 import { muffleCutoffHz } from '@/store/sound';
 import { screenFx, blurMaxPx } from './fatigueFx';
+import { setDeskArt, useDeskArt, type ArtVariant } from './deskArt';
 
 /**
  * Overlay de DEBUG da fadiga (`?debug=1`): estado, chances ativas, contadores,
@@ -151,6 +152,35 @@ export function FatigueDebug({ snapshot, resting }: { snapshot: Snapshot; restin
           desfocar
         </button>
       </div>
+      <ArtToggle />
+    </div>
+  );
+}
+
+/** Toggle das versões de arte da mesa (planta/caneca) — avaliação de estilo. */
+function ArtToggle() {
+  const art = useDeskArt();
+  const row = (kind: 'plant' | 'mug', label: string) => (
+    <span className="flex items-center gap-1">
+      <span className="text-white/50">{label}</span>
+      {(['a', 'b', 'c'] as ArtVariant[]).map((v) => (
+        <button
+          key={v}
+          onClick={() => setDeskArt(kind, v)}
+          className={`rounded px-1.5 py-0.5 uppercase ${
+            art[kind] === v ? 'bg-white/25 text-white' : 'bg-white/10 hover:bg-white/20'
+          }`}
+        >
+          {v}
+        </button>
+      ))}
+    </span>
+  );
+  return (
+    <div className="mt-1.5 flex items-center gap-3 border-t border-white/10 pt-1.5">
+      <span className="text-white/50">arte:</span>
+      {row('plant', 'planta')}
+      {row('mug', 'caneca')}
     </div>
   );
 }

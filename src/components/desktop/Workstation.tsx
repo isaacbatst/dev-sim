@@ -1,5 +1,6 @@
 import type { BreakState } from './Break';
 import { DeskItems } from './Break';
+import { PlantArt, useDeskArt } from './deskArt';
 
 /**
  * O QUARTO — modelo MUNDO + CÂMERA (engine-style, em CSS puro). O mundo é uma
@@ -37,6 +38,7 @@ export function Room({
   brk: BreakState;
   children: React.ReactNode;
 }) {
+  const art = useDeskArt();
   const ambient = ambientFor(clock);
 
   return (
@@ -187,8 +189,31 @@ export function Room({
         />
       </div>
 
-      {/* ITENS DA MESA — à frente do monitor, mais fundo (raspão no trabalho) */}
-      <div className="absolute inset-x-0" style={{ top: `${HORIZON + 8}dvh`, height: '26dvh' }}>
+      {/* PLANTA — na LATERAL do monitor, em pé na mesa (visível o dia todo,
+          na altura do monitor; pulsa ao regar). Depois do monitor no DOM →
+          pinta na frente da beirada da moldura. */}
+      {owned.includes('planta') && (
+        <div
+          className="absolute"
+          style={{
+            bottom: `${WORLD_H - HORIZON}dvh`,
+            left: 'calc(50% - min(560px, 47.5vw))',
+            transform: 'translateX(-70%)',
+          }}
+        >
+          <PlantArt
+            variant={art.plant}
+            size={1.15}
+            pulseKey={brk.leafN}
+            highlight={brk.mode === 'planta'}
+          />
+        </div>
+      )}
+
+      {/* ITENS DA MESA — à frente do monitor. Mais altos que antes: no
+          TRABALHO a caneca/teclado aparecem de verdade na beirada (a mesa é
+          sua o dia todo), não só a pontinha. */}
+      <div className="absolute inset-x-0" style={{ top: `${HORIZON + 2}dvh`, height: '32dvh' }}>
         <DeskItems owned={owned} brk={brk} />
       </div>
     </div>
