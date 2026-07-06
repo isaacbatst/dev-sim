@@ -337,6 +337,7 @@ export function GameScreen() {
           relief={brk.relief}
           neckProgress={brk.neckProgress}
           neckNexts={brk.neckNexts}
+          neckHits={brk.neckHits}
           spinning={brk.spinning}
           onResume={() => setBreak(false)}
         />

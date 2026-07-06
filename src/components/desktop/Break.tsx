@@ -52,6 +52,8 @@ export interface BreakState {
   neckProgress: number;
   /** Ângulos (0=↑ 1=→ 2=↓ 3=←) que continuam o giro agora (pro HUD pulsar). */
   neckNexts: number[];
+  /** Ângulos já apertados na sequência atual (o HUD afunda esses keycaps). */
+  neckHits: number[];
   relief: number;
   notes: { id: number; idx: number }[];
   setNotes: React.Dispatch<React.SetStateAction<{ id: number; idx: number }[]>>;
@@ -74,6 +76,7 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
   const [spinning, setSpinning] = useState(false);
   const [neckProgress, setNeckProgress] = useState(0);
   const [neckNexts, setNeckNexts] = useState<number[]>([]);
+  const [neckHits, setNeckHits] = useState<number[]>([]);
   const [relief, setRelief] = useState(0);
   const tiltRef = useRef({ dx: 0, dy: 0 });
   const seq = useRef<{ a: number; t: number }[]>([]);
@@ -176,6 +179,7 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
       // HUD: progresso + quais direções continuam o giro agora
       if (rot === 0) {
         setNeckProgress(s.length);
+        setNeckHits(s.map((e) => e.a));
         setNeckNexts(
           s.length === 1
             ? [(a + 1) % 4, (a + 3) % 4]
@@ -189,12 +193,14 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
           seq.current = [];
           setNeckProgress(0);
           setNeckNexts([]);
+          setNeckHits([]);
         }, 1300);
       }
       if (rot !== 0) {
         if (seqT.current) clearTimeout(seqT.current);
         setNeckProgress(4);
         setNeckNexts([]);
+        setNeckHits([]);
         // COMBO: contra-giro automático no sentido INVERSO, junto com o mix
         // (que já contém o estalo → cancela os individuais pendentes).
         seq.current.length = 0;
@@ -343,6 +349,7 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
     spinning,
     neckProgress,
     neckNexts,
+    neckHits,
     relief,
     notes,
     setNotes,
@@ -445,6 +452,7 @@ export function BreakHud({
   relief,
   neckProgress,
   neckNexts,
+  neckHits,
   spinning,
   onResume,
 }: {
@@ -454,6 +462,7 @@ export function BreakHud({
   relief: number;
   neckProgress: number;
   neckNexts: number[];
+  neckHits: number[];
   spinning: boolean;
   onResume: () => void;
 }) {
@@ -473,7 +482,7 @@ export function BreakHud({
           roda, o próximo aceso (--current), o arco enchendo. É a instrução. */}
       {mode === 'mesa' && (
         <div className="absolute inset-0 flex items-center justify-center">
-          <NeckDial progress={neckProgress} nexts={neckNexts} spinning={spinning} />
+          <NeckDial progress={neckProgress} nexts={neckNexts} hits={neckHits} spinning={spinning} />
         </div>
       )}
       {/* rodapé: relógio + dicas + voltar */}
@@ -511,10 +520,12 @@ export function BreakHud({
 function NeckDial({
   progress,
   nexts,
+  hits,
   spinning,
 }: {
   progress: number;
   nexts: number[];
+  hits: number[];
   spinning: boolean;
 }) {
   const R = 44;
@@ -556,11 +567,12 @@ function NeckDial({
         </svg>
         {ARROWS.map((g, i) => {
           const isNext = !done && nexts.includes(i);
+          const isHit = !done && hits.includes(i);
           return (
             <kbd
               key={g}
               className={`keycap absolute !h-7 !min-w-7 !text-xs ${
-                isNext ? 'keycap--current animate-edgepulse' : done ? 'keycap--done' : ''
+                isNext ? 'keycap--current animate-edgepulse' : done || isHit ? 'keycap--done' : ''
               }`}
               style={POS[i]}
             >
