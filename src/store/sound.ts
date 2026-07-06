@@ -43,7 +43,43 @@ function audio(): AudioContext | null {
     muffle.connect(ctx.destination);
   }
   if (ctx.state === 'suspended') void ctx.resume();
+  loadYawn(ctx);
   return ctx;
+}
+
+// Bocejo (fadiga): sample real — "yawn" por mrjswilson (freesound 795394, CC0;
+// ver public/sounds/CREDITS.md). Pré-carrega no init; o 1º bocejo só acontece
+// ~2h30 de jogo depois, então dá tempo de sobra.
+let yawnBuf: AudioBuffer | null = null;
+let yawnLoading = false;
+function loadYawn(c: AudioContext): void {
+  if (yawnBuf || yawnLoading) return;
+  yawnLoading = true;
+  fetch('/sounds/yawn.wav')
+    .then((r) => r.arrayBuffer())
+    .then((b) => c.decodeAudioData(b))
+    .then((buf) => {
+      yawnBuf = buf;
+    })
+    .catch(() => {
+      yawnLoading = false; // rede falhou → tenta de novo no próximo init
+    });
+}
+
+/** Toca o bocejo DIRETO no destino: é o corpo do jogador, não o "mundo ouvido"
+ *  — não passa pelo lowpass da fadiga (que abafa justamente o resto). */
+function playYawnSample(): boolean {
+  const c = audio();
+  if (!c || !yawnBuf) return false;
+  const src = c.createBufferSource();
+  src.buffer = yawnBuf;
+  src.playbackRate.value = 0.96 + Math.random() * 0.08;
+  const g = c.createGain();
+  g.gain.value = 0.5;
+  src.connect(g);
+  g.connect(c.destination);
+  src.start();
+  return true;
 }
 
 /** Tom curto com envelope percussivo. `slideTo` faz um glissando opcional. */
@@ -277,9 +313,12 @@ export function playSound(event: SoundEvent): void {
       noiseBurst(0.018, 420, 0.05);
       break;
     case 'yawn':
-      // Fadiga: bocejo — sopro descendente longo e macio (o telegraph).
-      tone(320, 0.9, { type: 'sine', gain: 0.05, slideTo: 150, attack: 0.25, cutoff: 900 });
-      noiseBurst(0.5, 700, 0.02);
+      // Fadiga: bocejo — sample real (CC0); síntese só como fallback se a
+      // rede ainda não entregou o buffer.
+      if (!playYawnSample()) {
+        tone(320, 0.9, { type: 'sine', gain: 0.05, slideTo: 150, attack: 0.25, cutoff: 900 });
+        noiseBurst(0.5, 700, 0.02);
+      }
       break;
   }
 }
