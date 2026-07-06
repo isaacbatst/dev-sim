@@ -308,6 +308,9 @@ export class Game {
 
   /** Tecla emperrada: engole o input em contexto de EXECUÇÃO (nunca julgado). */
   private stickyKeySwallows(inst: TicketInstance, opening: AppId | null): boolean {
+    // Na PAUSA nunca emperra: você não está no teclado do trabalho (os gestos
+    // da pausa — pescoço, regar, café — são descanso, não execução).
+    if (this.resting) return false;
     const r = fatigueRates(this.fatigueMin);
     if (r.stuckPKey <= 0) return false;
     if (this.fatigueMin - this.lastStuckAt < r.stuckCooldown) return false;
