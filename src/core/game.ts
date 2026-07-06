@@ -68,17 +68,17 @@ export function fatigueRates(fatigueMin: number) {
   const x = overworkH(fatigueMin);
   return {
     x,
-    /** piscada — bem rara: pontua o cansaço, o peso vem do desfoque/esquecimento */
-    blinkPMin: x <= 0 ? 0 : Math.min(0.06, 0.005 + 0.01 * x),
+    /** piscada — rara: pontua o cansaço, o peso vem do desfoque/esquecimento */
+    blinkPMin: x <= 0 ? 0 : Math.min(0.09, 0.008 + 0.015 * x),
     /** vista DESFOCA (lapso de 1s+1s reais na UI) — o peso perceptual do cansaço */
-    defocusPMin: x <= 0 ? 0 : Math.min(0.2, 0.02 + 0.045 * x),
+    defocusPMin: x <= 0 ? 0 : Math.min(0.15, 0.015 + 0.032 * x),
     /** bocejo — só de exausto (x≥1) em diante */
     yawnPMin: x < 1 ? 0 : Math.min(0.15, 0.022 + 0.025 * (x - 1)),
     /** tecla emperrada — por TECLA elegível (o lapso mais frequente) */
     stuckPKey: x <= 0 ? 0 : Math.min(0.8, 0.4 + 0.2 * x),
     stuckCooldown: Math.max(1.5, 5 - 1.5 * x),
     /** "tinha algo pra fazer?" — o lapso que ESCALA de verdade */
-    forgetPMin: x < 1 ? 0 : Math.min(0.64, 0.1 + 0.2 * (x - 1)),
+    forgetPMin: x < 1 ? 0 : Math.min(0.75, 0.13 + 0.25 * (x - 1)),
     forgetDuration: Math.min(90, 30 + 18 * (x - 1)),
     forgetCooldown: Math.max(2.5, 7 - 3 * (x - 1)),
     /** quantos slots podem estar esquecidos AO MESMO TEMPO */
