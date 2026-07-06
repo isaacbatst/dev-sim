@@ -257,12 +257,12 @@ export interface TicketInstance {
   remaining: number;
 }
 
-/** Prazo (s reais) por prioridade — generoso, afinar com playtest (§9/§11). */
+/** Prazo (s reais) por prioridade — afinar com playtest (§9/§11). */
 const DEADLINE_BY_PRIORITY: Record<Priority, number> = {
-  urgente: 50,
-  alta: 70,
-  normal: 100,
-  baixa: 135,
+  urgente: 40,
+  alta: 56,
+  normal: 80,
+  baixa: 108,
 };
 
 let nextTicketId = 1;

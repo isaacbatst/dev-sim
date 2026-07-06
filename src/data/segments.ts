@@ -296,5 +296,5 @@ export const SEGMENTS: Record<string, Segment> = {
   },
 
   // --- wait (AUDITORIA: tempo morto) ---
-  wait_cr: { type: 'wait', minDuration: 8, maxDuration: 15 },
+  wait_cr: { type: 'wait', minDuration: 8, maxDuration: 8 },
 };
