@@ -110,6 +110,12 @@ export class GameLoop {
     this.sync();
   }
 
+  /** Debug (?debug=1): força um lapso perceptual (piscada/desfoque). */
+  debugLapse(kind: 'blink' | 'defocus'): void {
+    this.game.debugLapse(kind);
+    this.sync();
+  }
+
   private frame = (ts: number): void => {
     // dt = tempo real decorrido, SEM clamp: o RAF é estrangulado a ~1fps em
     // segundo plano; clampear faria o relógio/deadlines/CR rastejarem. Assim o

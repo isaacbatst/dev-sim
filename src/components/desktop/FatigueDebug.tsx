@@ -3,7 +3,7 @@
 import type { Snapshot } from '@/core/snapshot';
 import { useGameStore } from '@/store/gameStore';
 import { muffleCutoffHz } from '@/store/sound';
-import { screenFx } from './fatigueFx';
+import { screenFx, blurMaxPx } from './fatigueFx';
 
 /**
  * Overlay de DEBUG da fadiga (`?debug=1`): estado, chances ativas, contadores,
@@ -29,6 +29,7 @@ const STAGE_COLOR: Record<string, string> = {
 
 export function FatigueDebug({ snapshot, resting }: { snapshot: Snapshot; resting: boolean }) {
   const debugFatigue = useGameStore((s) => s.debugFatigue);
+  const debugLapse = useGameStore((s) => s.debugLapse);
   const restoreFatigue = useGameStore((s) => s.restoreFatigue);
   const f = snapshot.fatigue;
   const forgotten = snapshot.slots.filter((s) => s?.forgotten);
@@ -65,8 +66,8 @@ export function FatigueDebug({ snapshot, resting }: { snapshot: Snapshot; restin
           'chances agora: nenhuma'
         ) : (
           <>
-            piscada {pct(f.rates.blinkPMin)}/min · emperrar {pct(f.rates.stuckPKey)}/tecla (cd{' '}
-            {f.rates.stuckCooldown.toFixed(0)}min)
+            piscada {pct(f.rates.blinkPMin)}/min · desfoque {pct(f.rates.defocusPMin)}/min ·
+            emperrar {pct(f.rates.stuckPKey)}/tecla (cd {f.rates.stuckCooldown.toFixed(0)}min)
             {f.rates.forgetPMin > 0 && (
               <>
                 {' '}
@@ -81,13 +82,15 @@ export function FatigueDebug({ snapshot, resting }: { snapshot: Snapshot; restin
       {/* peso perceptual (D) — os valores REAIS aplicados (fatigueFx/sound) */}
       {f.rates.x > 0 && (
         <div className="text-white/50">
-          peso: blur <b className="text-white/80">{screenFx(f.rates.x).blur.toFixed(2)}px</b> · sat{' '}
+          peso: desfoque até <b className="text-white/80">{blurMaxPx(f.rates.x).toFixed(1)}px</b>{' '}
+          (1s+1s reais) · sat{' '}
           <b className="text-white/80">{screenFx(f.rates.x).saturate.toFixed(2)}</b> · lowpass{' '}
           <b className="text-white/80">{(muffleCutoffHz(f.rates.x) / 1000).toFixed(1)}kHz</b>
         </div>
       )}
       <div className="mt-1">
-        piscadas <b className="text-white/80">{f.blinkN}</b> · bocejos{' '}
+        piscadas <b className="text-white/80">{f.blinkN}</b> · desfoques{' '}
+        <b className="text-white/80">{f.defocusN}</b> · bocejos{' '}
         <b className="text-white/80">{f.yawnN}</b> · emperradas{' '}
         <b className="text-white/80">{f.stuckN}</b>
       </div>
@@ -131,6 +134,21 @@ export function FatigueDebug({ snapshot, resting }: { snapshot: Snapshot; restin
           className="rounded bg-white/10 px-2 py-0.5 hover:bg-white/20"
         >
           zerar
+        </button>
+      </div>
+      {/* dispara os lapsos perceptuais na marra (testar timing/feel) */}
+      <div className="mt-1.5 flex gap-1.5">
+        <button
+          onClick={() => debugLapse('blink')}
+          className="rounded bg-white/10 px-2 py-0.5 hover:bg-white/20"
+        >
+          piscar
+        </button>
+        <button
+          onClick={() => debugLapse('defocus')}
+          className="rounded bg-white/10 px-2 py-0.5 hover:bg-white/20"
+        >
+          desfocar
         </button>
       </div>
     </div>

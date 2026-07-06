@@ -9,7 +9,7 @@ import { useBreak, BreakHud } from './desktop/Break';
 import { FatigueDebug } from './desktop/FatigueDebug';
 import { Boletim } from './desktop/Boletim';
 import { Daily } from './desktop/Daily';
-import { screenFx } from './desktop/fatigueFx';
+import { screenFx, blurMaxPx } from './desktop/fatigueFx';
 
 export function GameScreen() {
   const snapshot = useGameStore((s) => s.snapshot);
@@ -68,6 +68,21 @@ export function GameScreen() {
       setTimeout(() => setBlink(false), 300 + Math.min(450, 150 * x));
     } else if (n < prevBlinkN.current) {
       prevBlinkN.current = n; // novo dia (contador zerou)
+    }
+  }, [snapshot]);
+
+  // Vista desfocando (lapso): diffa defocusN e anima em TEMPO REAL — 1s até o
+  // desfoque máximo, 1s de volta ao foco (CSS transition na camada de blur).
+  const [defocus, setDefocus] = useState(false);
+  const prevDefocusN = useRef(0);
+  useEffect(() => {
+    const n = snapshot?.fatigue.defocusN ?? 0;
+    if (n > prevDefocusN.current) {
+      prevDefocusN.current = n;
+      setDefocus(true);
+      setTimeout(() => setDefocus(false), 1100); // 1s desfocando + pico curto
+    } else if (n < prevDefocusN.current) {
+      prevDefocusN.current = n; // novo dia
     }
   }, [snapshot]);
 
@@ -222,10 +237,9 @@ export function GameScreen() {
           }}
         >
           <Room clock={snapshot.clock} owned={career.owned} brk={brk}>
-            {/* Fadiga na TELA (diegético, CONTÍNUO): dessaturação, blur e brilho
-                escalam com x — SEM transição CSS: o valor muda a cada frame e
-                a transição reiniciada 60x/s nunca alcança o alvo (o blur levava
-                muitos segundos pra aparecer). Só o "dormir" do monitor transiciona. */}
+            {/* Fadiga na TELA: AMBIENTE contínuo (dessaturação/brilho seguem x
+                direto, sem transição — o valor muda a cada frame). O DESFOQUE é
+                camada separada abaixo: transição própria que não é reiniciada. */}
             <div
               className="h-full"
               style={{
@@ -239,15 +253,27 @@ export function GameScreen() {
                   dailyOpen || snapshot.status !== 'playing' ? 'filter 1.5s ease' : 'none',
               }}
             >
-              <Desktop
-                snapshot={snapshot}
-                day={day}
-                career={career}
-                shake={shake}
-                floatScore={floatScore}
-                onFocusProgram={focusProgram}
-                onSelect={selectSlot}
-              />
+              {/* DESFOQUE (lapso): a vista sai de foco em 1s REAL e volta em 1s.
+                  Camada própria: o filter só muda no evento → a transition vive. */}
+              <div
+                className="h-full motion-reduce:!filter-none"
+                style={{
+                  filter: defocus
+                    ? `blur(${blurMaxPx(snapshot.fatigue.rates.x).toFixed(1)}px)`
+                    : 'blur(0px)',
+                  transition: 'filter 1s ease-in-out',
+                }}
+              >
+                <Desktop
+                  snapshot={snapshot}
+                  day={day}
+                  career={career}
+                  shake={shake}
+                  floatScore={floatScore}
+                  onFocusProgram={focusProgram}
+                  onSelect={selectSlot}
+                />
+              </div>
             </div>
           </Room>
         </div>

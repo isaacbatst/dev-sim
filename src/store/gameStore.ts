@@ -123,6 +123,8 @@ interface GameState {
   setResting: (v: boolean) => void;
   restoreFatigue: () => void;
   debugFatigue: (min: number) => void;
+  /** Debug: força um lapso perceptual (piscada/desfoque). */
+  debugLapse: (kind: 'blink' | 'defocus') => void;
 }
 
 let loop: GameLoop | null = null;
@@ -227,6 +229,7 @@ export const useGameStore = create<GameState>((set, get) => {
     setResting: (v) => loop?.setResting(v),
     restoreFatigue: () => loop?.restoreFatigue(),
     debugFatigue: (min) => loop?.debugFatigue(min),
+    debugLapse: (kind) => loop?.debugLapse(kind),
     buyCosmetic: (id, preco) => {
       const c = { ...get().career };
       if (c.owned.includes(id) || c.wallet < preco) return;

@@ -183,6 +183,8 @@ export interface FatigueSnapshot {
   stage: FatigueStage;
   /** Contadores de lapsos (a UI diffa pra reagir; debug mostra). */
   blinkN: number;
+  /** Vista desfocou — a UI anima o blur (1s real até o máximo + 1s de volta). */
+  defocusN: number;
   yawnN: number;
   stuckN: number;
   /** Últimos eventos (para o overlay de debug). */
@@ -192,6 +194,7 @@ export interface FatigueSnapshot {
   rates: {
     x: number;
     blinkPMin: number;
+    defocusPMin: number;
     yawnPMin: number;
     stuckPKey: number;
     stuckCooldown: number;

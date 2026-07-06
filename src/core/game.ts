@@ -68,12 +68,14 @@ export function fatigueRates(fatigueMin: number) {
   const x = overworkH(fatigueMin);
   return {
     x,
-    /** piscada — bem rara: pontua o cansaço, o peso vem do blur/esquecimento */
-    blinkPMin: x <= 0 ? 0 : Math.min(0.12, 0.01 + 0.02 * x),
+    /** piscada — bem rara: pontua o cansaço, o peso vem do desfoque/esquecimento */
+    blinkPMin: x <= 0 ? 0 : Math.min(0.06, 0.005 + 0.01 * x),
+    /** vista DESFOCA (lapso de 1s+1s reais na UI) — o peso perceptual do cansaço */
+    defocusPMin: x <= 0 ? 0 : Math.min(0.2, 0.02 + 0.045 * x),
     /** bocejo — só de exausto (x≥1) em diante */
     yawnPMin: x < 1 ? 0 : Math.min(0.15, 0.022 + 0.025 * (x - 1)),
     /** tecla emperrada — por TECLA elegível (o lapso mais frequente) */
-    stuckPKey: x <= 0 ? 0 : Math.min(0.45, 0.08 + 0.1 * x),
+    stuckPKey: x <= 0 ? 0 : Math.min(0.5, 0.2 + 0.1 * x),
     stuckCooldown: Math.max(3, 10 - 3 * x),
     /** "tinha algo pra fazer?" — o lapso que ESCALA de verdade */
     forgetPMin: x < 1 ? 0 : Math.min(0.32, 0.05 + 0.1 * (x - 1)),
@@ -115,6 +117,7 @@ export class Game {
   /** Em pausa (a UI avisa): fadiga não acumula, lapsos não disparam. */
   private resting = false;
   private blinkN = 0;
+  private defocusN = 0;
   private yawnN = 0;
   private stuckN = 0;
   /** Até quando (min de jogo absolutos) cada slot está "esquecido". */
@@ -251,6 +254,12 @@ export class Game {
       this.logFatigue(`piscada (p=${(r.blinkPMin * 100).toFixed(1)}%/min)`);
     }
 
+    // vista desfoca (a UI anima 1s real até o máximo + 1s de volta)
+    if (Math.random() < r.defocusPMin * dMin) {
+      this.defocusN += 1;
+      this.logFatigue(`vista desfocou (p=${(r.defocusPMin * 100).toFixed(1)}%/min)`);
+    }
+
     // bocejo ocasional
     if (Math.random() < r.yawnPMin * dMin) {
       this.yawnN += 1;
@@ -328,6 +337,13 @@ export class Game {
   /** Debug: injeta minutos de fadiga (overlay ?debug=1). */
   debugFatigue(min: number): void {
     this.fatigueMin = Math.max(0, this.fatigueMin + min);
+  }
+
+  /** Debug: dispara um lapso perceptual na marra (a UI reage ao contador). */
+  debugLapse(kind: 'blink' | 'defocus'): void {
+    if (kind === 'blink') this.blinkN += 1;
+    else this.defocusN += 1;
+    this.logFatigue(`${kind === 'blink' ? 'piscada' : 'desfoque'} (forçado no debug)`);
   }
 
   selectSlot(index: number): void {
@@ -732,6 +748,7 @@ export class Game {
         min: this.fatigueMin,
         stage: this.fatigueStage(),
         blinkN: this.blinkN,
+        defocusN: this.defocusN,
         yawnN: this.yawnN,
         stuckN: this.stuckN,
         log: [...this.fatigueLog],
