@@ -60,7 +60,9 @@ const DEFAULT_CAREER: Career = {
   wallet: 0,
   streak: 0,
   lastPlayedDate: '',
-  owned: [],
+  // TESTE: planta+café de fábrica pra provar os rituais da pausa — reverter
+  // pra [] antes de qualquer release (cosmético é conquista da loja).
+  owned: ['planta', 'cafe'],
   unlockedTasks: [],
   lastPickDay: 0,
 };
@@ -69,7 +71,10 @@ function loadCareer(): Career {
   if (typeof window === 'undefined') return { ...DEFAULT_CAREER };
   try {
     const raw = localStorage.getItem(CAREER_KEY);
-    return raw ? { ...DEFAULT_CAREER, ...JSON.parse(raw) } : { ...DEFAULT_CAREER };
+    const c: Career = raw ? { ...DEFAULT_CAREER, ...JSON.parse(raw) } : { ...DEFAULT_CAREER };
+    // TESTE (ver DEFAULT_CAREER): garante os itens de fábrica em saves antigos.
+    c.owned = [...new Set([...DEFAULT_CAREER.owned, ...c.owned])];
+    return c;
   } catch {
     return { ...DEFAULT_CAREER };
   }
