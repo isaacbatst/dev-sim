@@ -335,6 +335,9 @@ export function GameScreen() {
           mode={brk.mode}
           owned={career.owned}
           relief={brk.relief}
+          neckProgress={brk.neckProgress}
+          neckNexts={brk.neckNexts}
+          spinning={brk.spinning}
           onResume={() => setBreak(false)}
         />
       )}

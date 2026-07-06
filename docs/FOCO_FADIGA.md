@@ -85,7 +85,7 @@ mesmo efeito:
 
 | Ritual | Requer | Gesto |
 | --- | --- | --- |
-| **Pescoço** | nada (todos têm) | estalar os 4 lados = o **combo circular** (contra-giro + mix já são o feedback de restaurado) |
+| **Pescoço** | nada (todos têm) | o **combo circular**: DUAS voltas completas (8 setas em ordem; o mostrador no HUD guia — arco + próxima seta pulsando); contra-giro + mix são o feedback |
 | **Regar** | planta (💰) | molhar todas as células da terra |
 | **Café** | café (💰) | 3 goles (a caneca esvazia) |
 | **Tocar** | teclado (💰) | ~8 notas |

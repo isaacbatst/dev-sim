@@ -48,6 +48,10 @@ export interface BreakState {
   flowing: boolean;
   /** Contra-giro automático do fecho do combo em curso. */
   spinning: boolean;
+  /** Progresso do combo circular (0..8 — DUAS voltas completas). */
+  neckProgress: number;
+  /** Ângulos (0=↑ 1=→ 2=↓ 3=←) que continuam o giro agora (pro HUD pulsar). */
+  neckNexts: number[];
   relief: number;
   notes: { id: number; idx: number }[];
   setNotes: React.Dispatch<React.SetStateAction<{ id: number; idx: number }[]>>;
@@ -68,9 +72,12 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
   const [tilt, setTiltState] = useState({ dx: 0, dy: 0 });
   const [flowing, setFlowing] = useState(false);
   const [spinning, setSpinning] = useState(false);
+  const [neckProgress, setNeckProgress] = useState(0);
+  const [neckNexts, setNeckNexts] = useState<number[]>([]);
   const [relief, setRelief] = useState(0);
   const tiltRef = useRef({ dx: 0, dy: 0 });
   const seq = useRef<{ a: number; t: number }[]>([]);
+  const seqT = useRef<ReturnType<typeof setTimeout> | null>(null);
   const spinTs = useRef<ReturnType<typeof setTimeout>[]>([]);
   const tiltT = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [notes, setNotes] = useState<{ id: number; idx: number }[]>([]);
@@ -119,8 +126,8 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
   // Alongamento natural: entra suave (~650ms), SEGURA no fundo (~1s) e solta
   // devagar (~1s) — nada de tique mecânico. CADA aperto agenda o SEU estalo
   // (independente, ~380ms depois, perto do fundo do movimento) — encadear
-  // rápido toca todos, em série. COMBO CIRCULAR: as 4 setas em ordem de
-  // rotação (qualquer sentido) = suspiro + anel de alívio (sem giro automático).
+  // rápido toca todos, em série. COMBO CIRCULAR: DUAS voltas completas (8
+  // setas em ordem de rotação, qualquer sentido) = ritual do pescoço.
   const setTilt = useCallback((d: { dx: number; dy: number }) => {
     tiltRef.current = d;
     setTiltState(d);
@@ -147,19 +154,47 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
       setTilt(d);
       if (tiltT.current) clearTimeout(tiltT.current);
       tiltT.current = setTimeout(() => setTilt({ dx: 0, dy: 0 }), 1650);
-      // sequência circular (ordem de rotação, qualquer sentido)
+      // sequência circular: DUAS voltas completas (8 setas em ordem de rotação,
+      // qualquer sentido). Mantém só o SUFIXO consistente — errar uma direção
+      // não zera tudo, recomeça dali.
       const now = performance.now();
-      const s = seq.current;
-      if (s.length && now - s[s.length - 1].t > 1300) s.length = 0;
+      let s = seq.current;
+      if (s.length && now - s[s.length - 1].t > 1300) s = [];
       s.push({ a, t: now });
-      if (s.length > 4) s.shift();
-      let rot: 1 | -1 | 0 = 0;
-      if (s.length === 4) {
-        const deltas = [1, 2, 3].map((i) => (s[i].a - s[i - 1].a + 4) % 4);
-        if (deltas.every((x) => x === 1)) rot = 1;
-        else if (deltas.every((x) => x === 3)) rot = -1;
+      let rotDelta: number | null = null; // 1 = horário, 3 = anti-horário
+      let start = s.length - 1;
+      for (let i = s.length - 1; i > 0; i--) {
+        const d = (s[i].a - s[i - 1].a + 4) % 4;
+        if (d !== 1 && d !== 3) break;
+        if (rotDelta === null) rotDelta = d;
+        else if (d !== rotDelta) break;
+        start = i - 1;
+      }
+      s = s.slice(start);
+      seq.current = s;
+      const rot: 1 | -1 | 0 = s.length >= 8 ? (rotDelta === 1 ? 1 : -1) : 0;
+      // HUD: progresso + quais direções continuam o giro agora
+      if (rot === 0) {
+        setNeckProgress(s.length);
+        setNeckNexts(
+          s.length === 1
+            ? [(a + 1) % 4, (a + 3) % 4]
+            : rotDelta !== null
+              ? [(a + rotDelta) % 4]
+              : [],
+        );
+        // sem seguir o giro, o progresso esfria junto com a janela da sequência
+        if (seqT.current) clearTimeout(seqT.current);
+        seqT.current = setTimeout(() => {
+          seq.current = [];
+          setNeckProgress(0);
+          setNeckNexts([]);
+        }, 1300);
       }
       if (rot !== 0) {
+        if (seqT.current) clearTimeout(seqT.current);
+        setNeckProgress(8);
+        setNeckNexts([]);
         // COMBO: contra-giro automático no sentido INVERSO, junto com o mix
         // (que já contém o estalo → cancela os individuais pendentes).
         seq.current.length = 0;
@@ -194,6 +229,7 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
             () => {
               setTilt({ dx: 0, dy: 0 });
               setSpinning(false);
+              setNeckProgress(0);
             },
             420 + 4 * 240,
           ),
@@ -305,6 +341,8 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
     tilt,
     flowing,
     spinning,
+    neckProgress,
+    neckNexts,
     relief,
     notes,
     setNotes,
@@ -405,12 +443,18 @@ export function BreakHud({
   mode,
   owned,
   relief,
+  neckProgress,
+  neckNexts,
+  spinning,
   onResume,
 }: {
   clock: string;
   mode: BreakMode;
   owned: string[];
   relief: number;
+  neckProgress: number;
+  neckNexts: number[];
+  spinning: boolean;
   onResume: () => void;
 }) {
   const has = (id: string) => owned.includes(id);
@@ -425,6 +469,13 @@ export function BreakHud({
           aria-hidden
         />
       )}
+      {/* o RITUAL do pescoço: mostrador circular — as setas em roda, a próxima
+          pulsando, o arco enchendo (2 voltas = 8 passos). É a instrução. */}
+      {mode === 'mesa' && (
+        <div className="absolute left-1/2 top-[16%] -translate-x-1/2">
+          <NeckDial progress={neckProgress} nexts={neckNexts} spinning={spinning} />
+        </div>
+      )}
       {/* rodapé: relógio + dicas + voltar */}
       <div className="pointer-events-auto mt-auto flex items-center justify-center gap-6 pb-5 font-mono text-xs text-white/50">
         <span className="tabular-nums text-white/75">{clock}</span>
@@ -433,7 +484,6 @@ export function BreakHud({
           <Hint k="⌫" label="voltar à mesa" />
         ) : (
           <>
-            <Hint k="← →" label="pescoço" wide />
             {has('planta') && <Hint k="R" label="regar" />}
             {has('cafe') && <Hint k="C" label="gole" />}
             {has('teclado') && <Hint k="A–K" label="tocar" wide />}
@@ -452,6 +502,90 @@ export function BreakHud({
 }
 
 /* ── peças ────────────────────────────────────────────────────── */
+
+/** Mostrador do combo do pescoço: as 4 setas em roda, a(s) próxima(s) pulsando
+ *  em âmbar (a linguagem do keycap), o arco enchendo — 2 voltas = 8 passos.
+ *  Sem texto de tutorial: o mostrador É a instrução. */
+function NeckDial({
+  progress,
+  nexts,
+  spinning,
+}: {
+  progress: number;
+  nexts: number[];
+  spinning: boolean;
+}) {
+  const R = 34;
+  const C = 2 * Math.PI * R;
+  const frac = Math.min(1, progress / 8);
+  const ARROWS = ['↑', '→', '↓', '←'];
+  const POS: React.CSSProperties[] = [
+    { top: 2, left: '50%', transform: 'translateX(-50%)' },
+    { right: 2, top: '50%', transform: 'translateY(-50%)' },
+    { bottom: 2, left: '50%', transform: 'translateX(-50%)' },
+    { left: 2, top: '50%', transform: 'translateY(-50%)' },
+  ];
+  const done = spinning || progress >= 8;
+  return (
+    // pastilha de HUD: fundo próprio — legível sobre o monitor aceso ou a parede
+    <div
+      className="flex flex-col items-center gap-2 rounded-2xl px-5 py-4"
+      style={{ background: 'rgba(5,7,12,0.72)' }}
+      aria-hidden
+    >
+      <div className="relative size-28">
+        <svg viewBox="0 0 112 112" className="absolute inset-0 size-full -rotate-90">
+          <circle
+            cx="56"
+            cy="56"
+            r={R}
+            fill="none"
+            stroke="rgba(255,255,255,0.12)"
+            strokeWidth="3"
+          />
+          <circle
+            cx="56"
+            cy="56"
+            r={R}
+            fill="none"
+            stroke={done ? 'var(--pass)' : 'var(--amber)'}
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeDasharray={C}
+            strokeDashoffset={C * (1 - (done ? 1 : frac))}
+            style={{ transition: 'stroke-dashoffset 220ms ease, stroke 220ms ease' }}
+          />
+        </svg>
+        {ARROWS.map((g, i) => {
+          const isNext = !done && nexts.includes(i);
+          const idle = !done && progress === 0;
+          return (
+            <span
+              key={g}
+              className={`absolute font-mono text-lg ${isNext || idle ? 'animate-edgepulse' : ''}`}
+              style={{
+                ...POS[i],
+                color: done
+                  ? 'var(--pass)'
+                  : isNext || idle
+                    ? 'var(--amber)'
+                    : 'rgba(255,255,255,0.35)',
+              }}
+            >
+              {g}
+            </span>
+          );
+        })}
+        <span className="absolute inset-0 flex items-center justify-center font-mono text-[11px] tabular-nums text-white/70">
+          {done ? '✓' : `${progress}/8`}
+        </span>
+      </div>
+      <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/40">
+        {done ? 'pescoço solto' : 'gire o pescoço · 2 voltas'}
+      </span>
+    </div>
+  );
+}
 
 function SoilGrid({
   wet,
