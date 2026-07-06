@@ -75,7 +75,7 @@ export function fatigueRates(fatigueMin: number) {
     /** vista DESFOCA (lapso de 1s+1s reais na UI) — o peso perceptual do cansaço */
     defocusPMin: x <= 0 ? 0 : Math.min(0.12, 0.01 + 0.025 * x),
     /** bocejo — só de exausto (x≥1) em diante */
-    yawnPMin: x < 1 ? 0 : Math.min(0.15, 0.022 + 0.0125 * (x - 1)),
+    yawnPMin: x < 1 ? 0 : Math.min(0.15, 0.022 + 0.00625 * (x - 1)),
     /** tecla emperrada — por TECLA elegível (o lapso mais frequente) */
     stuckPKey: x <= 0 ? 0 : Math.min(0.8, 0.4 + 0.2 * x),
     stuckCooldown: Math.max(1.5, 5 - 1.5 * x),
