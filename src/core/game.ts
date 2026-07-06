@@ -56,11 +56,13 @@ const CLOSE_KEY = 'x'; // fecha um programa aberto por engano (subjogo de abrir)
 // As curvas escalam com x = horas de trabalho além do limiar de cansado —
 // às 5-6h sem pausa o dia fica comicamente disfuncional (ignorar não é viável).
 const FAT_TIRED = 150; // ~2h30 de trabalho contínuo → telegraph + lapsos leves
-const FAT_EXHAUSTED = 210; // ~3h30 → lapsos fortes (x = 1)
+const FAT_EXHAUSTED = 195; // ~3h15 → lapsos fortes (x = 1)
 
-/** Horas de trabalho ALÉM do limiar de cansado (0 = fresco/limiar). */
+/** "Horas" de trabalho ALÉM do limiar de cansado (0 = fresco/limiar).
+ *  Divisor 45 (não 60): o x cresce ~33% mais rápido — a escalada toda
+ *  acelera junto (um só knob pro ritmo da espiral). */
 function overworkH(fatigueMin: number): number {
-  return Math.max(0, (fatigueMin - FAT_TIRED) / 60);
+  return Math.max(0, (fatigueMin - FAT_TIRED) / 45);
 }
 
 /** Curvas dos lapsos (probabilidades por MINUTO DE JOGO, salvo indicação). */
@@ -71,7 +73,7 @@ export function fatigueRates(fatigueMin: number) {
     /** piscada — rara: pontua o cansaço, o peso vem do desfoque/esquecimento */
     blinkPMin: x <= 0 ? 0 : Math.min(0.09, 0.008 + 0.015 * x),
     /** vista DESFOCA (lapso de 1s+1s reais na UI) — o peso perceptual do cansaço */
-    defocusPMin: x <= 0 ? 0 : Math.min(0.15, 0.015 + 0.032 * x),
+    defocusPMin: x <= 0 ? 0 : Math.min(0.12, 0.01 + 0.025 * x),
     /** bocejo — só de exausto (x≥1) em diante */
     yawnPMin: x < 1 ? 0 : Math.min(0.15, 0.022 + 0.025 * (x - 1)),
     /** tecla emperrada — por TECLA elegível (o lapso mais frequente) */

@@ -12,7 +12,7 @@ import { screenFx, blurMaxPx } from './fatigueFx';
  */
 
 // Limiares (espelho do core) — as CHANCES vêm do snapshot (fatigue.rates).
-const INFO = { tiredAt: 150, exhaustedAt: 210 };
+const INFO = { tiredAt: 150, exhaustedAt: 195 };
 const pct = (p: number) => `${(p * 100).toFixed(1)}%`;
 
 function fmtMin(min: number): string {
@@ -124,7 +124,7 @@ export function FatigueDebug({ snapshot, resting }: { snapshot: Snapshot; restin
           →cansado
         </button>
         <button
-          onClick={() => debugFatigue(215 - f.min)}
+          onClick={() => debugFatigue(200 - f.min)}
           className="rounded bg-white/10 px-2 py-0.5 hover:bg-white/20"
         >
           →exausto

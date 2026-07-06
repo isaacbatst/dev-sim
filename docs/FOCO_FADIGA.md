@@ -35,7 +35,8 @@
 ## 3. A curva (horas de expediente) — ESCALADA CONTÍNUA, SEM TETO
 
 "Exausto" é o COMEÇO do problema, não o fim. As curvas escalam com
-`x = horas de trabalho além do limiar de cansado` (implementação:
+`x = excesso além do limiar de cansado / 45min` (o divisor é O knob do ritmo
+da espiral — 45 e não 60: escalada ~33% mais rápida). Implementação:
 `fatigueRates()` em game.ts — fonte da verdade dos números):
 
 | Trabalho contínuo | x | O que acontece |
@@ -43,9 +44,9 @@
 | até ~2h30 | 0 | nada |
 | ~2h30 | 0 | **telegraph**: bocejo; hint `- pausa` acende em âmbar |
 | 2h30–3h30 | 0–1 | lapsos leves crescendo; dessaturação/blur começam |
-| ~3h30 (exausto) | 1 | esquecimento entra; hint da pausa PULSA |
-| ~4h30 | 2 | desfoques frequentes (pico ~2.8px), esquecer ~30%/min por ~48min, 2 slots juntos |
-| ~5h30+ | 2.5+ | comicamente disfuncional: emperrar ~80%/tecla (base 40%), esquecer ~40%/min por ~57min, até 3 slots esquecidos — ignorar não é viável |
+| ~3h15 (exausto) | 1 | esquecimento entra; hint da pausa PULSA |
+| ~4h00 | 2 | desfoques frequentes (pico ~2.8px), esquecer ~30%/min por ~48min, 2 slots juntos |
+| ~4h30+ | 2.5+ | comicamente disfuncional: emperrar ~80%/tecla (base 40%), esquecer ~40%/min por ~57min, até 3 slots esquecidos — ignorar não é viável |
 
 - **Peso perceptual (D):** dessaturação/brilho CONTÍNUOS escalam com x; o
   DESFOQUE é um LAPSO discreto (`defocusN`): a vista sai de foco em **1s REAL**
