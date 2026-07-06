@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as S from '@/store/breakSound';
+import { MugArt, useDeskArt } from './deskArt';
 
 /**
  * PAUSA ("-", a qualquer momento): o personagem se AFASTA do computador — zoom
@@ -404,10 +405,8 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
 
 export function DeskItems({ owned, brk }: { owned: string[]; brk: BreakState }) {
   const has = (id: string) => owned.includes(id);
-  const { mode, notes, setNotes, lit, sipN, wet, setWet, leafN, water } = brk;
-  // Prompts ancorados nos objetos (game UI): só na pausa, e não em modo planta
-  // (a grade de terra assume). Vivem NA CENA — inclinam com o pescoço.
-  const prompts = brk.active && mode === 'mesa';
+  const { mode, notes, setNotes, lit, sipN, wet, setWet, water } = brk;
+  const art = useDeskArt();
 
   return (
     <div className="relative flex h-full items-start justify-center">
@@ -418,76 +417,67 @@ export function DeskItems({ owned, brk }: { owned: string[]; brk: BreakState }) 
         </div>
       )}
 
-      <div style={{ perspective: '1100px' }}>
-        <div
-          className="flex items-end gap-16"
-          style={{ transform: 'rotateX(26deg)', transformOrigin: 'center 20%' }}
-        >
-          {has('planta') && (
-            <div className="relative">
-              <Plant size={1} pulseKey={leafN} highlight={mode === 'planta'} />
-              {prompts && <ObjectPrompt k="R" label="regar" total={12} done={brk.waterN} />}
+      <div className="flex items-end gap-14">
+        {/* caneca FORA do plano inclinado: é arte de frente — dentro do
+            rotateX ela sai cisalhada ("itálico") por estar fora do eixo. */}
+        <div key={sipN} className={`mb-1 ${sipN > 0 ? 'animate-sipmug' : ''}`}>
+          <MugArt variant={art.mug} steaming={has('cafe')} />
+        </div>
+
+        <div style={{ perspective: '1100px' }}>
+          <div
+            className="flex items-end gap-16"
+            style={{ transform: 'rotateX(26deg)', transformOrigin: 'center 20%' }}
+          >
+            {/* teclado (tecladinho se comprou o mecânico) */}
+            <div
+              className="relative h-32 w-[min(520px,46vw)] rounded-2xl"
+              style={{
+                background: 'linear-gradient(180deg, #191b24, #0c0e14)',
+                boxShadow: has('teclado')
+                  ? '0 40px 50px -16px rgba(0,0,0,0.8), 0 1px 0 rgba(255,255,255,0.06) inset, 0 -3px 34px -6px rgba(120,160,255,0.5)'
+                  : '0 40px 50px -16px rgba(0,0,0,0.8), 0 1px 0 rgba(255,255,255,0.06) inset',
+                backgroundImage: has('teclado')
+                  ? 'repeating-linear-gradient(90deg, rgba(140,120,255,0.22) 0 4.5%, transparent 4.5% 6.5%), repeating-linear-gradient(0deg, rgba(90,200,255,0.18) 0 24%, transparent 24% 32%)'
+                  : 'repeating-linear-gradient(90deg, rgba(255,255,255,0.04) 0 4.5%, transparent 4.5% 6.5%), repeating-linear-gradient(0deg, rgba(255,255,255,0.04) 0 24%, transparent 24% 32%)',
+              }}
+            >
+              {has('teclado') && (
+                <div className="absolute inset-x-4 bottom-4 top-4 flex gap-1">
+                  {PIANO.map((p, i) => (
+                    <div
+                      key={p.k}
+                      className="relative flex-1 rounded transition-colors duration-150"
+                      style={{
+                        background: lit[i] !== undefined ? 'rgba(245,166,35,0.4)' : 'transparent',
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+              {notes.map((n) => (
+                <span
+                  key={n.id}
+                  className="animate-notefloat pointer-events-none absolute bottom-full font-mono text-xl text-white/70"
+                  style={{ left: `${((n.idx + 0.5) / PIANO.length) * 100}%` }}
+                  onAnimationEnd={() => setNotes((ns) => ns.filter((x) => x.id !== n.id))}
+                  aria-hidden
+                >
+                  ♪
+                </span>
+              ))}
             </div>
-          )}
 
-          <div key={sipN} className={`relative ${sipN > 0 ? 'animate-sipmug' : ''}`}>
-            <Mug steaming={has('cafe')} />
-            {prompts && has('cafe') && (
-              <ObjectPrompt k="C" label="café" total={3} done={brk.sipDoneN} />
-            )}
-          </div>
-
-          {/* teclado (tecladinho se comprou o mecânico) */}
-          <div
-            className="relative h-32 w-[min(520px,46vw)] rounded-2xl"
-            style={{
-              background: 'linear-gradient(180deg, #191b24, #0c0e14)',
-              boxShadow: has('teclado')
-                ? '0 40px 50px -16px rgba(0,0,0,0.8), 0 1px 0 rgba(255,255,255,0.06) inset, 0 -3px 34px -6px rgba(120,160,255,0.5)'
-                : '0 40px 50px -16px rgba(0,0,0,0.8), 0 1px 0 rgba(255,255,255,0.06) inset',
-              backgroundImage: has('teclado')
-                ? 'repeating-linear-gradient(90deg, rgba(140,120,255,0.22) 0 4.5%, transparent 4.5% 6.5%), repeating-linear-gradient(0deg, rgba(90,200,255,0.18) 0 24%, transparent 24% 32%)'
-                : 'repeating-linear-gradient(90deg, rgba(255,255,255,0.04) 0 4.5%, transparent 4.5% 6.5%), repeating-linear-gradient(0deg, rgba(255,255,255,0.04) 0 24%, transparent 24% 32%)',
-            }}
-          >
-            {has('teclado') && (
-              <div className="absolute inset-x-4 bottom-4 top-4 flex gap-1">
-                {PIANO.map((p, i) => (
-                  <div
-                    key={p.k}
-                    className="relative flex-1 rounded transition-colors duration-150"
-                    style={{
-                      background: lit[i] !== undefined ? 'rgba(245,166,35,0.4)' : 'transparent',
-                    }}
-                  />
-                ))}
-              </div>
-            )}
-            {notes.map((n) => (
-              <span
-                key={n.id}
-                className="animate-notefloat pointer-events-none absolute bottom-full font-mono text-xl text-white/70"
-                style={{ left: `${((n.idx + 0.5) / PIANO.length) * 100}%` }}
-                onAnimationEnd={() => setNotes((ns) => ns.filter((x) => x.id !== n.id))}
-                aria-hidden
-              >
-                ♪
-              </span>
-            ))}
-            {prompts && has('teclado') && (
-              <ObjectPrompt k="A–K" label="tocar" total={8} done={brk.noteDoneN} />
-            )}
-          </div>
-
-          {/* mouse */}
-          <div
-            className="mb-2 h-14 w-10 shrink-0 rounded-[45%]"
-            style={{
-              background: 'linear-gradient(180deg, #1c1f29, #0d0f15)',
-              boxShadow: '0 22px 26px -10px rgba(0,0,0,0.75)',
-            }}
-          >
-            <div className="mx-auto mt-2 h-5 w-px bg-white/10" />
+            {/* mouse */}
+            <div
+              className="mb-2 h-14 w-10 shrink-0 rounded-[45%]"
+              style={{
+                background: 'linear-gradient(180deg, #1c1f29, #0d0f15)',
+                boxShadow: '0 22px 26px -10px rgba(0,0,0,0.75)',
+              }}
+            >
+              <div className="mx-auto mt-2 h-5 w-px bg-white/10" />
+            </div>
           </div>
         </div>
       </div>
@@ -500,19 +490,27 @@ export function DeskItems({ owned, brk }: { owned: string[]; brk: BreakState }) 
 export function BreakHud({
   clock,
   mode,
+  owned,
   relief,
   neckProgress,
   neckNexts,
   neckHits,
+  waterN,
+  sipDoneN,
+  noteDoneN,
   spinning,
   onResume,
 }: {
   clock: string;
   mode: BreakMode;
+  owned: string[];
   relief: number;
   neckProgress: number;
   neckNexts: number[];
   neckHits: number[];
+  waterN: number;
+  sipDoneN: number;
+  noteDoneN: number;
   spinning: boolean;
   onResume: () => void;
 }) {
@@ -540,21 +538,18 @@ export function BreakHud({
         </div>
       )}
       {mode === 'mesa' && (
-        <div className="hud-night absolute inset-x-0 bottom-16 flex justify-center">
-          <div className="flex flex-col items-center gap-1.5" aria-hidden>
-            <div className="flex items-center gap-2">
-              <kbd className="keycap !h-6 !min-w-6 !text-[11px]">P</kbd>
-              <span
-                className="font-mono text-[10px] uppercase tracking-[0.18em]"
-                style={{
-                  color: 'rgba(255,255,255,0.8)',
-                  textShadow: '0 1px 10px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.9)',
-                }}
-              >
-                pescoço
-              </span>
-            </div>
-            <Pips total={4} done={0} />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="hud-night flex items-start gap-10" aria-hidden>
+            <RitualOption k="P" label="pescoço" total={4} done={0} />
+            {owned.includes('planta') && (
+              <RitualOption k="R" label="regar" total={12} done={waterN} />
+            )}
+            {owned.includes('cafe') && (
+              <RitualOption k="C" label="café" total={3} done={sipDoneN} />
+            )}
+            {owned.includes('teclado') && (
+              <RitualOption k="A–K" label="tocar" total={8} done={noteDoneN} wide />
+            )}
           </div>
         </div>
       )}
@@ -650,38 +645,35 @@ function Pips({ total, done }: { total: number; done: number }) {
   );
 }
 
-/** Prompt ancorado num objeto da mesa (game UI: "aperte X pra interagir").
- *  Vive NA CENA (inclina com o pescoço, recebe o zoom) — diegético. */
-function ObjectPrompt({
+/** Opção de ritual da pausa — mesmo peso pra todos (P/R/C/A–K), centralizada.
+ *  Keycap + rótulo + pips; a com progresso acende o keycap (--current). */
+function RitualOption({
   k,
   label,
   total,
   done,
+  wide,
 }: {
   k: string;
   label: string;
   total: number;
   done: number;
+  wide?: boolean;
 }) {
   return (
-    <div
-      className="pointer-events-none absolute -top-16 left-1/2 flex -translate-x-1/2 flex-col items-center gap-1.5"
-      aria-hidden
-    >
-      <div className="flex items-center gap-2">
-        <kbd className={`keycap !h-6 !min-w-6 !text-[11px] ${done > 0 ? 'keycap--current' : ''}`}>
-          {k}
-        </kbd>
-        <span
-          className="whitespace-nowrap font-mono text-[10px] uppercase tracking-[0.18em]"
-          style={{
-            color: 'rgba(255,255,255,0.8)',
-            textShadow: '0 1px 10px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.9)',
-          }}
-        >
-          {label}
-        </span>
-      </div>
+    <div className="flex flex-col items-center gap-2" aria-hidden>
+      <kbd className={`keycap ${wide ? '!min-w-14' : ''} ${done > 0 ? 'keycap--current' : ''}`}>
+        {k}
+      </kbd>
+      <span
+        className="whitespace-nowrap font-mono text-[10px] uppercase tracking-[0.18em]"
+        style={{
+          color: 'rgba(255,255,255,0.8)',
+          textShadow: '0 1px 10px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.9)',
+        }}
+      >
+        {label}
+      </span>
       <Pips total={total} done={done} />
     </div>
   );
@@ -741,80 +733,6 @@ function SoilGrid({
           </div>
         ))}
       </div>
-    </div>
-  );
-}
-
-function Plant({
-  size,
-  pulseKey,
-  highlight,
-}: {
-  size: number;
-  pulseKey: number;
-  highlight?: boolean;
-}) {
-  const s = size;
-  return (
-    <div
-      key={pulseKey}
-      className={pulseKey > 0 ? 'animate-leafpulse relative shrink-0' : 'relative shrink-0'}
-      style={{
-        width: 96 * s,
-        height: 128 * s,
-        filter: highlight ? 'drop-shadow(0 0 18px rgba(94,208,122,0.35))' : undefined,
-      }}
-    >
-      {[-16, -5, 6, 17].map((x, i) => (
-        <span
-          key={i}
-          className="absolute"
-          style={{
-            bottom: 40 * s,
-            left: (44 + x) * s,
-            width: 13 * s,
-            height: (52 + (i % 2) * 20) * s,
-            borderRadius: '50% 50% 50% 50% / 70% 70% 30% 30%',
-            background: `color-mix(in oklab, #4ec07a ${72 - i * 8}%, #1c3a24)`,
-            transform: `rotate(${x * 1.6}deg)`,
-            transformOrigin: 'bottom center',
-          }}
-        />
-      ))}
-      <div
-        className="absolute rounded-b-[8px] rounded-t-[3px]"
-        style={{
-          left: 12 * s,
-          right: 12 * s,
-          bottom: 0,
-          height: 44 * s,
-          background: 'linear-gradient(180deg, #b5622f, #7d3f1c)',
-        }}
-      />
-    </div>
-  );
-}
-
-function Mug({ steaming }: { steaming: boolean }) {
-  return (
-    <div className="relative mb-1 h-20 w-16 shrink-0">
-      {steaming && (
-        <div className="absolute -top-9 left-1/2 -translate-x-1/2">
-          {[-7, 0, 7].map((x, i) => (
-            <span
-              key={i}
-              className="animate-edgepulse absolute bottom-0 w-1 rounded-full bg-white/25"
-              style={{ left: x, height: 28, animationDelay: `${i * 220}ms` }}
-            />
-          ))}
-        </div>
-      )}
-      <div
-        className="absolute inset-0 rounded-b-[22px] rounded-t-[8px]"
-        style={{ background: 'linear-gradient(180deg, #2c3140, #171a22)' }}
-      />
-      <div className="absolute right-[-16px] top-4 size-10 rounded-full border-4 border-[#2c3140]" />
-      <div className="absolute inset-x-2 top-0 h-3.5 rounded-full bg-[#0c0e14]" />
     </div>
   );
 }

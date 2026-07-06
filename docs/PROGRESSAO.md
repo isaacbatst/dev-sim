@@ -50,6 +50,32 @@ identidade). **Dois paces diferentes = dois trilhos.**
 
 - **Perks** (§7 — *mutators* double-edged): unlock = **entra no arsenal**; ativa **um por
   turno**. Podem ser raros/lentos sem frustrar, porque a variedade vem da árvore.
+
+### 2.1 A mesa EVOLUI (decisão 2026-07-06) — vertical na ficção, horizontal na mecânica
+
+Os rituais da pausa são evoluíveis com `$` — o sumidouro de dinheiro de longo
+prazo (hoje a loja esgota em 3 compras) e o coração do "meu setup cresce" (H-B).
+
+**A regra que não se quebra: evolução muda o GESTO e a IDENTIDADE, nunca o
+efeito.** Restauração é plana e idêntica pra todo ritual, pra sempre — "café
+melhor restaura mais" é pay-to-win contra a fadiga. VACINA CONTRA EFFECT CREEP:
+se alguém propuser efeito no upgrade, a resposta é este parágrafo.
+
+O truque: a escada de status pode PARECER vertical (caneca → prensa → V60 →
+espresso, como os cargos) desde que mecanicamente seja só OUTRO gesto:
+
+| Ritual | Evolução (gesto novo, efeito igual) |
+|---|---|
+| Café | caneca: 3 goles → prensa: mergulhar + goles → V60: despejar em círculos (setas) + gole → espresso: moer (mash) + extrair (hold curto) + gole |
+| Planta | espécies novas = grades/gestos próprios (suculenta borrifa 6; samambaia 16); a planta CRESCE com o cuidado — história visível na mesa |
+| Pescoço | alongamentos novos = combos novos (ombros, punhos) — variedade do ritual grátis |
+| Teclado | escalas/sons novos (synth → lofi → piano) — o mesmo gesto soa diferente |
+
+- O sistema de prompts+pips da pausa escala de graça (gesto novo = prompt novo).
+- Perk ≠ setup: perk é mutator de GAMEPLAY (promoção, §7); setup é
+  sensorial/identidade (comprado). Trilhos separados.
+- **Sequência: construir só DEPOIS do P5** (validar que jogadores pausam e
+  curtem pausar antes de aprofundar conteúdo de pausa).
 - **Limiares de cargo esticados** (placeholder, afinar jogando): Júnior 400 (dia 1–2, o
   gostinho), Pleno 1.500 (~1 semana), Sênior 4.000 (~2 semanas), Tech Lead 8.000 (~1 mês),
   Staff 14.000, Principal 22.000.
