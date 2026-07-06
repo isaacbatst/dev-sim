@@ -14,6 +14,8 @@ const APP_BY_TASK: Record<string, AppId> = {
   document: 'editor',
   fix_typo: 'editor',
   ui_update: 'editor',
+  infra_manutencao: 'terminal',
+  subir_servico: 'terminal',
 };
 
 const APP_NAME: Record<AppId, string> = {
@@ -22,6 +24,7 @@ const APP_NAME: Record<AppId, string> = {
   slack: 'Slack',
   mail: 'Mail',
   meet: 'Meet',
+  terminal: 'Terminal',
 };
 
 /** Tecla que abre cada app de desktop (coincide com a ação "Abrir X"). */
@@ -31,6 +34,7 @@ export const LAUNCH_KEY: Record<AppId, string> = {
   slack: 's',
   mail: 'm', // mail/meet viram sites do navegador; não abrem standalone
   meet: 'o',
+  terminal: 't',
 };
 
 /** Mapa inverso (só apps de desktop reais) p/ detectar "abriu o programa errado". */
@@ -38,6 +42,7 @@ export const APP_BY_LAUNCH_KEY: Record<string, AppId> = {
   v: 'editor',
   c: 'browser',
   s: 'slack',
+  t: 'terminal',
 };
 
 export function appForTask(taskId: string): AppId {
@@ -48,5 +53,6 @@ export function windowTitle(app: AppId, taskTitle: string): string {
   if (app === 'slack') return 'Slack — #geral';
   if (app === 'mail') return 'Mail — Caixa de entrada';
   if (app === 'meet') return 'Meet — Daily';
+  if (app === 'terminal') return 'Terminal — ~/projeto';
   return `${APP_NAME[app]} — ${taskTitle}`;
 }

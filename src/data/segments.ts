@@ -88,6 +88,43 @@ export const SEGMENTS: Record<string, Segment> = {
   press_push: { type: 'press', maxItems: 1, actions: [{ key: 'p', label: 'Push' }] },
   press_fix: { type: 'press', maxItems: 1, actions: [{ key: 'f', label: 'Corrigir' }] },
 
+  // --- arquétipos de ASSINATURA FIXA (PROGRESSAO.md §3.2): combos decoráveis ---
+  press_open_terminal: {
+    type: 'press',
+    maxItems: 1,
+    opens: 'terminal',
+    actions: [{ key: 't', label: 'Abrir Terminal' }],
+  },
+  // Bump de dependência: V → J → B → I (sempre igual — decorável).
+  press_open_package: {
+    type: 'press',
+    maxItems: 1,
+    actions: [{ key: 'j', label: 'Abrir package.json' }],
+  },
+  press_bump: { type: 'press', maxItems: 1, actions: [{ key: 'b', label: 'Bump da versão' }] },
+  press_install: { type: 'press', maxItems: 1, actions: [{ key: 'i', label: 'Instalar (npm i)' }] },
+  // Rotacionar keys: V → E → G → K (segredo não vai pra PR — sem CR).
+  press_open_env: { type: 'press', maxItems: 1, actions: [{ key: 'e', label: 'Abrir .env' }] },
+  press_gen_key: { type: 'press', maxItems: 1, actions: [{ key: 'g', label: 'Gerar nova key' }] },
+  press_apply_key: {
+    type: 'press',
+    maxItems: 1,
+    actions: [{ key: 'k', label: 'Aplicar a key' }],
+  },
+  // Spike: o slot de variação — a instância sorteia a FONTE (S ou D); a outra
+  // vira distrator. O esqueleto C→?→L→V→rascunho não muda.
+  press_spike_source: {
+    type: 'press',
+    maxItems: 1,
+    actions: [
+      { key: 's', label: 'Abrir Stack Overflow' },
+      { key: 'd', label: 'Abrir Documentação' },
+    ],
+  },
+  // Módulo novo: a receita de criação (N → escrever → S → push → CR → merge).
+  press_new_file: { type: 'press', maxItems: 1, actions: [{ key: 'n', label: 'Novo arquivo' }] },
+  press_save: { type: 'press', maxItems: 1, actions: [{ key: 's', label: 'Salvar' }] },
+
   // --- combo (atalho modificador+tecla; mimético) ---
   // Copiar do Stack Overflow (no browser) e colar no VS Code — passos separados,
   // em apps diferentes, como no fluxo real.
@@ -121,6 +158,49 @@ export const SEGMENTS: Record<string, Segment> = {
     label: 'Escrever a documentação',
     minCount: 12,
     maxCount: 18,
+  },
+  // Spike: rascunho CURTO (timeboxed — in-and-out, depois joga fora).
+  mash_spike_draft: {
+    type: 'mash',
+    keys: ['a', 's', 'd', 'j', 'k', 'l'],
+    label: 'Rascunhar a prova de conceito',
+    minCount: 6,
+    maxCount: 9,
+  },
+  mash_write_module: {
+    type: 'mash',
+    keys: ['a', 's', 'd', 'j', 'k', 'l'],
+    label: 'Escrever o módulo',
+    minCount: 12,
+    maxCount: 18,
+  },
+  // Terminal: comandos como combos de luta (PROGRESSAO §3.2). Cada comando é um
+  // mash de UM ciclo em ordem — digitar as letras do comando. O alvo (api/web)
+  // é a última letra: variantes da task escolhem qual.
+  mash_cmd_restart_api: {
+    type: 'mash',
+    keys: ['r', 's', 't', 'a'],
+    label: 'Digitar: rst api',
+    minCount: 4,
+    maxCount: 4,
+  },
+  mash_cmd_restart_web: {
+    type: 'mash',
+    keys: ['r', 's', 't', 'w'],
+    label: 'Digitar: rst web',
+    minCount: 4,
+    maxCount: 4,
+  },
+  // "up" × réplicas: cada GRUPO é uma execução do comando (a contagem do CSD:
+  // o pedido dita quantas réplicas, você executa U·P de memória).
+  mash_cmd_up: {
+    type: 'mash',
+    keys: ['u', 'p'],
+    label: 'Subir réplicas: up',
+    minCount: 2,
+    maxCount: 2,
+    minGroups: 2,
+    maxGroups: 3,
   },
 
   // --- gauge (segurar e soltar na zona-alvo — "encher até a linha" do CSD) ---

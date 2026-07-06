@@ -81,21 +81,52 @@ primeira ESCOLHA (não promoção).
 **A árvore (proposta em trabalho — equilibrar):** ver §3.1. Persistência: `unlockedTasks`
 no localStorage.
 
-### 3.1 Rascunho da árvore (em discussão)
+### 3.1 A árvore (FECHADA 2026-07-06) — 4 ramos, 4 identidades
 
 ```
-raízes (1ª escolha, fim do dia 1 — "código, UI ou review?"):
-  fix_typo            ui_update           review_pr
-     │                   │                   │
-     ├─ fix_bug          └─ new_ui_feature   └─ refactor
-     │     └─ fix_login_bug                       └─ refactor_module
-     └─ deploy_hotfix
+A · Consertador      B · Construtor          C · Arquiteto            D · Ops
+fix_typo             ui_update               review_pr                bump_dep*
+   │                    │                       │                        │
+   ├─ fix_bug           ├─ new_ui_feature       ├─ refactor              └─ rotate_keys*
+   │    └─ fix_login_bug└─ modulo_novo*         │    └─ refactor_module       └─ infra_manutencao*
+   └─ deploy_hotfix ⚡       └─ servico_novo*    └─ spike*                          (Terminal)
 ```
 
-- 3 raízes = 3 sabores de identidade (consertador / designer / revisor-arquiteto).
-- Mecânica NOVA no início de cada ramo (nav+fix / scrub / triage); multis como capstones.
-- Desequilíbrios conhecidos (trabalhar): ramo A com 4 nós vs B com 2; futuros arquétipos
-  (modelagem de dados, API, escrever teste) engordam B/C.
+(* = arquétipo NOVO. Tamanhos 4/4/4/3, profundidade 3 em TODOS os ramos —
+`modulo_novo` pendura direto no `ui_update` pra criação não pagar o pedágio do
+multi visual; `bump_dep` e `rotate_keys` são tasks SEPARADAS, não variantes.)
+
+- **Não é talent tree de compromisso**: a cada dia escolhe QUALQUER nó elegível
+  (raízes livres + filhos do que possui). Desequilíbrio de tamanho de ramo importa
+  pouco; o que importa: raízes igualmente tentadoras (gestos distintos), mecânica
+  nova por profundidade, multis escalonados (dia 2–3), corrente máx. de 3 picks.
+- 1ª escolha = "que tipo de dev você é?" (consertador/construtor/arquiteto/ops).
+
+### 3.2 Princípio das mecânicas novas: ASSINATURA FIXA (combo decorável)
+
+Direção (2026-07-06): mais tasks decoráveis como COMBO, menos seleção/leitura.
+- **A sequência é sempre a mesma por tipo** — decorável (dia 1 lê a action bar;
+  dia 10 executa de cabeça). Aleatoriedade só no cosmético e nos slots abaixo.
+- **Variação mínima sem quebrar o feel**: 1–2 teclas do combo com 2 opções,
+  ditadas pelo ticket (ex.: fonte da pesquisa S/D; alvo do comando A/W).
+- **Repetição com quantidade** (CSD: frango = 7 batidas; sorvete BB vs BCC): o
+  pedido dita contagens, você executa de memória (réplicas no terminal etc.).
+- **SEM novos Ctrl+algo** (o Ctrl+C/V do fix_bug fica como está).
+- Tasks antigas de seleção/leitura permanecem — o mix combo × leitura é saudável.
+
+**Assinaturas dos 6 arquétipos:**
+| Task | Assinatura | Tempero |
+|---|---|---|
+| 📦 Bump de dependência (raiz D) | `V→J(package.json)→B(bump)→I(install + log do npm)`. Sem CR — o "renovate manual" | fixa |
+| 🔑 Rotacionar keys | `V→E(.env)→G(gerar)→K(aplicar)→Enter`. Sem CR (segredo não vai pra PR) | fixa |
+| 🧪 Spike | `C→[S ou D]→L→V→mash curto→Enter` — sem CR/merge (joga fora) | slot de variação (fonte) |
+| 🖥️ Infra | Terminal (app novo): comandos mnemônicos `R·S·T·[A ou W]·Enter`, `U·P·Enter`×réplicas | alvo variável + contagem |
+| 📦 Módulo novo | `V→N(novo)→mash(escrever)→S(salvar)→P(push)→CR→merge` | fixa (a receita de criação) |
+| 🚀 Serviço novo | encadeia módulo + terminal (`U·P·Enter`×réplicas) — a receita longa | capstone |
+
+Implementação futura: segmento único `recipe` = sequência de `{tecla, contagem}`
+com slots variáveis — alimenta os 5 (e futuros). A comanda mostra o PEDIDO; a
+action bar apaga as teclas conforme executa (a comanda do CSD).
 
 ---
 

@@ -852,11 +852,36 @@ function ComboFix({
 const DOC_TEXT =
   '/**\n * Autentica o usuário e retorna o token de sessão.\n * @param user credenciais já validadas\n * @returns token persistido\n */';
 const DOC_TARGET = 'export function login(user: User) {';
+/** Spike: rascunho descartável (timeboxed). */
+const SPIKE_TEXT =
+  '// SPIKE — prova de conceito (jogar fora)\nconst r = await fetch(url)\nconsole.log(await r.json())\n// conclusão: dá pra fazer. ~2 dias.';
+/** Módulo novo: o arquivo nasce aqui. */
+const MODULE_TEXT =
+  "import { api } from './api'\n\nexport function notify(user: User, msg: string) {\n  return api.save({ to: user.id, msg })\n}";
 
-/** Mash de digitar: martelar o teclado e a documentação (JSDoc) sai char a char,
- *  acima da função, com caret piscando. "A tela mostra a ação real acontecendo." */
-function TypeScene({ seg, file }: { seg: Extract<SegmentView, { type: 'mash' }>; file: string }) {
-  const revealed = DOC_TEXT.slice(0, Math.ceil(DOC_TEXT.length * seg.progress));
+/** Texto digitado pelo mash conforme a task (doc, spike, módulo). */
+function typeTextFor(taskId: string): { text: string; below: string[] } {
+  if (taskId === 'spike') return { text: SPIKE_TEXT, below: [] };
+  if (taskId === 'modulo_novo') return { text: MODULE_TEXT, below: [] };
+  return {
+    text: DOC_TEXT,
+    below: [DOC_TARGET, '  const token = createSession(user)', '  return persist(token)', '}'],
+  };
+}
+
+/** Mash de digitar: martelar o teclado e o texto sai char a char, com caret
+ *  piscando. "A tela mostra a ação real acontecendo." */
+function TypeScene({
+  seg,
+  file,
+  taskId,
+}: {
+  seg: Extract<SegmentView, { type: 'mash' }>;
+  file: string;
+  taskId: string;
+}) {
+  const { text, below } = typeTextFor(taskId);
+  const revealed = text.slice(0, Math.ceil(text.length * seg.progress));
   const done = seg.progress >= 1;
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden font-code text-sm">
@@ -868,23 +893,201 @@ function TypeScene({ seg, file }: { seg: Extract<SegmentView, { type: 'mash' }>;
         {!done && (
           <span className="animate-edgepulse ml-px inline-block h-[1.05em] w-[0.5em] translate-y-[0.15em] bg-ink/80" />
         )}
-        {'\n'}
-        <span className="opacity-80">
-          <Code line={DOC_TARGET} ext="ts" />
-        </span>
-        {'\n'}
-        <span className="opacity-80">
-          <Code line={'  const token = createSession(user)'} ext="ts" />
-        </span>
-        {'\n'}
-        <span className="opacity-80">
-          <Code line={'  return persist(token)'} ext="ts" />
-        </span>
-        {'\n'}
-        <span className="opacity-80">
-          <Code line={'}'} ext="ts" />
-        </span>
+        {below.map((line) => (
+          <span key={line}>
+            {'\n'}
+            <span className="opacity-80">
+              <Code line={line} ext="ts" />
+            </span>
+          </span>
+        ))}
       </pre>
+    </div>
+  );
+}
+
+// ── Arquétipos de assinatura fixa (PROGRESSAO §3.2): views dedicadas ────────
+
+const PKG_BEFORE = '    "date-utils": "^2.3.9",';
+const PKG_AFTER = '    "date-utils": "^2.4.0",';
+const PKG_LINES = [
+  '{',
+  '  "name": "devos-app",',
+  '  "private": true,',
+  '  "dependencies": {',
+  PKG_BEFORE,
+  '    "http-lib": "^1.8.2",',
+  '    "ui-kit": "^5.0.1"',
+  '  },',
+  '  "scripts": { "dev": "next dev" }',
+  '}',
+];
+
+/** Bump de dependência: package.json com a linha da dep; estágio pela ação atual. */
+function BumpView({ focus, ready }: { focus?: SegmentView; ready: boolean }) {
+  const label = focus?.type === 'press' ? (focus.tokens[0]?.label ?? '') : '';
+  const stage = ready
+    ? 'done'
+    : /instalar/i.test(label)
+      ? 'install'
+      : /bump/i.test(label)
+        ? 'bump'
+        : 'open';
+  const bumped = stage === 'install' || stage === 'done';
+  return (
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden font-code text-sm">
+      <div className="flex shrink-0 border-b border-line bg-surface px-3 py-1 text-xs text-ink-dim">
+        <span className="border-b-2 border-amber px-2 py-1 text-ink">package.json</span>
+        {stage === 'open' && <span className="ml-auto py-1 text-[10px]">J abre o arquivo</span>}
+      </div>
+      <pre
+        className={`m-0 flex-1 overflow-y-auto p-3 leading-6 ${stage === 'open' ? 'opacity-40' : ''}`}
+      >
+        {PKG_LINES.map((line, i) => {
+          const isDep = line === PKG_BEFORE;
+          const shown = isDep && bumped ? PKG_AFTER : line;
+          return (
+            <div
+              key={i}
+              className={`relative flex items-center gap-3 ${
+                isDep ? (bumped ? 'bg-pass/10' : 'bg-amber/10') : ''
+              }`}
+            >
+              {isDep && (
+                <span
+                  aria-hidden
+                  className={`absolute inset-y-0 left-0 w-0.5 ${bumped ? 'bg-pass' : 'bg-amber'}`}
+                />
+              )}
+              <span className="w-6 select-none text-right text-ink-dim">{i + 1}</span>
+              <span>
+                <Code line={shown} ext="js" />
+              </span>
+              {isDep && stage === 'bump' && (
+                <span className="ml-auto pr-2 text-[10px] text-amber">B ↑ ^2.4.0</span>
+              )}
+              {isDep && bumped && (
+                <span className="ml-auto pr-2 text-[10px] text-pass">↑ bumped</span>
+              )}
+            </div>
+          );
+        })}
+      </pre>
+      {/* terminal do npm (sempre escuro, como o painel git) */}
+      {(stage === 'install' || stage === 'done') && (
+        <div className="shrink-0 border-t border-white/10 bg-[#0c0e14] p-2.5 font-code text-xs">
+          <p className="text-zinc-400">$ npm install</p>
+          {stage === 'install' ? (
+            <p className="text-amber-400">I instala — reza pro lockfile.</p>
+          ) : (
+            <p className="text-emerald-400">added 1 package · audited 512 · 0 vulnerabilities ✓</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+const ENV_OLD = 'API_KEY=sk-live-9f31••••';
+const ENV_NEW = 'API_KEY=sk-live-a77c••••';
+const ENV_LINES = [
+  'NODE_ENV=production',
+  'DATABASE_URL=postgres://devos:••••@db:5432',
+  ENV_OLD,
+  'PORT=3000',
+];
+
+/** Rotacionar keys: o .env com a key velha → gerada → aplicada. Sem CR. */
+function EnvView({ focus, ready }: { focus?: SegmentView; ready: boolean }) {
+  const label = focus?.type === 'press' ? (focus.tokens[0]?.label ?? '') : '';
+  const stage = ready
+    ? 'done'
+    : /aplicar/i.test(label)
+      ? 'apply'
+      : /gerar/i.test(label)
+        ? 'gen'
+        : 'open';
+  const applied = stage === 'done';
+  return (
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden font-code text-sm">
+      <div className="flex shrink-0 border-b border-line bg-surface px-3 py-1 text-xs text-ink-dim">
+        <span className="border-b-2 border-amber px-2 py-1 text-ink">.env</span>
+        {stage === 'open' && <span className="ml-auto py-1 text-[10px]">E abre o arquivo</span>}
+      </div>
+      <pre
+        className={`m-0 flex-1 overflow-y-auto p-3 leading-6 ${stage === 'open' ? 'opacity-40' : ''}`}
+      >
+        {ENV_LINES.map((line, i) => {
+          const isKey = line === ENV_OLD;
+          const shown = isKey && applied ? ENV_NEW : line;
+          return (
+            <div
+              key={i}
+              className={`relative flex items-center gap-3 ${
+                isKey ? (applied ? 'bg-pass/10' : 'bg-amber/10') : ''
+              }`}
+            >
+              {isKey && (
+                <span
+                  aria-hidden
+                  className={`absolute inset-y-0 left-0 w-0.5 ${applied ? 'bg-pass' : 'bg-amber'}`}
+                />
+              )}
+              <span className="w-6 select-none text-right text-ink-dim">{i + 1}</span>
+              <span className={isKey && stage !== 'open' ? 'text-ink' : undefined}>{shown}</span>
+              {isKey && stage === 'gen' && (
+                <span className="ml-auto pr-2 text-[10px] text-amber">expirando — G gera nova</span>
+              )}
+              {isKey && applied && (
+                <span className="ml-auto pr-2 text-[10px] text-pass">rotacionada ✓</span>
+              )}
+            </div>
+          );
+        })}
+      </pre>
+      {stage === 'apply' && (
+        <div className="shrink-0 border-t border-line bg-surface/60 p-2.5 text-xs">
+          <span className="text-ink-dim">nova key gerada: </span>
+          <span className="font-code text-ink">{ENV_NEW.replace('API_KEY=', '')}</span>
+          <span className="ml-2 text-[10px] text-amber">K aplica no .env</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Módulo novo: o arquivo recém-criado (vazio → escrito → salvo). */
+function ModuleView({ focus, written }: { focus?: SegmentView; written: boolean }) {
+  const label = focus?.type === 'press' ? (focus.tokens[0]?.label ?? '') : '';
+  const creating = /novo arquivo/i.test(label);
+  return (
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden font-code text-sm">
+      <div className="flex shrink-0 border-b border-line bg-surface px-3 py-1 text-xs text-ink-dim">
+        <span className="border-b-2 border-amber px-2 py-1 italic text-ink">
+          {creating ? 'Sem título' : 'notificar.ts'}
+          {!creating && !written && <span className="not-italic text-amber"> ●</span>}
+        </span>
+        {creating && <span className="ml-auto py-1 text-[10px]">N cria o arquivo</span>}
+      </div>
+      <pre className="m-0 flex-1 overflow-y-auto p-3 leading-6">
+        {creating ? (
+          <span className="animate-edgepulse ml-px inline-block h-[1.05em] w-[0.5em] bg-ink/60" />
+        ) : (
+          MODULE_TEXT.split('\n').map((line, i) => (
+            <div key={i} className="flex items-center gap-3">
+              <span className="w-6 select-none text-right text-ink-dim">{i + 1}</span>
+              <span>
+                <Code line={line} ext="ts" />
+              </span>
+            </div>
+          ))
+        )}
+      </pre>
+      {!creating && !written && (
+        <div className="shrink-0 border-t border-line bg-surface/60 p-2.5 text-xs text-ink-dim">
+          alterações não salvas — <span className="text-amber">S salva</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -1174,7 +1377,15 @@ export function EditorScene({ active }: { active: ActiveTicketSnapshot }) {
   const pick = focus?.type === 'file' ? focus : null;
 
   let main: React.ReactNode;
-  if (pick) {
+  // Arquétipos com view própria (assinatura fixa — PROGRESSAO §3.2).
+  if (active.taskId === 'bump_dep') main = <BumpView focus={focus} ready={active.ready} />;
+  else if (active.taskId === 'rotate_keys') main = <EnvView focus={focus} ready={active.ready} />;
+  else if (
+    active.taskId === 'modulo_novo' &&
+    (active.ready || (focus?.type === 'press' && !/push/i.test(focus.tokens[0]?.label ?? '')))
+  )
+    main = <ModuleView focus={focus} written={active.ready} />;
+  else if (pick) {
     // Prévia do que está sob o cursor: arquivo → conteúdo; pasta → placeholder.
     const row = pick.rows[pick.cursor];
     if (row?.kind === 'file') main = <Preview file={fileBasename(pick.files[row.fileIndex])} />;
@@ -1186,7 +1397,19 @@ export function EditorScene({ active }: { active: ActiveTicketSnapshot }) {
   else if (focus?.type === 'combo')
     main = <ComboFix seg={focus} file={active.editorFile} fixedLine={active.editorFixedLine} />;
   else if (focus?.type === 'mash' && !focus.keys.some((k) => k.startsWith('arrow')))
-    main = <TypeScene seg={focus} file={active.editorFile} />;
+    main = (
+      <TypeScene
+        seg={focus}
+        file={
+          active.taskId === 'spike'
+            ? 'spike.ts'
+            : active.taskId === 'modulo_novo'
+              ? 'notificar.ts'
+              : active.editorFile
+        }
+        taskId={active.taskId}
+      />
+    );
   else if (
     focus?.type === 'mash' || // merge (⬅️➡️) → GitView
     (focus?.type === 'press' && /push/i.test(focus.tokens[0]?.label ?? ''))

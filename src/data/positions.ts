@@ -14,8 +14,11 @@ export const POSITIONS = [
   'Principal',
 ] as const;
 
-/** Nota acumulada pra ATINGIR cada nível (índice = nível − 1). Estagiário = 0. */
-export const PROMO_AT = [0, 300, 800, 1600, 2800, 4500, 7000];
+/** Nota acumulada pra ATINGIR cada nível (índice = nível − 1). Estagiário = 0.
+ *  Limiares LONGOS de propósito (PROGRESSAO §2): cargo é prestígio/arco da
+ *  campanha (Júnior dia 1-2, Pleno ~1 semana, Sênior ~2, TL ~1 mês) — a
+ *  variedade mecânica vem do trilho rápido (árvore de tasks, taskTree.ts). */
+export const PROMO_AT = [0, 400, 1500, 4000, 8000, 14000, 22000];
 
 /** Nível (1..N) para uma nota acumulada. */
 export function levelFor(careerTotal: number): number {

@@ -32,7 +32,7 @@ export type SoundEvent =
   | 'yawn'; // fadiga: bocejo (telegraph)
 
 /** Qual "app" do desktop a tarefa atual representa (UI diegética). */
-export type AppId = 'editor' | 'browser' | 'slack' | 'mail' | 'meet';
+export type AppId = 'editor' | 'browser' | 'slack' | 'mail' | 'meet' | 'terminal';
 
 /** Programa em foco: a "Comanda" (details) ou um app aberto. */
 export type ProgramId = 'details' | AppId;
@@ -215,6 +215,8 @@ export interface ActiveTicketSnapshot {
   description: string;
   priority: Priority;
   taskTitle: string;
+  /** Id do template da task atual (cenas com view própria: bump_dep, rotate_keys…). */
+  taskId: string;
   taskIndex: number;
   taskCount: number;
   segments: SegmentView[];

@@ -25,7 +25,10 @@ function multi(
   return { id, name, description, priority, tasks };
 }
 
-const SINGLE: TicketTemplate[] = Object.values(TASKS).map((t) => wrap(t));
+// subir_servico só existe dentro do multi servico_novo — não vira ticket próprio.
+const SINGLE: TicketTemplate[] = Object.values(TASKS)
+  .filter((t) => t.id !== 'subir_servico')
+  .map((t) => wrap(t));
 
 const MULTI: TicketTemplate[] = [
   multi(
@@ -56,11 +59,32 @@ const MULTI: TicketTemplate[] = [
     'urgente',
     'Avisar o time e corrigir urgentemente',
   ),
+  // A receita longa (capstone do ramo Construtor): módulo + subir no terminal.
+  multi(
+    'servico_novo',
+    'Implementar Serviço',
+    [TASKS.modulo_novo, TASKS.subir_servico],
+    'normal',
+    'Criar o módulo e subir o serviço',
+  ),
 ];
 
 export const TICKETS: Record<string, TicketTemplate> = Object.fromEntries(
   [...SINGLE, ...MULTI].map((t) => [t.id, t]),
 );
 
-/** Pool padrão de spawn (todos os tickets). A progressão por nível entra na Fase 2 item 3. */
-export const TICKET_POOL: TicketTemplate[] = [...SINGLE, ...MULTI];
+// Arquétipos novos: só entram pelo unlock da árvore (taskTree.ts) — fora do
+// pool legado pra não vazarem antes da escolha do jogador.
+const TREE_ONLY = new Set([
+  'bump_dep',
+  'rotate_keys',
+  'spike',
+  'modulo_novo',
+  'infra_manutencao',
+  'servico_novo',
+]);
+
+/** Pool legado (testes/força). O spawn real usa a árvore (taskTree.poolForUnlocked). */
+export const TICKET_POOL: TicketTemplate[] = [...SINGLE, ...MULTI].filter(
+  (t) => !TREE_ONLY.has(t.id),
+);

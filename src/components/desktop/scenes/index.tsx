@@ -4,6 +4,7 @@ import { BrowserScene } from './BrowserScene';
 import { MeetScene } from './MeetScene';
 import { SlackScene } from './SlackScene';
 import { MailScene } from './MailScene';
+import { TerminalScene } from './TerminalScene';
 
 type Slots = (SlotSnapshot | null)[];
 
@@ -13,6 +14,7 @@ const SCENES: Record<AppId, (active: ActiveTicketSnapshot, slots: Slots) => Reac
   meet: (a) => <MeetScene active={a} />,
   slack: (a) => <SlackScene active={a} />,
   mail: (a) => <MailScene active={a} />,
+  terminal: (a) => <TerminalScene active={a} />,
 };
 
 export function Scene({ active, slots }: { active: ActiveTicketSnapshot; slots: Slots }) {

@@ -3,6 +3,7 @@ import { GameLoop } from '@/core/loop';
 import { Game } from '@/core/game';
 import type { ProgramId, Snapshot } from '@/core/snapshot';
 import { levelFor } from '@/data/positions';
+import { eligibleNodes, poolForUnlocked } from '@/data/taskTree';
 import { playSound } from './sound';
 
 /**

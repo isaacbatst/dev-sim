@@ -123,6 +123,78 @@ export const TASKS: Record<string, TaskTemplate> = {
       ],
     ],
   },
+  // ── Arquétipos de ASSINATURA FIXA (PROGRESSAO.md §3.2) — combos decoráveis ──
+  // Bump de dependência: o "renovate manual". V→J→B→I, sempre igual; sem CR.
+  bump_dep: {
+    id: 'bump_dep',
+    title: 'Bump de Dependência',
+    description: 'Abrir o package.json, subir a versão e instalar',
+    steps: [
+      step('press_open_vscode'),
+      step('press_open_package'),
+      step('press_bump'),
+      step('press_install'),
+    ],
+  },
+  // Rotacionar keys: V→E→G→K; sem CR (segredo não vai pra PR).
+  rotate_keys: {
+    id: 'rotate_keys',
+    title: 'Rotacionar Keys',
+    description: 'Abrir o .env, gerar a nova key e aplicar',
+    steps: [
+      step('press_open_vscode'),
+      step('press_open_env'),
+      step('press_gen_key'),
+      step('press_apply_key'),
+    ],
+  },
+  // Spike: timeboxed, sem CR/merge (joga fora). A fonte (S/D) é o slot de variação.
+  spike: {
+    id: 'spike',
+    title: 'Fazer um Spike',
+    description: 'Pesquisar, rascunhar uma prova de conceito e entregar direto',
+    steps: [
+      step('press_open_browser'),
+      step('press_spike_source'),
+      step('press_read'),
+      step('press_open_vscode'),
+      step('mash_spike_draft'),
+    ],
+  },
+  // Módulo novo: a receita de CRIAÇÃO (hoje tudo é manutenção). 100% fixa.
+  modulo_novo: {
+    id: 'modulo_novo',
+    title: 'Implementar Módulo',
+    description: 'Criar o arquivo, escrever o módulo, salvar; push, CR e merge',
+    steps: [
+      step('press_open_vscode'),
+      step('press_new_file'),
+      step('mash_write_module'),
+      step('press_save'),
+      step('press_push'),
+      step('wait_cr'),
+      step('mash_merge'),
+    ],
+  },
+  // Infra: comandos de terminal como combos — o alvo (api/web) varia por instância.
+  infra_manutencao: {
+    id: 'infra_manutencao',
+    title: 'Manutenção na Infra',
+    description: 'Abrir o Terminal, reiniciar o serviço e subir as réplicas',
+    steps: [],
+    variants: [
+      [step('press_open_terminal'), step('mash_cmd_restart_api'), step('mash_cmd_up')],
+      [step('press_open_terminal'), step('mash_cmd_restart_web'), step('mash_cmd_up')],
+    ],
+  },
+  // Subir o serviço: só existe DENTRO do multi servico_novo (não vira ticket).
+  subir_servico: {
+    id: 'subir_servico',
+    title: 'Subir o Serviço',
+    description: 'Abrir o Terminal e subir as réplicas',
+    steps: [step('press_open_terminal'), step('mash_cmd_up')],
+  },
+
   // Uma só task: a cada vez sorteia uma mudança de COR ou de FONTE (o detalhe
   // do ticket descreve qual). Ver `variants` (sorteado ao instanciar).
   ui_update: {

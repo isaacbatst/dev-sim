@@ -14,7 +14,7 @@ import {
   type TaskInstance,
   type TicketInstance,
 } from './domain/instance';
-import { TICKET_POOL } from '@/data/tickets';
+import { TICKET_POOL, TICKETS } from '@/data/tickets';
 import { SLACK_CHANNELS } from '@/data/channels';
 import { APP_BY_LAUNCH_KEY, LAUNCH_KEY, appForTask, windowTitle } from './domain/apps';
 import type {
@@ -131,8 +131,9 @@ export class Game {
     this.pool = pool;
     this.minPerSec = (DAY_END_MIN - DAY_START_MIN) / daySeconds;
     // Teste: força um ticket específico no 1º slot (id de single = id da task).
+    // Busca no registro COMPLETO (inclui os gated pela árvore, fora do pool).
     if (forceId) {
-      const t = pool.find((p) => p.id === forceId);
+      const t = TICKETS[forceId];
       if (t) this.slots[0] = instantiateTicket(t);
     }
     while (this.slots.filter(Boolean).length < 2) this.spawnTicket();
@@ -990,6 +991,7 @@ export class Game {
       description: inst.template.description,
       priority: inst.template.priority,
       taskTitle: task.title,
+      taskId: task.id,
       taskIndex: Math.min(inst.taskIndex, inst.tasks.length - 1),
       taskCount: inst.tasks.length,
       segments: inst.ready || !step ? [] : step.segments.map((s) => this.segmentView(s)),
@@ -1098,6 +1100,20 @@ export class Game {
     return 0;
   }
 
+  /** Terminal (infra): alvo do restart (api/web) e nº de réplicas do "up". */
+  private cmdInfo(t: TaskInstance): { target: string | null; replicas: number | null } {
+    let target: string | null = null;
+    let replicas: number | null = null;
+    for (const step of t.steps)
+      for (const seg of step.segments) {
+        if (seg.type !== 'mash') continue;
+        if (seg.keys[0] === 'r' && seg.keys.length === 4)
+          target = seg.keys[3] === 'a' ? 'api' : 'web';
+        if (seg.keys[0] === 'u') replicas = seg.groups;
+      }
+    return { target, replicas };
+  }
+
   /** Descrição em prosa da subtarefa, com os detalhes mutáveis embutidos. */
   private taskProse(t: TaskInstance): string {
     const sel = this.selLabels(t);
@@ -1143,6 +1159,24 @@ export class Game {
           ? `Em ${file}, deixe a fonte do ${sel[0]} em ${sel[1]} e o estilo ${sel[2]}; faça push, aguarde o CR e o merge.`
           : `Em ${file}, mude a ${sel[1]} do ${sel[0]} para ${sel[2]}; faça push, aguarde o CR e o merge.`;
       }
+      case 'bump_dep':
+        return `No VSCode, abra o package.json (J), suba a versão (B) e instale (I). Direto na main — dependabot manda lembranças.`;
+      case 'rotate_keys':
+        return `No VSCode, abra o .env (E), gere a nova key (G) e aplique (K). Segredo não vai pra PR.`;
+      case 'spike': {
+        const fonte = this.pressLabelsAt(t, 1)[0]?.replace(/^Abrir /, '') ?? 'a fonte';
+        return `Timebox: pesquise em ${fonte}, leia e rascunhe a prova de conceito no VSCode. Entrega direto — spike se joga fora.`;
+      }
+      case 'modulo_novo':
+        return `No VSCode, crie o arquivo (N), escreva o módulo e salve (S); faça push, aguarde o CR e o merge.`;
+      case 'infra_manutencao': {
+        const { target, replicas } = this.cmdInfo(t);
+        return `No Terminal, reinicie o serviço ${target ?? 'api'} (rst ${target ?? 'api'}) e suba ${replicas ?? 2} réplicas (up, uma por vez).`;
+      }
+      case 'subir_servico': {
+        const { replicas } = this.cmdInfo(t);
+        return `No Terminal, suba ${replicas ?? 2} réplicas do serviço novo (up, uma por vez).`;
+      }
       default:
         return t.template.description;
     }
@@ -1150,6 +1184,8 @@ export class Game {
 
   /** Arquivo aberto no editor (para a cena do VSCode mostrar o conteúdo certo). */
   private editorFile(t: TaskInstance): string {
+    if (t.template.id === 'modulo_novo') return 'notificar.ts';
+    if (t.template.id === 'spike') return 'spike.ts';
     for (const step of t.steps)
       for (const seg of step.segments)
         if (seg.type === 'file') return fileBasename(seg.files[seg.chosenIndex ?? seg.targetIndex]);
