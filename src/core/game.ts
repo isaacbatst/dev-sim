@@ -45,10 +45,11 @@ const DAY_START_MIN = 9 * 60;
 const DAY_END_MIN = 17 * 60;
 const DAY_REAL_SECONDS = 220;
 
-// Backlog enche mais devagar: como o deadline corre em TODOS os slots em
-// paralelo (e só dá pra trabalhar um), spawn rápido = perda garantida. Calibrar
-// por feel (§10/§11 — balanceamento fino só com playtest).
-const SPAWN_INTERVAL = 20;
+// Backlog: intervalo ALEATÓRIO entre chegadas — demanda não chega em metrônomo.
+// Como o deadline corre em TODOS os slots em paralelo (e só dá pra trabalhar
+// um), a média não pode ser baixa demais. Calibrar por feel (§10/§11).
+const SPAWN_MIN = 10;
+const SPAWN_MAX = 25;
 const CLOSE_KEY = 'x'; // fecha um programa aberto por engano (subjogo de abrir)
 
 // ── Fadiga (FOCO_FADIGA.md) — tudo em MINUTOS DE JOGO ─────────────────────
@@ -107,6 +108,8 @@ export class Game {
   private slots: (TicketInstance | null)[] = new Array(SLOT_COUNT).fill(null);
   private activeSlot: number | null = null;
   private spawnTimer = 0;
+  /** Próxima chegada (s reais) — sorteada de novo a cada spawn. */
+  private nextSpawnIn = SPAWN_MIN + Math.random() * (SPAWN_MAX - SPAWN_MIN);
   private pool: TicketTemplate[];
   /** Minutos de jogo por segundo real (deriva da duração do dia). */
   private minPerSec: number;
@@ -159,8 +162,9 @@ export class Game {
     }
 
     this.spawnTimer += dt;
-    if (this.spawnTimer >= SPAWN_INTERVAL) {
-      this.spawnTimer -= SPAWN_INTERVAL;
+    if (this.spawnTimer >= this.nextSpawnIn) {
+      this.spawnTimer = 0;
+      this.nextSpawnIn = SPAWN_MIN + Math.random() * (SPAWN_MAX - SPAWN_MIN);
       this.spawnTicket();
     }
 
