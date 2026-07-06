@@ -39,6 +39,12 @@ export class GameLoop {
     this.rafId = requestAnimationFrame(this.frame);
   }
 
+  /** Publica o snapshot SEM iniciar o RAF — o mundo espera (ex.: daily antes
+   *  de o relógio andar). `start()` depois disso não pula tempo (lastTs = now). */
+  publish(): void {
+    this.sync();
+  }
+
   stop(): void {
     if (this.rafId !== null) {
       cancelAnimationFrame(this.rafId);

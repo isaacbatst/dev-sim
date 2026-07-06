@@ -45,7 +45,7 @@ identidade). **Dois paces diferentes = dois trilhos.**
 | Canal | O que dá | Como se obtém | Pace |
 |---|---|---|---|
 | **Comprar (`$`)** | cosmético / identidade — mesa/setup (planta, teclado, café…) | gasta `$` (da nota) no que **quer** | livre |
-| **Árvore de tasks** | novos TIPOS de demanda (mecânicas) | **escolhe 1 por dia** no boletim, entre os nós elegíveis da árvore (§3) | RÁPIDO — sandbox completo em ~1,5 semana |
+| **Árvore de tasks** | novos TIPOS de demanda (mecânicas) | **escolhe 1 por dia na DAILY** (abertura do dia), entre os nós elegíveis da árvore (§3) | RÁPIDO — sandbox completo em ~1,5 semana |
 | **Promoção (cargo)** | **perks** (§7) + prestígio/título | nota acumulada, limiares LONGOS | LENTO — o arco da campanha |
 
 - **Perks** (§7 — *mutators* double-edged): unlock = **entra no arsenal**; ativa **um por
@@ -56,30 +56,53 @@ identidade). **Dois paces diferentes = dois trilhos.**
 
 ---
 
-## 3. A árvore de tasks — escolha diária (a sacada revisada)
+## 3. A árvore de tasks — a escolha acontece na DAILY (decisão 2026-07-06)
 
-O boletim de fim de dia oferece **"nova demanda desbloqueada — escolha uma"**: 2–3 cards
-(nós elegíveis pela árvore de pré-requisitos), cada um com nome + uma linha + o gesto.
-Escolheu → entra no pool de amanhã.
+**A DAILY (standup) abre o expediente**: antes de o relógio andar, o chefe apresenta os
+nós elegíveis da árvore em cards (nome + uma linha + o gesto, com a lombada do ramo) e o
+jogador **libera 1 TIPO de task por dia** — não uma unidade, o tipo entra no pool a
+partir daquele dia. Escolha obrigatória ("o chefe não aceita silêncio na daily"); o dia
+só começa depois dela. Aprofundar = escolher o mesmo ramo em dailies seguintes; abrir
+horizonte = escolher outra raiz.
+
+**Evolução do desenho** (substituiu a escolha no boletim de fim de dia): a escolha no
+boletim era um cardápio ÀS CEGAS — escolher entre tipos que nunca se jogou. Na daily,
+as escolhas *profundas* (as que importam) são sempre INFORMADAS: você passou dias
+jogando as tasks do ramo antes de decidir aprofundar. É o "ações te constroem" do KCD
+com a prática implícita (o tipo liberado roda no pool o dia todo), sem contador de XP,
+sem medidor, sem RNG bloqueando progresso.
 
 **Por quê assim:**
-1. **Ritual de retorno garantido** — todo boletim tem um presente; "amanhã escolho um
-   brinquedo novo" é gancho de D1 melhor que marcos que caem no meio do dia.
-2. **Agência = identidade** — "destravei o review antes do refactor" (a escolha empodera;
-   gera conversa entre jogadores).
-3. **§6 intacto** — tasks são conteúdo horizontal; ordem livre não desequilibra.
-4. **A árvore já era necessária**: multis dependem das tasks componentes (pré-requisitos
-   naturais).
+1. **Escolha informada onde importa** — só as raízes são semi-cegas, e raízes são as
+   tasks baratas; profundidade se escolhe depois de provar o ramo.
+2. **Ritual de retorno** — "amanhã na daily tem oferta nova"; o dia 1 ABRE com "que tipo
+   de dev você é?" (as 4 raízes), não fecha com isso.
+3. **Diegese** — pegar demanda na daily é literalmente como funciona; "me coloca em mais
+   coisas de infra" é pedir pro chefe.
+4. **Profundidade × largura** — identidade ("sou o cara de Ops") vs variedade (mais
+   tipos no pool) puxam de verdade; irmãos no ramo dão decisão até dentro da identidade.
+5. **§6 intacto** — liberar tipo = conteúdo/identidade, NUNCA poder. (Camada futura
+   opcional: capstones pedirem também N entregas do ramo — prática explícita.)
+
+Regras: sem "passar" (sempre há opção); a daily não come tempo de expediente (relógio
+parado); sem elegíveis (árvore completa) → sem daily, dia começa direto; `?force=` pula
+a daily (modo de teste). O boletim segue com nota/carreira/corrente (narrativa) e o
+acesso ao mapa da árvore.
 
 > **O onboarding continua não sendo caso especial:** dia 1 = o conjunto inicial (6 tipos
-> simples); a árvore é a curva contínua de unlock.
+> simples) + a 1ª daily com as 4 raízes; a árvore é a curva contínua de unlock.
 
 **Conjunto inicial (dia 1):** `meeting`, `email`, `slack`, `study`, `test_feature`,
 `document` — o estagiário vive de reunião/e-mail/estudo; ganhar acesso ao código é a
 primeira ESCOLHA (não promoção).
 
-**A árvore (proposta em trabalho — equilibrar):** ver §3.1. Persistência: `unlockedTasks`
-no localStorage.
+**Fatiamento da implementação** (slices verticais):
+- **F1 — mecânica**: overlay da daily na abertura (cards + "ver a árvore"; relógio só
+  anda depois da escolha); bloco de escolha sai do boletim; copy especial no dia 1.
+- **F2 — tempero**: a daily com cara de standup (falas do chefe, humor dev), som/entrada,
+  juice dos cards.
+
+Persistência: `unlockedTasks` + `lastPickDay` no localStorage (inalterados).
 
 ### 3.1 A árvore (FECHADA 2026-07-06) — 4 ramos, 4 identidades
 

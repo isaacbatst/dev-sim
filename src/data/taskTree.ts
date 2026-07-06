@@ -13,14 +13,14 @@ import type { TicketTemplate } from '@/core/domain/types';
 /** Pool do dia 1 — o estagiário vive de reunião/e-mail/estudo; código é escolha. */
 export const INITIAL_TASKS = ['meeting', 'email', 'slack', 'study', 'test_feature', 'document'];
 
-/** Os 4 ramos = 4 identidades de dev. Cores dos accents que o devOS já usa
- *  (ops = o verde do Terminal). */
+/** Os 4 ramos = 4 identidades de dev (nomes em inglês — jargão da área).
+ *  Cores dos accents que o devOS já usa (ops = o verde do Terminal). */
 export type BranchId = 'consertador' | 'construtor' | 'arquiteto' | 'ops';
 
 export const BRANCHES: Record<BranchId, { nome: string; cor: string }> = {
-  consertador: { nome: 'Consertador', cor: '#ff8a7a' },
-  construtor: { nome: 'Construtor', cor: '#5b9bff' },
-  arquiteto: { nome: 'Arquiteto', cor: '#c084fc' },
+  consertador: { nome: 'Fixer', cor: '#ff8a7a' },
+  construtor: { nome: 'Builder', cor: '#5b9bff' },
+  arquiteto: { nome: 'Architect', cor: '#c084fc' },
   ops: { nome: 'Ops', cor: '#5fd07a' },
 };
 

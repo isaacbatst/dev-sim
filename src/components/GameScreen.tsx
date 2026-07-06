@@ -8,6 +8,7 @@ import { Room } from './desktop/Workstation';
 import { useBreak, BreakHud } from './desktop/Break';
 import { FatigueDebug } from './desktop/FatigueDebug';
 import { Boletim } from './desktop/Boletim';
+import { Daily } from './desktop/Daily';
 
 export function GameScreen() {
   const snapshot = useGameStore((s) => s.snapshot);
@@ -25,8 +26,16 @@ export function GameScreen() {
   const quickOpen = useGameStore((s) => s.quickOpen);
   const buyCosmetic = useGameStore((s) => s.buyCosmetic);
   const pickTask = useGameStore((s) => s.pickTask);
+  const dailyOpen = useGameStore((s) => s.dailyOpen);
+  const beginDay = useGameStore((s) => s.beginDay);
   const setResting = useGameStore((s) => s.setResting);
   const restoreFatigue = useGameStore((s) => s.restoreFatigue);
+
+  // Daily aberta: o teclado não vai pro jogo (o handler é estável → ref).
+  const dailyRef = useRef(false);
+  useEffect(() => {
+    dailyRef.current = dailyOpen;
+  }, [dailyOpen]);
 
   const [shake, setShake] = useState(false);
   const [floatScore, setFloatScore] = useState<string | null>(null);
@@ -87,6 +96,8 @@ export function GameScreen() {
   // O gate por foco vive no core (ações de trabalho exigem o programa em foco).
   useEffect(() => {
     const onDown = (e: KeyboardEvent) => {
+      // Na daily (manhã) o expediente não começou: nada de teclas do jogo.
+      if (dailyRef.current) return;
       // "-" alterna a pausa (levantar da mesa / voltar). Pode a qualquer momento.
       if (e.key === '-') {
         e.preventDefault();
@@ -174,7 +185,7 @@ export function GameScreen() {
         className="origin-top transition-transform duration-700 motion-reduce:transition-none"
         style={{
           transform:
-            onBreak || snapshot.status !== 'playing'
+            onBreak || dailyOpen || snapshot.status !== 'playing'
               ? 'translateY(-7.1dvh) scale(0.71)'
               : 'translateY(-25dvh) scale(1)',
           transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)',
@@ -217,9 +228,9 @@ export function GameScreen() {
               className="h-full"
               style={{
                 filter:
-                  snapshot.status !== 'playing'
-                    ? // Fim do expediente: o monitor "dorme" — a tela apaga
-                      // enquanto você se afasta (e o boletim lê melhor por cima).
+                  dailyOpen || snapshot.status !== 'playing'
+                    ? // Manhã (daily) e fim do expediente: o monitor "dorme" —
+                      // você ainda não sentou / já se afastou da mesa.
                       'brightness(0.3) saturate(0.5)'
                     : snapshot.fatigue.rates.x > 0
                       ? `saturate(${Math.max(0.72, 1 - 0.09 * snapshot.fatigue.rates.x)}) blur(${Math.min(1.6, 0.6 * snapshot.fatigue.rates.x).toFixed(2)}px) brightness(${Math.max(0.92, 1 - 0.025 * snapshot.fatigue.rates.x)})`
@@ -282,8 +293,11 @@ export function GameScreen() {
           dayResult={dayResult}
           onNextDay={nextDay}
           onBuy={buyCosmetic}
-          onPickTask={pickTask}
         />
+      )}
+      {/* DAILY (manhã): a standup abre o dia — HUD sobre a cena recuada. */}
+      {dailyOpen && snapshot.status === 'playing' && (
+        <Daily day={day} career={career} onPick={pickTask} onBegin={beginDay} />
       )}
       {/* overlay de debug da fadiga (?debug=1) */}
       {debug && <FatigueDebug snapshot={snapshot} resting={onBreak} />}

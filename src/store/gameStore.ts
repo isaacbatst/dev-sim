@@ -99,6 +99,11 @@ interface GameState {
   career: Career;
   /** Resultado do dia atual (setado quando o expediente fecha). */
   dayResult: DayResult | null;
+  /** DAILY (PROGRESSAO §3): a standup abre o dia — o relógio só anda depois
+   *  da escolha do tipo de task. */
+  dailyOpen: boolean;
+  /** Fecha a daily e começa o expediente (o relógio passa a andar). */
+  beginDay: () => void;
   start: () => () => void;
   restart: () => void;
   nextDay: () => void;
@@ -145,7 +150,12 @@ export const useGameStore = create<GameState>((set, get) => {
     });
   };
 
-  const spawn = () => {
+  /** A daily acontece quando ainda não se escolheu hoje e há nós elegíveis.
+   *  `?force=` pula (modo de teste); árvore completa → dia começa direto. */
+  const dailyNeeded = (career: Career, day: number): boolean =>
+    !forcedTask() && career.lastPickDay < day && eligibleNodes(career.unlockedTasks).length > 0;
+
+  const spawn = (paused = false) => {
     loop?.stop();
     // Pool do jogador = conjunto inicial + nós destravados na árvore (§3).
     const pool = poolForUnlocked(get().career.unlockedTasks);
@@ -157,7 +167,9 @@ export const useGameStore = create<GameState>((set, get) => {
       playSound,
       new Game(pool, forcedTask(), daySeconds()),
     );
-    loop.start();
+    // Na daily o mundo espera: publica o snapshot mas o relógio não anda.
+    if (paused) loop.publish();
+    else loop.start();
   };
 
   return {
@@ -165,6 +177,7 @@ export const useGameStore = create<GameState>((set, get) => {
     day: 1,
     career: { ...DEFAULT_CAREER },
     dayResult: null,
+    dailyOpen: false,
 
     start: () => {
       const career = loadCareer();
@@ -175,8 +188,10 @@ export const useGameStore = create<GameState>((set, get) => {
         career.lastPlayedDate = today;
         if (!forcedTask()) saveCareer(career);
       }
-      set({ day: loadDay(), career, dayResult: null });
-      spawn();
+      const day = loadDay();
+      const daily = dailyNeeded(career, day);
+      set({ day, career, dayResult: null, dailyOpen: daily });
+      spawn(daily);
       return () => {
         loop?.stop();
         loop = null;
@@ -184,15 +199,22 @@ export const useGameStore = create<GameState>((set, get) => {
     },
 
     restart: () => {
-      set({ dayResult: null });
-      spawn();
+      const daily = dailyNeeded(get().career, get().day);
+      set({ dayResult: null, dailyOpen: daily });
+      spawn(daily);
     },
-    /** Próximo expediente: avança o dia da campanha e reabre. */
+    /** Próximo expediente: avança o dia da campanha e reabre (com daily). */
     nextDay: () => {
       const next = get().day + 1;
       if (typeof window !== 'undefined') localStorage.setItem('devos-day', String(next));
-      set({ day: next, dayResult: null });
-      spawn();
+      const daily = dailyNeeded(get().career, next);
+      set({ day: next, dayResult: null, dailyOpen: daily });
+      spawn(daily);
+    },
+    beginDay: () => {
+      if (!get().dailyOpen) return;
+      set({ dailyOpen: false });
+      loop?.start();
     },
     selectSlot: (index) => loop?.selectSlot(index),
     keyDown: (key) => loop?.keyDown(key),
