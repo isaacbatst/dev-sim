@@ -7,8 +7,7 @@ import type { TicketTemplate } from '@/core/domain/types';
  * (raízes livres + filhos do que o jogador já possui). Não é talent tree de
  * compromisso: tudo continua alcançável, a escolha só define a ordem.
  *
- * Os arquétipos novos (setup, spike, infra, módulo, serviço — §3.2) entram
- * aqui como drops de conteúdo quando forem construídos.
+ * 4 ramos = 4 identidades: Consertador / Construtor / Arquiteto / Ops.
  */
 
 /** Pool do dia 1 — o estagiário vive de reunião/e-mail/estudo; código é escolha. */
@@ -44,6 +43,16 @@ export const TASK_TREE: TreeNode[] = [
     requires: ['ui_update'],
     gesto: 'pesquise e implemente a mudança visual (multi)',
   },
+  {
+    id: 'modulo_novo',
+    requires: ['ui_update'],
+    gesto: 'crie o arquivo e escreva o módulo — a receita N → escrever → salvar',
+  },
+  {
+    id: 'servico_novo',
+    requires: ['modulo_novo'],
+    gesto: 'a receita longa: módulo + subir réplicas no Terminal (multi)',
+  },
   // C · Arquiteto
   { id: 'review_pr', requires: [], gesto: 'despache os comentários do PR — J/K/L' },
   {
@@ -56,15 +65,33 @@ export const TASK_TREE: TreeNode[] = [
     requires: ['refactor'],
     gesto: 'estude, refatore e teste o módulo inteiro (multi)',
   },
-  // D · Ops — arquétipos futuros (setup → infra), entram como drops.
+  {
+    id: 'spike',
+    requires: ['review_pr'],
+    gesto: 'timebox: pesquise, rascunhe e entregue direto — sem CR, joga fora',
+  },
+  // D · Ops
+  {
+    id: 'bump_dep',
+    requires: [],
+    gesto: 'suba a versão no package.json e instale — J → B → I',
+  },
+  {
+    id: 'rotate_keys',
+    requires: ['bump_dep'],
+    gesto: 'gere e aplique a nova key no .env — segredo não vai pra PR',
+  },
+  {
+    id: 'infra_manutencao',
+    requires: ['rotate_keys'],
+    gesto: 'o Terminal: digite comandos de verdade — rst api, up × réplicas',
+  },
 ];
 
 /** Nós que o jogador pode escolher hoje: não possuídos, com pré-requisitos ok. */
 export function eligibleNodes(unlocked: string[]): TreeNode[] {
   const owned = new Set(unlocked);
-  return TASK_TREE.filter(
-    (n) => !owned.has(n.id) && n.requires.every((r) => owned.has(r)),
-  );
+  return TASK_TREE.filter((n) => !owned.has(n.id) && n.requires.every((r) => owned.has(r)));
 }
 
 /** Pool de spawn do jogador: conjunto inicial + o que a árvore destravou. */

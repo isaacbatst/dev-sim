@@ -40,6 +40,10 @@ export interface Career {
   lastPlayedDate: string;
   /** Cosméticos comprados (Parte 2). */
   owned: string[];
+  /** Árvore de tasks (§3): nós destravados — o trilho RÁPIDO. */
+  unlockedTasks: string[];
+  /** Dia da campanha em que a última escolha foi feita (1 escolha/dia). */
+  lastPickDay: number;
 }
 
 /** Resultado de um dia (pro boletim): nota, ganho e se promoveu. */
@@ -57,6 +61,8 @@ const DEFAULT_CAREER: Career = {
   streak: 0,
   lastPlayedDate: '',
   owned: [],
+  unlockedTasks: [],
+  lastPickDay: 0,
 };
 
 function loadCareer(): Career {
@@ -106,6 +112,8 @@ interface GameState {
   quickOpen: () => void;
   /** Compra um cosmético: desconta `$` e adiciona a `owned` (persiste). */
   buyCosmetic: (id: string, preco: number) => void;
+  /** Árvore de tasks: destrava um nó elegível (1 escolha por dia, no boletim). */
+  pickTask: (id: string) => void;
   /** Fadiga: avisa pausa aberta/fechada; ritual restaura; debug injeta minutos. */
   setResting: (v: boolean) => void;
   restoreFatigue: () => void;
@@ -128,7 +136,8 @@ export const useGameStore = create<GameState>((set, get) => {
     const gained = Math.max(0, snapshot.score); // dia ruim não retrocede (§6)
     c.careerTotal += gained;
     c.wallet += gained;
-    c.level = levelFor(c.careerTotal);
+    // Nunca rebaixa (posição não cai — §1); protege saves de limiares antigos.
+    c.level = Math.max(c.level, levelFor(c.careerTotal));
     saveCareer(c);
     set({
       career: c,
@@ -138,13 +147,15 @@ export const useGameStore = create<GameState>((set, get) => {
 
   const spawn = () => {
     loop?.stop();
+    // Pool do jogador = conjunto inicial + nós destravados na árvore (§3).
+    const pool = poolForUnlocked(get().career.unlockedTasks);
     loop = new GameLoop(
       (snapshot) => {
         set({ snapshot });
         if (snapshot.status === 'won') closeDay(snapshot);
       },
       playSound,
-      new Game(undefined, forcedTask(), daySeconds()),
+      new Game(pool, forcedTask(), daySeconds()),
     );
     loop.start();
   };
@@ -199,6 +210,14 @@ export const useGameStore = create<GameState>((set, get) => {
       if (c.owned.includes(id) || c.wallet < preco) return;
       c.wallet -= preco;
       c.owned = [...c.owned, id];
+      saveCareer(c);
+      set({ career: c });
+    },
+    pickTask: (id) => {
+      const { career, day } = get();
+      if (career.lastPickDay >= day) return; // já escolheu hoje
+      if (!eligibleNodes(career.unlockedTasks).some((n) => n.id === id)) return;
+      const c = { ...career, unlockedTasks: [...career.unlockedTasks, id], lastPickDay: day };
       saveCareer(c);
       set({ career: c });
     },

@@ -23,6 +23,7 @@ export function GameScreen() {
   const cycleFocus = useGameStore((s) => s.cycleFocus);
   const quickOpen = useGameStore((s) => s.quickOpen);
   const buyCosmetic = useGameStore((s) => s.buyCosmetic);
+  const pickTask = useGameStore((s) => s.pickTask);
   const setResting = useGameStore((s) => s.setResting);
   const restoreFatigue = useGameStore((s) => s.restoreFatigue);
 
@@ -228,6 +229,7 @@ export function GameScreen() {
                 onSelect={selectSlot}
                 onNextDay={nextDay}
                 onBuy={buyCosmetic}
+                onPickTask={pickTask}
               />
             </div>
           </Room>

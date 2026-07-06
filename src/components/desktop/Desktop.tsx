@@ -2,6 +2,8 @@ import type { Snapshot } from '@/core/snapshot';
 import type { Career, DayResult } from '@/store/gameStore';
 import { positionName, levelProgress } from '@/data/positions';
 import { COSMETICS } from '@/data/cosmetics';
+import { TICKETS } from '@/data/tickets';
+import { eligibleNodes } from '@/data/taskTree';
 import { MenuBar } from './MenuBar';
 import { InboxPanel } from './InboxPanel';
 import { AppWindow } from './AppWindow';
@@ -28,6 +30,7 @@ export function Desktop({
   onSelect,
   onNextDay,
   onBuy,
+  onPickTask,
 }: {
   snapshot: Snapshot;
   day: number;
@@ -39,6 +42,7 @@ export function Desktop({
   onSelect: (index: number) => void;
   onNextDay: () => void;
   onBuy: (id: string, preco: number) => void;
+  onPickTask: (id: string) => void;
 }) {
   const { status, clock, delivered, expired, score, slots, active } = snapshot;
   const openCount = slots.filter(Boolean).length;
@@ -148,6 +152,9 @@ export function Desktop({
               {expired > 0 && <span className="text-fail">✕ {expired} perdidas</span>}
             </div>
 
+            {/* Árvore de tasks: a escolha do dia (o presente do boletim — §3) */}
+            <TaskPick career={career} day={day} onPick={onPickTask} />
+
             {/* Barra pra próxima posição (o caminho a percorrer) */}
             <CareerBar career={career} />
 
@@ -182,6 +189,56 @@ function KeyHintInline() {
       <kbd className="keycap !h-5 !min-w-5 !text-[10px]">1</kbd>–
       <kbd className="keycap !h-5 !min-w-5 !text-[10px]">5</kbd>
     </span>
+  );
+}
+
+/** Árvore de tasks (PROGRESSAO §3): 1 escolha/dia entre os nós elegíveis —
+ *  cards com o nome e o GESTO numa linha; escolheu, entra no pool de amanhã. */
+function TaskPick({
+  career,
+  day,
+  onPick,
+}: {
+  career: Career;
+  day: number;
+  onPick: (id: string) => void;
+}) {
+  const pickedToday = career.lastPickDay >= day;
+  const eligible = eligibleNodes(career.unlockedTasks);
+  if (pickedToday) {
+    const last = career.unlockedTasks[career.unlockedTasks.length - 1];
+    const name = last ? (TICKETS[last]?.name ?? last) : null;
+    if (!name) return null;
+    return (
+      <div className="mt-5 border-t border-line pt-4">
+        <p className="font-mono text-[11px] text-ink-dim">
+          <span className="text-pass">✓</span> amanhã no backlog:{' '}
+          <span className="text-ink">{name}</span>
+        </p>
+      </div>
+    );
+  }
+  if (eligible.length === 0) return null;
+  return (
+    <div className="mt-5 border-t border-line pt-4 text-left">
+      <p className="mb-2 text-center font-mono text-[10px] uppercase tracking-[0.2em] text-amber">
+        nova demanda desbloqueada — escolha uma
+      </p>
+      <div className="flex flex-col gap-1.5">
+        {eligible.map((n) => (
+          <button
+            key={n.id}
+            onClick={() => onPick(n.id)}
+            className="group rounded-md border border-line/60 bg-bg/40 px-3 py-2 text-left transition-colors hover:border-amber/60 hover:bg-amber/10"
+          >
+            <p className="text-sm font-semibold text-ink group-hover:text-amber">
+              {TICKETS[n.id]?.name ?? n.id}
+            </p>
+            <p className="mt-0.5 font-mono text-[10px] leading-relaxed text-ink-dim">{n.gesto}</p>
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
 
