@@ -233,9 +233,9 @@ export function GameScreen() {
                       // você ainda não sentou / já se afastou da mesa.
                       'brightness(0.3) saturate(0.5)'
                     : snapshot.fatigue.rates.x > 0
-                      ? `saturate(${Math.max(0.72, 1 - 0.09 * snapshot.fatigue.rates.x)}) blur(${Math.min(1.6, 0.6 * snapshot.fatigue.rates.x).toFixed(2)}px) brightness(${Math.max(0.92, 1 - 0.025 * snapshot.fatigue.rates.x)})`
+                      ? `saturate(${Math.max(0.72, 1 - 0.09 * snapshot.fatigue.rates.x)}) blur(${Math.min(2.4, 1.1 * snapshot.fatigue.rates.x).toFixed(2)}px) brightness(${Math.max(0.92, 1 - 0.025 * snapshot.fatigue.rates.x)})`
                       : 'none',
-                transition: 'filter 2s ease',
+                transition: 'filter 1.2s ease',
               }}
             >
               <Desktop

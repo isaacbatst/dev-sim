@@ -74,14 +74,13 @@ export function Daily({
                 {day === 1 ? (
                   <>
                     Na daily, o chefe pergunta:{' '}
-                    <span className="font-semibold">que tipo de dev você é?</span> Libere seu
-                    primeiro tipo de demanda:
+                    <span className="font-semibold">que tipo de dev você é?</span> Escolha por onde
+                    começar:
                   </>
                 ) : (
                   <>
-                    O chefe distribui as demandas. Libere um tipo{' '}
-                    <span className="font-semibold text-amber">novo</span> — aprofunde um ramo ou
-                    abra outro:
+                    Chegou demanda <span className="font-semibold text-amber">nova</span> no quadro.
+                    Qual você chama pra você?
                   </>
                 )}
               </p>
@@ -122,9 +121,6 @@ export function Daily({
                 );
               })}
             </div>
-            <p className="mt-4 font-mono text-[10px] text-ink-dim">
-              o chefe não aceita silêncio na daily — o expediente começa depois da escolha
-            </p>
           </div>
         ) : (
           <div className="beat-in mt-6">

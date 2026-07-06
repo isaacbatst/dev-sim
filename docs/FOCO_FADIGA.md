@@ -44,16 +44,17 @@
 | ~2h30 | 0 | **telegraph**: bocejo; hint `- pausa` acende em âmbar |
 | 2h30–3h30 | 0–1 | lapsos leves crescendo; dessaturação/blur começam |
 | ~3h30 (exausto) | 1 | esquecimento entra; hint da pausa PULSA |
-| ~4h30 | 2 | piscada ~13%/min, esquecer ~10%/min por ~42min, 2 slots juntos |
-| ~5h30+ | 2.5+ | comicamente disfuncional: piscada ~20%/min, emperrar ~24%/tecla, até 3 slots esquecidos por ~55min — ignorar não é viável |
+| ~4h30 | 2 | blur ~2.2px, esquecer ~15%/min por ~48min, 2 slots juntos |
+| ~5h30+ | 2.5+ | comicamente disfuncional: emperrar ~24%/tecla, esquecer ~20%/min por ~57min, até 3 slots esquecidos — ignorar não é viável |
 
 - **Peso perceptual contínuo (D):** dessaturação/blur/brilho escalam com x (sem
   degraus); a piscada fica mais PESADA (fecha e reabre mais lenta, segura mais);
   o som do jogo abafa progressivamente (lowpass no master, 18kHz → ~3.5kHz).
 - **Descoberta (E):** o hint `- pausa` da MenuBar acende em âmbar no telegraph e
   pulsa quando exausto (âmbar = "a ação de agora" — e a ação é pausar).
-- **Esquecimento agressivo:** dura 30→70min (escala), cooldown encolhe 16→6min,
-  e o nº de slots esquecidos AO MESMO TEMPO cresce (1→3 com a fadiga).
+- **Esquecimento agressivo (o lapso que ESCALA):** dura 30→90min, cooldown
+  encolhe 14→5min, e o nº de slots esquecidos AO MESMO TEMPO cresce (1→3).
+  A piscada é rara de propósito — o peso vem do blur + esquecimento.
 - Ritmo emergente: telegraph ~11h30 (pausa de "almoço"), de novo ~15h (café da
   tarde) → **~2 pausas/dia** saem do horário. Ignorar não mata — mas o custo por
   minuto cresce sem parar até a pausa ser a única decisão sensata.
