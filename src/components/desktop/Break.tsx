@@ -48,7 +48,7 @@ export interface BreakState {
   flowing: boolean;
   /** Contra-giro automático do fecho do combo em curso. */
   spinning: boolean;
-  /** Progresso do combo circular (0..8 — DUAS voltas completas). */
+  /** Progresso do combo circular (0..4 — uma volta completa). */
   neckProgress: number;
   /** Ângulos (0=↑ 1=→ 2=↓ 3=←) que continuam o giro agora (pro HUD pulsar). */
   neckNexts: number[];
@@ -126,8 +126,8 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
   // Alongamento natural: entra suave (~650ms), SEGURA no fundo (~1s) e solta
   // devagar (~1s) — nada de tique mecânico. CADA aperto agenda o SEU estalo
   // (independente, ~380ms depois, perto do fundo do movimento) — encadear
-  // rápido toca todos, em série. COMBO CIRCULAR: DUAS voltas completas (8
-  // setas em ordem de rotação, qualquer sentido) = ritual do pescoço.
+  // rápido toca todos, em série. COMBO CIRCULAR: uma volta completa (4 setas
+  // em ordem de rotação, qualquer sentido) = ritual do pescoço.
   const setTilt = useCallback((d: { dx: number; dy: number }) => {
     tiltRef.current = d;
     setTiltState(d);
@@ -154,7 +154,7 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
       setTilt(d);
       if (tiltT.current) clearTimeout(tiltT.current);
       tiltT.current = setTimeout(() => setTilt({ dx: 0, dy: 0 }), 1650);
-      // sequência circular: DUAS voltas completas (8 setas em ordem de rotação,
+      // sequência circular: UMA volta completa (4 setas em ordem de rotação,
       // qualquer sentido). Mantém só o SUFIXO consistente — errar uma direção
       // não zera tudo, recomeça dali.
       const now = performance.now();
@@ -172,7 +172,7 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
       }
       s = s.slice(start);
       seq.current = s;
-      const rot: 1 | -1 | 0 = s.length >= 8 ? (rotDelta === 1 ? 1 : -1) : 0;
+      const rot: 1 | -1 | 0 = s.length >= 4 ? (rotDelta === 1 ? 1 : -1) : 0;
       // HUD: progresso + quais direções continuam o giro agora
       if (rot === 0) {
         setNeckProgress(s.length);
@@ -193,7 +193,7 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
       }
       if (rot !== 0) {
         if (seqT.current) clearTimeout(seqT.current);
-        setNeckProgress(8);
+        setNeckProgress(4);
         setNeckNexts([]);
         // COMBO: contra-giro automático no sentido INVERSO, junto com o mix
         // (que já contém o estalo → cancela os individuais pendentes).
@@ -469,10 +469,10 @@ export function BreakHud({
           aria-hidden
         />
       )}
-      {/* o RITUAL do pescoço: mostrador circular — as setas em roda, a próxima
-          pulsando, o arco enchendo (2 voltas = 8 passos). É a instrução. */}
+      {/* o RITUAL do pescoço: mostrador circular CENTRAL — keycaps de seta em
+          roda, o próximo aceso (--current), o arco enchendo. É a instrução. */}
       {mode === 'mesa' && (
-        <div className="absolute left-1/2 top-[16%] -translate-x-1/2">
+        <div className="absolute inset-0 flex items-center justify-center">
           <NeckDial progress={neckProgress} nexts={neckNexts} spinning={spinning} />
         </div>
       )}
@@ -503,9 +503,11 @@ export function BreakHud({
 
 /* ── peças ────────────────────────────────────────────────────── */
 
-/** Mostrador do combo do pescoço: as 4 setas em roda, a(s) próxima(s) pulsando
- *  em âmbar (a linguagem do keycap), o arco enchendo — 2 voltas = 8 passos.
- *  Sem texto de tutorial: o mostrador É a instrução. */
+/** Mostrador do combo do pescoço, na LINGUAGEM da casa: as setas são KEYCAPS
+ *  (a assinatura tátil do devOS) em roda; o próximo do giro acende `--current`
+ *  (âmbar, "aperte agora" — um só por vez); o arco fecha a volta. Pastilha com
+ *  os tokens hud-night + elevação. Sem texto de tutorial: o mostrador É a
+ *  instrução. */
 function NeckDial({
   progress,
   nexts,
@@ -515,41 +517,37 @@ function NeckDial({
   nexts: number[];
   spinning: boolean;
 }) {
-  const R = 34;
+  const R = 44;
   const C = 2 * Math.PI * R;
-  const frac = Math.min(1, progress / 8);
+  const frac = Math.min(1, progress / 4);
   const ARROWS = ['↑', '→', '↓', '←'];
   const POS: React.CSSProperties[] = [
-    { top: 2, left: '50%', transform: 'translateX(-50%)' },
-    { right: 2, top: '50%', transform: 'translateY(-50%)' },
-    { bottom: 2, left: '50%', transform: 'translateX(-50%)' },
-    { left: 2, top: '50%', transform: 'translateY(-50%)' },
+    { top: 0, left: '50%', transform: 'translateX(-50%)' },
+    { right: 0, top: '50%', transform: 'translateY(-50%)' },
+    { bottom: 0, left: '50%', transform: 'translateX(-50%)' },
+    { left: 0, top: '50%', transform: 'translateY(-50%)' },
   ];
-  const done = spinning || progress >= 8;
+  const done = spinning || progress >= 4;
   return (
-    // pastilha de HUD: fundo próprio — legível sobre o monitor aceso ou a parede
     <div
-      className="flex flex-col items-center gap-2 rounded-2xl px-5 py-4"
-      style={{ background: 'rgba(5,7,12,0.72)' }}
+      className="hud-night flex flex-col items-center gap-2.5 rounded-xl px-6 py-5"
+      style={{
+        background: 'color-mix(in srgb, var(--surface) 92%, transparent)',
+        boxShadow:
+          '0 24px 60px -18px rgba(0,0,0,0.7), 0 4px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06)',
+      }}
       aria-hidden
     >
-      <div className="relative size-28">
-        <svg viewBox="0 0 112 112" className="absolute inset-0 size-full -rotate-90">
+      <div className="relative size-32">
+        <svg viewBox="0 0 128 128" className="absolute inset-0 size-full -rotate-90">
+          <circle cx="64" cy="64" r={R} fill="none" stroke="var(--line)" strokeWidth="2.5" />
           <circle
-            cx="56"
-            cy="56"
-            r={R}
-            fill="none"
-            stroke="rgba(255,255,255,0.12)"
-            strokeWidth="3"
-          />
-          <circle
-            cx="56"
-            cy="56"
+            cx="64"
+            cy="64"
             r={R}
             fill="none"
             stroke={done ? 'var(--pass)' : 'var(--amber)'}
-            strokeWidth="3"
+            strokeWidth="2.5"
             strokeLinecap="round"
             strokeDasharray={C}
             strokeDashoffset={C * (1 - (done ? 1 : frac))}
@@ -558,30 +556,24 @@ function NeckDial({
         </svg>
         {ARROWS.map((g, i) => {
           const isNext = !done && nexts.includes(i);
-          const idle = !done && progress === 0;
           return (
-            <span
+            <kbd
               key={g}
-              className={`absolute font-mono text-lg ${isNext || idle ? 'animate-edgepulse' : ''}`}
-              style={{
-                ...POS[i],
-                color: done
-                  ? 'var(--pass)'
-                  : isNext || idle
-                    ? 'var(--amber)'
-                    : 'rgba(255,255,255,0.35)',
-              }}
+              className={`keycap absolute !h-7 !min-w-7 !text-xs ${
+                isNext ? 'keycap--current animate-edgepulse' : done ? 'keycap--done' : ''
+              }`}
+              style={POS[i]}
             >
               {g}
-            </span>
+            </kbd>
           );
         })}
-        <span className="absolute inset-0 flex items-center justify-center font-mono text-[11px] tabular-nums text-white/70">
-          {done ? '✓' : `${progress}/8`}
+        <span className="absolute inset-0 flex items-center justify-center font-mono text-[11px] tabular-nums text-ink-dim">
+          {done ? <span className="text-pass">✓</span> : `${progress}/4`}
         </span>
       </div>
-      <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/40">
-        {done ? 'pescoço solto' : 'gire o pescoço · 2 voltas'}
+      <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink-dim">
+        {done ? 'pescoço solto' : 'gire o pescoço'}
       </span>
     </div>
   );
