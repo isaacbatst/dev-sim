@@ -36,18 +36,24 @@ export function Daily({
     onPick(id);
   };
 
-  // Enter começa o dia (só depois de escolher).
+  // Teclado: 1–N escolhe (como tudo no jogo); Enter começa o dia após escolher.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (tree) {
         if (e.key === 'Enter' || e.key === 'Escape') setTree(false);
         return;
       }
-      if (e.key === 'Enter' && !e.repeat && picked) onBegin();
+      if (e.repeat) return;
+      if (!picked && e.key >= '1' && e.key <= String(Math.min(9, eligible.length))) {
+        const n = eligible[Number(e.key) - 1];
+        if (n) pick(n.id);
+        return;
+      }
+      if (e.key === 'Enter' && picked) onBegin();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [tree, picked, onBegin]);
+  });
 
   return (
     <div className="hud-night absolute inset-0 z-30 overflow-y-auto bg-black/75 backdrop-blur-[5px]">
@@ -87,27 +93,31 @@ export function Daily({
               </button>
             </div>
             <div className="flex flex-col gap-1.5">
-              {eligible.map((n) => {
+              {eligible.map((n, i) => {
                 const b = BRANCHES[n.branch];
                 return (
                   <button
                     key={n.id}
                     onClick={() => pick(n.id)}
-                    className="group rounded-md border border-line/60 bg-surface/90 py-2 pl-3 pr-3 text-left transition-colors hover:border-amber/60 hover:bg-amber/10"
-                    style={{ borderLeft: `3px solid ${b.cor}` }}
+                    className="pick-card flex items-center gap-3 rounded-md px-3 py-2 text-left"
                   >
-                    <p
-                      className="font-mono text-[9px] uppercase tracking-[0.18em]"
-                      style={{ color: b.cor }}
-                    >
-                      {b.nome}
-                    </p>
-                    <p className="mt-0.5 text-sm font-semibold text-ink group-hover:text-amber">
-                      {TICKETS[n.id]?.name ?? n.id}
-                    </p>
-                    <p className="mt-0.5 font-mono text-[10px] leading-relaxed text-ink-dim">
-                      {n.gesto}
-                    </p>
+                    <kbd className="keycap !h-8 !min-w-8 shrink-0 !text-sm">{i + 1}</kbd>
+                    <span className="min-w-0">
+                      <span className="flex items-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.18em] text-ink-dim">
+                        <span
+                          aria-hidden
+                          className="size-2 rounded-[2px]"
+                          style={{ background: b.cor }}
+                        />
+                        {b.nome}
+                      </span>
+                      <span className="mt-0.5 block text-sm font-semibold text-ink">
+                        {TICKETS[n.id]?.name ?? n.id}
+                      </span>
+                      <span className="mt-0.5 block font-mono text-[10px] leading-relaxed text-ink-dim">
+                        {n.gesto}
+                      </span>
+                    </span>
                   </button>
                 );
               })}

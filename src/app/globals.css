@@ -410,11 +410,30 @@ body {
   animation: stamp 0.3s ease;
 }
 
+/* ── Card de escolha (daily): a linguagem é o KEYCAP, não borda/glow ──
+   Hover = a tecla acende (assinatura devOS) + valor sobe um degrau (neutro).
+   Nada de listra lateral, borda colorida ou texto mudando de cor. */
+.pick-card {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  transition: background-color 0.15s ease;
+}
+.pick-card:hover,
+.pick-card:focus-visible {
+  background: color-mix(in srgb, var(--surface-2) 86%, #ffffff);
+}
+.pick-card:hover .keycap,
+.pick-card:focus-visible .keycap {
+  color: var(--amber);
+  border-color: var(--amber);
+}
+
 /* ── Boletim (HUD de fim de expediente): batidas sequenciadas ── */
 /* O boletim flutua sobre o QUARTO (sempre escuro), não sobre o monitor — os
    tokens do tema não valem aqui. Escopo fixo mundo-escuro (como o Terminal),
    com os accents do tema graveyard. Vale nos DOIS temas do devOS. */
 .hud-night {
+  --bg: #0e1016;
   --surface: #161922;
   --surface-2: #1f2430;
   --line: #2b3140;

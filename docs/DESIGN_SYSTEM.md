@@ -296,6 +296,16 @@ pra hierarquia e pro grão.
 
 ## Changelog
 
+- **2026-07-06 (b):** **Card de escolha da daily corrigido — a lombada violava o
+  Do Not Use.** A 1ª versão usava listra lateral 3px na cor do ramo + hover
+  âmbar-wash (borda+fundo+texto) — exatamente os "tells" nº 1 e 2 da lista.
+  Receita nova (`.pick-card`): cartão aninhado padrão (`surface-2` + `line` +
+  `rounded-md`); identidade do ramo = **quadradinho colorido** no eyebrow
+  (mesmo padrão dos dots de extensão do explorer), nome em `ink-dim`; hover =
+  **o KEYCAP acende** (`--current`, a assinatura) + valor sobe um degrau
+  (neutro, color-mix 14% white). E a escolha ganhou teclado: keycaps `1–4`
+  nos cards (o jogo é keyboard-first; a daily era mouse-only). Lição: conferir
+  o Do Not Use ANTES de inventar componente novo.
 - **2026-07-06:** **Boletim vira HUD com batidas (Boletim.tsx).** Fim do
   expediente = o MESMO gesto da pausa: a câmera recua da mesa, o monitor
   "dorme" (brightness 0.3) e o boletim flutua sobre o quarto escurecido — sem
