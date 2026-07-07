@@ -333,15 +333,27 @@ export function PlantArt({
 /* ── CANECAS ──────────────────────────────────────────────────── */
 
 function Steam() {
+  // fios CURVOS com contorno (a linguagem do vapor do close-up) — as barras
+  // retas antigas liam como "linhas estranhas" em cima da caneca.
   return (
-    <div className="absolute -top-10 left-1/2 -translate-x-1/2">
-      {[-8, 0, 8].map((x, i) => (
-        <span
-          key={i}
-          className="animate-edgepulse absolute bottom-0 w-1 rounded-full bg-white/25"
-          style={{ left: x, height: 32, animationDelay: `${i * 220}ms` }}
-        />
-      ))}
+    <div className="absolute -top-4 left-1/2 -translate-x-1/2" aria-hidden>
+      <svg viewBox="0 0 60 52" className="h-10 w-12" fill="none" strokeLinecap="round">
+        {[
+          { d: 'M18 50 C 13 41 22 34 18 24 C 16 18 20 12 18 6', delay: '0ms', o: 0.8 },
+          { d: 'M30 50 C 25 39 34 32 30 20 C 28 13 32 8 30 2', delay: '280ms', o: 1 },
+          { d: 'M42 50 C 37 42 46 34 42 25 C 40 19 44 13 42 7', delay: '560ms', o: 0.7 },
+        ].map((w, i) => (
+          <g
+            key={i}
+            className="animate-edgepulse"
+            style={{ animationDelay: w.delay }}
+            opacity={w.o}
+          >
+            <path d={w.d} stroke="rgba(60,48,38,0.5)" strokeWidth="4" />
+            <path d={w.d} stroke="rgba(255,255,255,0.85)" strokeWidth="1.8" />
+          </g>
+        ))}
+      </svg>
     </div>
   );
 }
@@ -410,7 +422,6 @@ function MugBarrel() {
         d="M24 34 C 22 26 74 26 72 34 L74 76 C 75 92 63 100 48 100 C 33 100 21 92 22 76 Z"
         fill="url(#mugB)"
       />
-      <path d="M24 34 C 22 26 74 26 72 34 L73 46 C 73 52 23 52 23 46 Z" fill="#e9e1cf" />
       <ellipse cx="48" cy="33" rx="24" ry="6" fill="#efe7d6" />
       <ellipse cx="48" cy="33.5" rx="20.5" ry="4.9" fill="#1a130e" />
       <ellipse cx="48" cy="34.3" rx="17" ry="3.9" fill="#43301d" />
@@ -513,9 +524,9 @@ export function MugCloseup({ variant, sips }: { variant: ArtVariant; sips: numbe
       {!empty && (
         <g fill="none" strokeLinecap="round">
           {[
-            { d: 'M104 54 C 98 44 108 36 104 26 C 102 20 106 13 104 7', o: 0.9, delay: '0ms' },
-            { d: 'M130 52 C 124 41 134 33 130 21 C 128 14 132 8 130 1', o: 1, delay: '300ms' },
-            { d: 'M156 54 C 150 45 160 37 156 27 C 154 21 158 15 156 9', o: 0.8, delay: '600ms' },
+            { d: 'M104 42 C 99 34 107 27 104 19 C 102 14 106 9 104 4', o: 0.9, delay: '0ms' },
+            { d: 'M130 40 C 125 31 133 25 130 15 C 128 10 132 5 130 0', o: 1, delay: '300ms' },
+            { d: 'M156 42 C 151 35 159 28 156 20 C 154 15 158 11 156 6', o: 0.8, delay: '600ms' },
           ].map((w, i) => (
             <g
               key={i}
