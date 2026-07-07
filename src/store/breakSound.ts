@@ -150,9 +150,10 @@ export function preload(): void {
   if (c) for (const name of Object.keys(SAMPLES)) loadSample(c, name);
 }
 
-/** Pescoço: estalo por direção (leve variação de pitch pra não repetir). */
-export function neckCrack(): void {
-  playSample('crack', 0.65, 0.92 + Math.random() * 0.16);
+/** Pescoço: estalo por direção (leve variação de pitch pra não repetir);
+ *  `rate` baixo = crack GRAVE (o alongamento fundo do fecho). */
+export function neckCrack(rate = 0.92 + Math.random() * 0.16): void {
+  playSample('crack', 0.65, rate);
 }
 
 /** Fecho do combo circular do pescoço (o mix crack+alívio). */

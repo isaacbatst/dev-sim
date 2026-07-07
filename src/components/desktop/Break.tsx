@@ -65,6 +65,10 @@ export interface BreakState {
   neckProgress: number;
   /** Ângulos (0=↑ 1=→ 2=↓ 3=←) que continuam o giro agora (pro HUD pulsar). */
   neckNexts: number[];
+  /** Fecho do pescoço: alongamentos laterais completados (0..2, ← depois →). */
+  stretchN: number;
+  /** Progresso do SEGURAR atual (0..1 — enche o medidor do keycap). */
+  stretchHold: number;
   /** Ângulos já apertados na sequência atual (o HUD afunda esses keycaps). */
   neckHits: number[];
   /** Progresso dos rituais de objeto (pips nos prompts da cena). */
@@ -103,6 +107,10 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
   const [neckProgress, setNeckProgress] = useState(0);
   const [neckNexts, setNeckNexts] = useState<number[]>([]);
   const [neckHits, setNeckHits] = useState<number[]>([]);
+  const [stretchN, setStretchN] = useState(0);
+  const [stretchHold, setStretchHold] = useState(0);
+  const stretchRef = useRef(0);
+  const holdT = useRef<ReturnType<typeof setInterval> | null>(null);
   const [waterN, setWaterN] = useState(0);
   const [wateredKeys, setWateredKeys] = useState<string[]>([]);
   const [stirN, setStirN] = useState(0);
@@ -139,6 +147,9 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
     setPrevActive(active);
     if (!active) {
       setMode('mesa');
+      setNeckProgress(0);
+      setStretchN(0);
+      setStretchHold(0);
       setWaterN(0);
       setWateredKeys([]);
       setStirN(0);
@@ -154,6 +165,9 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
       sipCount.current = 0;
       noteCount.current = 0;
       stirSeq.current = [];
+      stretchRef.current = 0;
+      seq.current = [];
+      if (holdT.current) clearInterval(holdT.current);
     }
   }, [active]);
 
@@ -189,8 +203,8 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
     const cur = stirSeq.current;
     S.stir(cur.length - 1);
     setStirN(cur.length);
-    // a cruz enche POR VOLTA: na 2ª volta os keycaps levantam e afundam de novo
-    setStirHits(cur.slice(Math.floor((cur.length - 1) / 4) * 4));
+    // sequência inteira: o keycap fica ÂMBAR na 1ª volta e VERDE na 2ª
+    setStirHits([...cur]);
     const lastA = cur[cur.length - 1];
     setStirNexts(
       cur.length >= STIR_TOTAL
@@ -255,6 +269,58 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
   // quando o combo fecha (senão caem em cima do mix e embola).
   const crackTs = useRef<ReturnType<typeof setTimeout>[]>([]);
 
+  /** Fecho do pescoço: alongamento lateral COM PESO. Segura ← (depois →) por
+   *  ~1s — a câmera inclina fundo e FICA; o medidor enche; soltar antes só
+   *  recomeça (sem falha). Cada lado fecha com um crack grave; o segundo
+   *  dispara o mix + alívio e devolve à mesa. */
+  const stretchStart = useCallback(
+    (key: string) => {
+      const side = stretchRef.current === 0 ? 'ArrowLeft' : 'ArrowRight';
+      if (key !== side || holdT.current) return;
+      setTilt(key === 'ArrowLeft' ? { dx: -1, dy: 0 } : { dx: 1, dy: 0 });
+      if (tiltT.current) clearTimeout(tiltT.current);
+      const t0 = performance.now();
+      holdT.current = setInterval(() => {
+        const p = Math.min(1, (performance.now() - t0) / 950);
+        setStretchHold(p);
+        if (p >= 1) {
+          if (holdT.current) clearInterval(holdT.current);
+          holdT.current = null;
+          S.neckCrack(0.76); // grave: o alongamento fundo
+          setTilt({ dx: 0, dy: 0 });
+          setStretchHold(0);
+          stretchRef.current += 1;
+          setStretchN(stretchRef.current);
+          if (stretchRef.current >= 2) {
+            // fecho do ritual: mix + alívio, e a mesa
+            setSpinning(true); // trava inputs do giro durante o fecho
+            setTimeout(() => {
+              S.neckCombo();
+              setRelief((r) => r + 1);
+              completeRitual(false);
+            }, 320);
+            setTimeout(() => {
+              setSpinning(false);
+              setNeckProgress(0);
+              stretchRef.current = 0;
+              setStretchN(0);
+              setMode('mesa');
+            }, 1100);
+          }
+        }
+      }, 40);
+    },
+    [completeRitual, setTilt],
+  );
+
+  const stretchCancel = useCallback(() => {
+    if (!holdT.current) return;
+    clearInterval(holdT.current);
+    holdT.current = null;
+    setStretchHold(0);
+    setTilt({ dx: 0, dy: 0 }); // soltou antes: volta, sem falha
+  }, [setTilt]);
+
   const roll = useCallback(
     (key: string) => {
       if (spinning) return; // o contra-giro do combo termina sozinho
@@ -294,8 +360,8 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
       // HUD: progresso + quais direções continuam o giro agora
       if (rot === 0) {
         setNeckProgress(s.length);
-        // a cruz enche POR VOLTA (na 2ª os keycaps levantam e afundam de novo)
-        setNeckHits(s.slice(Math.floor((s.length - 1) / 4) * 4).map((e) => e.a));
+        // sequência inteira: o keycap fica ÂMBAR na 1ª volta e VERDE na 2ª
+        setNeckHits(s.map((e) => e.a));
         setNeckNexts(
           s.length === 1
             ? [(a + 1) % 4, (a + 3) % 4]
@@ -314,49 +380,12 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
       }
       if (rot !== 0) {
         if (seqT.current) clearTimeout(seqT.current);
+        // voltas completas → fase do ALONGAMENTO (segurar ← e →). O fecho
+        // agora é ATIVO e com peso, não um contra-giro automático.
         setNeckProgress(NECK_TOTAL);
         setNeckNexts([]);
         setNeckHits([]);
-        // COMBO: contra-giro automático no sentido INVERSO, junto com o mix
-        // (que já contém o estalo → cancela os individuais pendentes).
         seq.current.length = 0;
-        crackTs.current.forEach(clearTimeout);
-        crackTs.current = [];
-        if (tiltT.current) clearTimeout(tiltT.current);
-        spinTs.current.forEach(clearTimeout);
-        spinTs.current = [];
-        setSpinning(true);
-        const ANGLES = [
-          { dx: 0, dy: -1 },
-          { dx: 1, dy: 0 },
-          { dx: 0, dy: 1 },
-          { dx: -1, dy: 0 },
-        ];
-        // som + primeiro passo do desenrolar juntos, aos 420ms. O combo é o
-        // RITUAL do pescoço (grátis) → restaura a fadiga.
-        spinTs.current.push(
-          setTimeout(() => {
-            S.neckCombo();
-            setRelief((r) => r + 1);
-            completeRitual(false); // feedback próprio (contra-giro + mix)
-          }, 420),
-        );
-        for (let i = 1; i <= 4; i++) {
-          spinTs.current.push(
-            setTimeout(() => setTilt(ANGLES[(a - rot * i + 8) % 4]), 420 + (i - 1) * 240),
-          );
-        }
-        spinTs.current.push(
-          setTimeout(
-            () => {
-              setTilt({ dx: 0, dy: 0 });
-              setSpinning(false);
-              setNeckProgress(0);
-              setMode('mesa'); // ritual fechado — de volta à mesa (como os outros)
-            },
-            420 + 4 * 240,
-          ),
-        );
       } else {
         // um estalo POR aperto (não cancela os anteriores — série ao encadear)
         const t = setTimeout(() => {
@@ -434,10 +463,16 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
       if (mode === 'pescoco') {
         if (e.key === 'Backspace') {
           e.preventDefault();
+          stretchCancel();
           return setMode('mesa');
         }
         if (DIRS[e.key]) {
           e.preventDefault();
+          // voltas fechadas → fase do alongamento (segurar; e.repeat ignorado)
+          if (neckProgress >= NECK_TOTAL) {
+            if (!e.repeat) stretchStart(e.key);
+            return;
+          }
           return roll(e.key);
         }
         return;
@@ -488,10 +523,30 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
         return playNote(PIANO_IDX[k]);
       }
     };
+    const onUp = (e: KeyboardEvent) => {
+      if (mode === 'pescoco' && DIRS[e.key]) stretchCancel();
+    };
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    window.addEventListener('keyup', onUp);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('keyup', onUp);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, mode, owned.join(','), roll, water, playNote, sip, stirN, stirPress]);
+  }, [
+    active,
+    mode,
+    owned.join(','),
+    roll,
+    water,
+    playNote,
+    sip,
+    stirN,
+    stirPress,
+    neckProgress,
+    stretchStart,
+    stretchCancel,
+  ]);
 
   return {
     active,
@@ -502,6 +557,8 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
     neckProgress,
     neckNexts,
     neckHits,
+    stretchN,
+    stretchHold,
     waterN,
     wateredKeys,
     stirN,
@@ -620,6 +677,8 @@ export function BreakHud({
     neckProgress,
     neckNexts,
     neckHits,
+    stretchN,
+    stretchHold,
     waterN,
     stirN,
     sipDoneN,
@@ -646,6 +705,8 @@ export function BreakHud({
             nexts={neckNexts}
             hits={neckHits}
             spinning={spinning}
+            stretchN={stretchN}
+            stretchHold={stretchHold}
           />
         </div>
       )}
@@ -668,7 +729,7 @@ export function BreakHud({
       {mode === 'mesa' && (
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="hud-night flex items-start gap-10" aria-hidden>
-            <RitualOption k="P" label="pescoço" total={NECK_TOTAL} done={0} />
+            <RitualOption k="P" label="pescoço" total={NECK_TOTAL + 2} done={0} />
             {owned.includes('planta') && (
               <RitualOption k="R" label="regar" total={12} done={waterN} />
             )}
@@ -709,47 +770,94 @@ function NeckCluster({
   nexts,
   hits,
   spinning,
+  stretchN,
+  stretchHold,
 }: {
   progress: number;
   nexts: number[];
   hits: number[];
   spinning: boolean;
+  stretchN: number;
+  stretchHold: number;
 }) {
   const done = spinning || progress >= NECK_TOTAL;
-  // hud-night: o cluster flutua sobre o QUARTO/monitor — keycaps sempre escuros
-  const cap = (i: number, g: string) => (
-    <kbd
-      className={`keycap ${
-        !done && nexts.includes(i)
-          ? 'keycap--current animate-edgepulse'
-          : done || hits.includes(i)
+  // fase do FECHO: voltas completas → segurar ← e → (alongamento com peso)
+  const stretching = progress >= NECK_TOTAL && !spinning;
+  // hud-night: o cluster flutua sobre o QUARTO/monitor — keycaps sempre
+  // escuros. Como na rega: 1ª passada = ÂMBAR (meio), 2ª = VERDE (feito);
+  // a que continua o giro PULSA.
+  const cap = (i: number, g: string) => {
+    const cnt = hits.filter((h) => h === i).length;
+    return (
+      <kbd
+        className={`keycap ${
+          done || cnt >= 2
             ? 'keycap--done'
-            : ''
-      }`}
-    >
-      {g}
-    </kbd>
-  );
+            : nexts.includes(i)
+              ? 'keycap--current animate-edgepulse'
+              : cnt === 1
+                ? 'keycap--current'
+                : ''
+        }`}
+      >
+        {g}
+      </kbd>
+    );
+  };
+  // keycap do SEGURAR: enche de baixo pra cima enquanto pressionado
+  const holdCap = (g: string, idx: number) => {
+    const doneSide = spinning || stretchN > idx;
+    const activeSide = !doneSide && stretchN === idx;
+    return (
+      <span key={g} className="relative inline-flex">
+        <kbd
+          className={`keycap ${doneSide ? 'keycap--done' : activeSide ? 'keycap--current' : ''} ${
+            activeSide && stretchHold === 0 ? 'animate-edgepulse' : ''
+          }`}
+        >
+          {g}
+        </kbd>
+        {/* o medidor: preenchimento subindo dentro do keycap */}
+        {activeSide && stretchHold > 0 && (
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-x-[3px] bottom-[3px] rounded-[4px]"
+            style={{
+              height: `${Math.round(stretchHold * 82)}%`,
+              background: 'color-mix(in srgb, var(--amber) 45%, transparent)',
+            }}
+          />
+        )}
+      </span>
+    );
+  };
   return (
     <div className="hud-night flex flex-col items-center gap-2.5" aria-hidden>
-      {/* cruz de setas (o cluster físico do teclado, virado pro giro) */}
-      <div className="flex flex-col items-center gap-1.5">
-        {cap(0, '↑')}
+      {stretching ? (
+        // FECHO: segurar ← fundo (~1s), depois → — solta com crack grave
         <div className="flex items-center gap-14">
-          {cap(3, '←')}
-          {cap(1, '→')}
+          {holdCap('←', 0)}
+          {holdCap('→', 1)}
         </div>
-        {cap(2, '↓')}
-      </div>
-      <Pips total={NECK_TOTAL} done={done ? NECK_TOTAL : progress} />
+      ) : (
+        <div className="flex flex-col items-center gap-1.5">
+          {cap(0, '↑')}
+          <div className="flex items-center gap-14">
+            {cap(3, '←')}
+            {cap(1, '→')}
+          </div>
+          {cap(2, '↓')}
+        </div>
+      )}
+      <Pips total={NECK_TOTAL + 2} done={(done ? NECK_TOTAL : progress) + stretchN} />
       <span
         className="font-mono text-[10px] uppercase tracking-[0.2em]"
         style={{
-          color: done ? 'var(--pass)' : 'rgba(255,255,255,0.75)',
+          color: spinning ? 'var(--pass)' : 'rgba(255,255,255,0.75)',
           textShadow: '0 1px 10px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.9)',
         }}
       >
-        {done ? 'pescoço solto ✓' : 'gire o pescoço'}
+        {spinning ? 'pescoço solto ✓' : stretching ? 'segure — alongue fundo' : 'gire o pescoço'}
       </span>
     </div>
   );
@@ -1056,20 +1164,26 @@ function CoffeePrompt({ brk }: { brk: BreakState }) {
   const stirring = stirN < STIR_TOTAL;
   const finished = !stirring && sips >= 2;
   const ARROWS = ['↑', '→', '↓', '←'];
-  const arrowKey = (a: number) => (
-    <kbd
-      key={a}
-      className={`keycap ${
-        !stirring || stirHits.includes(a)
-          ? 'keycap--done'
-          : stirNexts.includes(a)
-            ? 'keycap--current animate-edgepulse'
-            : ''
-      }`}
-    >
-      {ARROWS[a]}
-    </kbd>
-  );
+  // como na rega: 1ª volta = ÂMBAR (meio), 2ª = VERDE; a próxima pulsa
+  const arrowKey = (a: number) => {
+    const cnt = stirHits.filter((h) => h === a).length;
+    return (
+      <kbd
+        key={a}
+        className={`keycap ${
+          !stirring || cnt >= 2
+            ? 'keycap--done'
+            : stirNexts.includes(a)
+              ? 'keycap--current animate-edgepulse'
+              : cnt === 1
+                ? 'keycap--current'
+                : ''
+        }`}
+      >
+        {ARROWS[a]}
+      </kbd>
+    );
+  };
   return (
     <div className="hud-night flex flex-col items-center gap-2.5" aria-hidden>
       {stirring ? (
