@@ -1,6 +1,7 @@
 # Créditos de áudio
 
-Ambas as licenças exigem **atribuição** no produto final (página de créditos).
+As licenças **CC-BY** exigem atribuição no produto final (página de créditos);
+CC0 não exige, mas creditamos por cortesia.
 
 - `neck-crack.wav` — "Neck Bone Snap" por **Clearwavsound**
   (freesound.org/people/Clearwavsound/sounds/524612/) · **CC-BY 3.0**.
