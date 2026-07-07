@@ -10,5 +10,7 @@ Ambas as licenças exigem **atribuição** no produto final (página de crédito
 - `yawn.wav` — bocejo por **mrjswilson**
   (freesound.org/people/mrjswilson/sounds/795394/) · **CC0** (não exige
   atribuição; creditado por cortesia).
-- `gulp-action.wav` / `gulp-final.wav` — goles do café por **Isaac Batista**
-  (gravação/mix próprio no REAPER).
+- `gulp-action.wav` / `gulp-final.wav` — goles do café: edição/mix (REAPER,
+  Isaac Batista) de som por **LewisEmmott5**
+  (freesound.org/people/LewisEmmott5/sounds/732576/) · **CC0** (não exige
+  atribuição; creditado por cortesia).
