@@ -192,7 +192,7 @@ export function Room({
       {/* PLANTA — na LATERAL do monitor, em pé na mesa (visível o dia todo,
           na altura do monitor; pulsa ao regar). Depois do monitor no DOM →
           pinta na frente da beirada da moldura. */}
-      {owned.includes('planta') && (
+      {owned.includes('planta') && brk.mode !== 'planta' && (
         <div
           className="absolute"
           style={{
@@ -201,13 +201,9 @@ export function Room({
             transform: 'translateX(-70%)',
           }}
         >
-          <PlantArt
-            variant={art.plant}
-            tier={art.plantTier}
-            size={1.9}
-            pulseKey={brk.leafN}
-            highlight={brk.mode === 'planta'}
-          />
+          {/* (sem highlight: no modo planta o vaso do canto some — você está
+              com ele em close) */}
+          <PlantArt variant={art.plant} tier={art.plantTier} size={1.9} pulseKey={brk.leafN} />
         </div>
       )}
 

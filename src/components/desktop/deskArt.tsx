@@ -631,3 +631,48 @@ export function MugCloseup({
     </svg>
   );
 }
+
+/* ── REGADOR (modo planta) ───────────────────────────────────── */
+
+/** Regador metálico visto de lado, bico à esquerda com crivo — desliza sobre
+ *  a terra e verte a cada tecla (o movimento fica no wrapper, em Break). */
+export function CanArt() {
+  return (
+    <svg viewBox="0 0 140 90" className="size-full" aria-hidden>
+      <defs>
+        <linearGradient id="canBody" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#4a5262" />
+          <stop offset="0.5" stopColor="#333a48" />
+          <stop offset="1" stopColor="#20242e" />
+        </linearGradient>
+      </defs>
+      {/* alça superior */}
+      <path
+        d="M62 26 C 62 10 102 10 102 26"
+        stroke="#2a2f3b"
+        strokeWidth="7"
+        fill="none"
+        strokeLinecap="round"
+      />
+      {/* corpo */}
+      <path
+        d="M52 30 L112 30 Q118 30 118 36 L114 74 Q113 82 104 82 L62 82 Q53 82 52 74 Z"
+        fill="url(#canBody)"
+      />
+      <path
+        d="M58 36 C 57 50 57 62 59 74"
+        stroke="rgba(255,255,255,0.16)"
+        strokeWidth="5"
+        fill="none"
+        strokeLinecap="round"
+      />
+      {/* bico */}
+      <path d="M54 42 L22 20 L16 28 L50 58 Z" fill="#3b4250" />
+      {/* crivo (cabeça do bico) */}
+      <ellipse cx="18" cy="23" rx="9" ry="7" fill="#4a5262" transform="rotate(-38 18 23)" />
+      {[0, 1, 2].map((i) => (
+        <circle key={i} cx={14 + i * 4} cy={20 + i * 2.4} r="1.1" fill="#171a21" />
+      ))}
+    </svg>
+  );
+}

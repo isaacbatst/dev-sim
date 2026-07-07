@@ -332,18 +332,8 @@ export function GameScreen() {
       {onBreak && (
         <BreakHud
           clock={snapshot.clock}
-          mode={brk.mode}
           owned={career.owned}
-          relief={brk.relief}
-          neckProgress={brk.neckProgress}
-          neckNexts={brk.neckNexts}
-          neckHits={brk.neckHits}
-          waterN={brk.waterN}
-          stirN={brk.stirN}
-          sipDoneN={brk.sipDoneN}
-          noteDoneN={brk.noteDoneN}
-          sipN={brk.sipN}
-          spinning={brk.spinning}
+          brk={brk}
           onResume={() => setBreak(false)}
         />
       )}

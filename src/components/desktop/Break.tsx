@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as S from '@/store/breakSound';
-import { MugArt, MugCloseup, useDeskArt } from './deskArt';
+import { CanArt, MugArt, MugCloseup, PlantArt, useDeskArt } from './deskArt';
 
 /**
  * PAUSA ("-", a qualquer momento): o personagem se AFASTA do computador — zoom
@@ -60,6 +60,8 @@ export interface BreakState {
   neckHits: number[];
   /** Progresso dos rituais de objeto (pips nos prompts da cena). */
   waterN: number;
+  /** Células já regadas (a terra FICA molhada até completar). */
+  wateredKeys: string[];
   /** Café: mexidas com a colher (0..4, ← → ← →) antes dos goles. */
   stirN: number;
   sipDoneN: number;
@@ -88,6 +90,7 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
   const [neckNexts, setNeckNexts] = useState<number[]>([]);
   const [neckHits, setNeckHits] = useState<number[]>([]);
   const [waterN, setWaterN] = useState(0);
+  const [wateredKeys, setWateredKeys] = useState<string[]>([]);
   const [stirN, setStirN] = useState(0);
   const [sipDoneN, setSipDoneN] = useState(0);
   const [noteDoneN, setNoteDoneN] = useState(0);
@@ -107,7 +110,6 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
   const waterAt = useRef(0);
 
   // Progresso dos RITUAIS de restauração (por pausa).
-  const wateredCells = useRef<Set<string>>(new Set());
   const sipCount = useRef(0);
   const noteCount = useRef(0);
 
@@ -120,6 +122,7 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
     if (!active) {
       setMode('mesa');
       setWaterN(0);
+      setWateredKeys([]);
       setStirN(0);
       setSipDoneN(0);
       setNoteDoneN(0);
@@ -127,7 +130,6 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
   }
   useEffect(() => {
     if (!active) {
-      wateredCells.current.clear();
       sipCount.current = 0;
       noteCount.current = 0;
     }
@@ -330,13 +332,20 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
       setWet((w) => ({ ...w, [k]: (w[k] ?? 0) + 1 }));
       setLeafN((n) => n + 1);
       // ritual: todas as células regadas
-      wateredCells.current.add(k);
-      setWaterN(wateredCells.current.size);
-      if (wateredCells.current.size >= SOILKEYS.length) {
-        wateredCells.current.clear();
-        setWaterN(0);
-        completeRitual(true);
-      }
+      setWateredKeys((keys) => {
+        if (keys.includes(k)) return keys;
+        const next = [...keys, k];
+        setWaterN(next.length);
+        if (next.length >= SOILKEYS.length) {
+          setTimeout(() => {
+            setWateredKeys([]);
+            setWaterN(0);
+            completeRitual(true);
+            setMode('mesa'); // terra regada — de volta à mesa
+          }, 650);
+        }
+        return next;
+      });
     },
     [completeRitual],
   );
@@ -424,6 +433,7 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
     neckNexts,
     neckHits,
     waterN,
+    wateredKeys,
     stirN,
     sipDoneN,
     noteDoneN,
@@ -443,18 +453,11 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
 
 export function DeskItems({ owned, brk }: { owned: string[]; brk: BreakState }) {
   const has = (id: string) => owned.includes(id);
-  const { mode, notes, setNotes, lit, wet, setWet, water } = brk;
+  const { mode, notes, setNotes, lit } = brk;
   const art = useDeskArt();
 
   return (
     <div className="relative flex h-full items-start justify-center">
-      {/* grade de terra (regar): um "olhar de perto" no vaso, flutua sobre a mesa */}
-      {mode === 'planta' && (
-        <div className="absolute bottom-[70%] left-1/2 z-10 -translate-x-1/2">
-          <SoilGrid wet={wet} setWet={setWet} onWater={water} />
-        </div>
-      )}
-
       <div className="flex items-end gap-14">
         {/* caneca FORA do plano inclinado: é arte de frente — dentro do
             rotateX ela sai cisalhada ("itálico") por estar fora do eixo. */}
@@ -529,35 +532,28 @@ export function DeskItems({ owned, brk }: { owned: string[]; brk: BreakState }) 
 
 export function BreakHud({
   clock,
-  mode,
   owned,
-  relief,
-  neckProgress,
-  neckNexts,
-  neckHits,
-  waterN,
-  stirN,
-  sipDoneN,
-  noteDoneN,
-  sipN,
-  spinning,
+  brk,
   onResume,
 }: {
   clock: string;
-  mode: BreakMode;
   owned: string[];
-  relief: number;
-  neckProgress: number;
-  neckNexts: number[];
-  neckHits: number[];
-  waterN: number;
-  stirN: number;
-  sipDoneN: number;
-  noteDoneN: number;
-  sipN: number;
-  spinning: boolean;
+  brk: BreakState;
   onResume: () => void;
 }) {
+  const {
+    mode,
+    relief,
+    neckProgress,
+    neckNexts,
+    neckHits,
+    waterN,
+    stirN,
+    sipDoneN,
+    noteDoneN,
+    sipN,
+    spinning,
+  } = brk;
   return (
     <div className="pointer-events-none absolute inset-0 z-30 flex flex-col">
       {/* alívio da volta completa do pescoço */}
@@ -584,6 +580,9 @@ export function BreakHud({
       {/* CAFÉ em primeira pessoa: a xícara na SUA mão, perto da câmera.
           Cada gole (C) inclina pra boca; o nível baixa; 3º gole devolve à mesa. */}
       {mode === 'cafe' && <CoffeeCloseup sips={sipDoneN} sipKey={sipN} stirN={stirN} />}
+      {/* REGAR em primeira pessoa: a planta perto, regador na mão, terra que
+          escurece de verdade — célula a célula, até cobrir tudo. */}
+      {mode === 'planta' && <PlantCloseup brk={brk} />}
       {mode === 'mesa' && (
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="hud-night flex items-start gap-10" aria-hidden>
@@ -726,64 +725,140 @@ function RitualOption({
   );
 }
 
-function SoilGrid({
-  wet,
-  setWet,
-  onWater,
-}: {
-  wet: Record<string, number>;
-  setWet: React.Dispatch<React.SetStateAction<Record<string, number>>>;
-  onWater: (k: string) => void;
-}) {
+/** Forma orgânica por célula (a terra não é um grid perfeito). */
+const SOIL_SHAPE: Record<string, string> = Object.fromEntries(
+  SOILKEYS.map((k, i) => {
+    const r = [
+      '52% 48% 55% 45% / 48% 55% 45% 52%',
+      '45% 55% 48% 52% / 55% 45% 52% 48%',
+      '58% 42% 50% 50% / 45% 52% 48% 55%',
+      '48% 52% 42% 58% / 52% 48% 55% 45%',
+    ][i % 4];
+    return [k, r];
+  }),
+);
+
+/** REGAR em primeira pessoa: a SUA planta (espécie/tier) perto da câmera, o
+ *  regador desliza até a coluna regada e VERTE; a terra escurece célula a
+ *  célula (e fica molhada) até cobrir as 12 — aí o alívio e a volta à mesa. */
+function PlantCloseup({ brk }: { brk: BreakState }) {
+  const art = useDeskArt();
+  const { wateredKeys, waterN, leafN, wet, setWet, water } = brk;
+  // coluna da última célula regada → o regador desliza até ela
+  const last = wateredKeys[wateredKeys.length - 1];
+  let col = 1.5;
+  if (last)
+    for (const row of SOIL) {
+      const i = row.indexOf(last);
+      if (i >= 0) col = i;
+    }
+  const CELL = 52;
+  const canX = (col - 1.5) * (CELL + 6);
   return (
-    <div
-      className="rounded-2xl p-2 shadow-[0_18px_40px_-12px_rgba(0,0,0,0.7)]"
-      style={{ background: '#7a5c44' }}
-    >
-      <div className="flex flex-col gap-1.5">
-        {SOIL.map((row, ri) => (
-          <div key={ri} className="flex gap-1.5">
-            {row.map((k) => (
-              <button
-                key={k}
-                onPointerDown={() => onWater(k)}
-                className="relative size-14 overflow-hidden rounded-lg"
-                style={{ background: '#5b4636' }}
-                aria-label={`regar ${k}`}
-              >
-                {wet[k] !== undefined && (
-                  <>
-                    <span
-                      key={wet[k]}
-                      className="animate-waterabsorb absolute inset-0"
-                      style={{ background: '#2f241b' }}
-                      onAnimationEnd={() =>
-                        setWet((w) => {
-                          const c = { ...w };
-                          delete c[k];
-                          return c;
-                        })
-                      }
-                    />
-                    <span
-                      key={`s${wet[k]}`}
-                      className="animate-watersplash absolute left-1/2 top-1 -ml-2 size-4 rounded-full border-2"
-                      style={{ borderColor: '#9fd0e6' }}
-                    />
-                  </>
-                )}
-                <kbd className="absolute bottom-0.5 right-1 font-mono text-[9px] uppercase text-white/40">
-                  {k}
-                </kbd>
-              </button>
-            ))}
+    <div className="absolute inset-x-0 bottom-0 flex justify-center">
+      <div className="animate-mugrise relative" style={{ width: 520, height: '72vh' }}>
+        {/* halo escuro: separa o close-up da cena atrás (mesa/teclado) */}
+        <div
+          aria-hidden
+          className="absolute inset-x-[-30%] bottom-[-12%] top-[36%]"
+          style={{
+            background: 'radial-gradient(58% 62% at 50% 72%, rgba(0,0,0,0.55), transparent 72%)',
+          }}
+        />
+        {/* a SUA planta (espécie + estágio), vaso na base — atrás da terra */}
+        <div className="absolute bottom-[-56px] left-1/2 -translate-x-1/2">
+          <PlantArt variant={art.plant} tier={art.plantTier} size={3.4} pulseKey={leafN} />
+        </div>
+        {/* a TERRA sobre a boca do vaso: 12 células orgânicas, molhada FICA */}
+        <div
+          className="pointer-events-auto absolute bottom-[112px] left-1/2 flex -translate-x-1/2 flex-col gap-1.5 p-3"
+          style={{
+            borderRadius: '38% 42% 40% 45% / 16% 18% 20% 16%',
+            background: '#6b4f3a',
+            boxShadow: '0 18px 40px -12px rgba(0,0,0,0.7), inset 0 2px 6px rgba(0,0,0,0.35)',
+          }}
+        >
+          {SOIL.map((row, ri) => (
+            <div key={ri} className="flex gap-1.5">
+              {row.map((k) => {
+                const wetNow = wateredKeys.includes(k);
+                return (
+                  <button
+                    key={k}
+                    onPointerDown={() => water(k)}
+                    className="relative overflow-hidden"
+                    style={{
+                      width: CELL,
+                      height: CELL,
+                      borderRadius: SOIL_SHAPE[k],
+                      background: wetNow ? '#231a11' : '#5e4936',
+                      boxShadow: wetNow
+                        ? 'inset 0 2px 5px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,0,0,0.25)'
+                        : 'inset 0 -2px 4px rgba(0,0,0,0.35)',
+                      transition: 'background 400ms ease, box-shadow 400ms ease',
+                    }}
+                    aria-label={`regar ${k}`}
+                  >
+                    {wet[k] !== undefined && (
+                      <span
+                        key={`s${wet[k]}`}
+                        className="animate-watersplash absolute left-1/2 top-1 -ml-2 size-4 rounded-full border-2"
+                        style={{ borderColor: '#9fd0e6' }}
+                        onAnimationEnd={() =>
+                          setWet((w) => {
+                            const c = { ...w };
+                            delete c[k];
+                            return c;
+                          })
+                        }
+                      />
+                    )}
+                    {wetNow && (
+                      <span
+                        aria-hidden
+                        className="absolute inset-x-2 top-1 h-1.5 rounded-full"
+                        style={{ background: 'rgba(159,208,230,0.18)' }}
+                      />
+                    )}
+                    <kbd className="absolute bottom-0.5 right-1 font-mono text-[11px] uppercase text-white/60">
+                      {k}
+                    </kbd>
+                  </button>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+        {/* regador na mão: desliza pra coluna regada e VERTE a cada tecla */}
+        <div
+          className="pointer-events-none absolute left-1/2 h-24 w-36"
+          style={{
+            bottom: 112 + 3 * CELL + 44,
+            transform: `translateX(calc(-50% + ${canX}px))`,
+            transition: 'transform 240ms ease',
+          }}
+        >
+          <div key={waterN} className={`size-full ${waterN > 0 ? 'animate-pour' : ''}`}>
+            <CanArt />
           </div>
-        ))}
+        </div>
+        {/* rótulo + pips (a gramática), entre o regador e a terra */}
+        <div className="hud-night pointer-events-none absolute bottom-[58px] left-1/2 flex -translate-x-1/2 flex-col items-center gap-1.5">
+          <span
+            className="font-mono text-[10px] uppercase tracking-[0.18em]"
+            style={{
+              color: 'rgba(255,255,255,0.8)',
+              textShadow: '0 1px 10px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.9)',
+            }}
+          >
+            {waterN >= 12 ? 'terra regada' : 'regue toda a terra'}
+          </span>
+          <Pips total={12} done={waterN} />
+        </div>
       </div>
     </div>
   );
 }
-
 function Hint({ k, label, wide }: { k: string; label: string; wide?: boolean }) {
   return (
     <span className="flex items-center gap-1.5">
