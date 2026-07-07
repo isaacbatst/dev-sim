@@ -145,17 +145,22 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
   /** Um gole no MODO café: 3 goles completam o ritual e a xícara volta pra
    *  mesa (sai do close-up). */
   const sip = useCallback(() => {
-    S.sip();
+    const isLast = sipCount.current + 1 >= 3;
+    // o último gole tem sample próprio (gulp-final, com o "ahh" embutido —
+    // completeRitual(false) pra não dobrar com o sigh sintetizado)
+    if (isLast) S.sipFinal();
+    else S.sip();
     setSipN((n) => n + 1);
     sipCount.current += 1;
     setSipDoneN(sipCount.current);
-    if (sipCount.current >= 3) {
+    if (isLast) {
       sipCount.current = 0;
       setTimeout(() => {
         setSipDoneN(0);
-        completeRitual(true);
+        completeRitual(false);
+        setRelief((r) => r + 1); // anel de alívio (o "ahh" veio do sample)
         setMode('mesa'); // devolve a xícara à mesa
-      }, 550); // depois do "ahh" do gole
+      }, 650);
     }
   }, [completeRitual]);
 

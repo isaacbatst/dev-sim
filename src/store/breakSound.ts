@@ -105,6 +105,8 @@ function noise(dur: number, opts: NoiseOpts): void {
 const SAMPLES: Record<string, string> = {
   crack: '/sounds/neck-crack.wav', // estalo por direção
   neckCombo: '/sounds/neck-combo.wav', // fecho do combo circular (mix do Isaac)
+  gulp: '/sounds/gulp-action.wav', // gole do café (Isaac)
+  gulpFinal: '/sounds/gulp-final.wav', // último gole — fecha o ritual (Isaac)
 };
 const bufs: Record<string, AudioBuffer> = {};
 const loadingSet = new Set<string>();
@@ -176,8 +178,16 @@ export function waterDrop(v = 0): void {
 
 /** Gole de café: slurp curto + "ahh" quente na sequência. */
 export function sip(): void {
+  if (bufs['gulp']) return playSample('gulp', 0.75, 0.96 + Math.random() * 0.08);
+  // fallback sintetizado (sample ainda carregando)
   noise(0.22, { type: 'bandpass', freq: 1400, q: 1.6, gain: 0.08, slideTo: 500 });
   tone(300, 0.16, { type: 'sine', gain: 0.05, slideTo: 200, attack: 0.02 });
   noise(0.45, { type: 'bandpass', freq: 850, q: 2, gain: 0.06, slideTo: 300, delay: 0.28 });
   tone(330, 0.4, { type: 'sine', gain: 0.05, slideTo: 215, attack: 0.06, delay: 0.28 });
+}
+
+/** Último gole — fecha o ritual do café (o "ahh" já vem no sample). */
+export function sipFinal(): void {
+  if (bufs['gulpFinal']) return playSample('gulpFinal', 0.85);
+  sip();
 }
