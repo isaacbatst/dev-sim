@@ -780,19 +780,13 @@ function PlantCloseup({ brk }: { brk: BreakState }) {
             background: 'radial-gradient(58% 62% at 50% 72%, rgba(0,0,0,0.55), transparent 72%)',
           }}
         />
-        {/* a SUA planta (espécie + estágio): a folhagem sobe INTEIRA de trás
-            da boca do vaso; o vaso original da arte fica escondido atrás do
-            corpo desenhado abaixo (um vaso só, coerente) */}
-        <div className="absolute bottom-[124px] left-1/2 -translate-x-1/2">
-          <PlantArt variant={art.plant} tier={art.plantTier} size={3.4} pulseKey={leafN} />
-        </div>
         {/* CORPO do vaso (esconde o vasinho da arte e sustenta a boca) */}
         <div
           aria-hidden
           className="absolute bottom-0 left-1/2 -translate-x-1/2"
           style={{
             width: 296,
-            height: 226,
+            height: 205,
             clipPath: 'polygon(2% 0, 98% 0, 82% 100%, 18% 100%)',
             background: `linear-gradient(105deg, ${POT_RIM[art.plant][0]} 0%, ${POT_RIM[art.plant][1]} 52%, ${POT_RIM[art.plant][2]} 100%)`,
           }}
@@ -803,7 +797,7 @@ function PlantCloseup({ brk }: { brk: BreakState }) {
           className="pointer-events-auto absolute bottom-[150px] left-1/2 -translate-x-1/2"
           style={{
             width: 300,
-            height: 150,
+            height: 110,
             borderRadius: '50%',
             background: `linear-gradient(165deg, ${POT_RIM[art.plant][0]} 0%, ${POT_RIM[art.plant][1]} 55%, ${POT_RIM[art.plant][2]} 100%)`,
             boxShadow: '0 22px 44px -14px rgba(0,0,0,0.75), inset 0 -3px 8px rgba(0,0,0,0.35)',
@@ -814,7 +808,8 @@ function PlantCloseup({ brk }: { brk: BreakState }) {
             style={{
               inset: 11,
               borderRadius: '50%',
-              background: 'radial-gradient(80% 80% at 50% 38%, #4a3826, #332517)',
+              background: `${SOIL_GRAIN}, radial-gradient(80% 80% at 50% 38%, #4a3826, #332517)`,
+              backgroundSize: '17px 13px, 100% 100%',
               boxShadow: 'inset 0 6px 14px rgba(0,0,0,0.6), inset 0 -2px 6px rgba(0,0,0,0.4)',
             }}
           >
@@ -828,13 +823,12 @@ function PlantCloseup({ brk }: { brk: BreakState }) {
                     className="absolute overflow-hidden"
                     style={{
                       width: 84,
-                      height: 36,
-                      left: 12 + ci * 90,
-                      top: 8 + ri * 40,
+                      height: 24,
+                      left: 8 + ci * 90,
+                      top: 6 + ri * 28,
                       borderRadius: SOIL_SHAPE[k],
-                      background: `${SOIL_GRAIN} #55412f`,
-                      backgroundSize: '26px 20px',
-                      boxShadow: 'inset 0 -2px 4px rgba(0,0,0,0.3)',
+                      background:
+                        'radial-gradient(65% 75% at 50% 40%, rgba(255,255,255,0.05), transparent 80%)',
                     }}
                     aria-label={`regar ${k} (${cnt}/2)`}
                   >
@@ -858,13 +852,13 @@ function PlantCloseup({ brk }: { brk: BreakState }) {
                       <span
                         aria-hidden
                         className="absolute left-1/2 top-1 -translate-x-1/2 rounded-full"
-                        style={{ width: 46, height: 7, background: 'rgba(159,208,230,0.2)' }}
+                        style={{ width: 36, height: 5, background: 'rgba(159,208,230,0.2)' }}
                       />
                     )}
                     {wet[k] !== undefined && (
                       <span
                         key={`s${wet[k]}`}
-                        className="animate-watersplash absolute left-1/2 top-0.5 -ml-2 size-4 rounded-full border-2"
+                        className="animate-watersplash absolute left-1/2 top-0.5 -ml-1.5 size-3 rounded-full border-2"
                         style={{ borderColor: '#9fd0e6' }}
                         onAnimationEnd={() =>
                           setWet((w) => {
@@ -875,20 +869,22 @@ function PlantCloseup({ brk }: { brk: BreakState }) {
                         }
                       />
                     )}
-                    <kbd className="absolute bottom-0.5 right-1.5 font-mono text-[10px] uppercase text-white/50">
-                      {k}
-                    </kbd>
                   </button>
                 );
               }),
             )}
           </div>
         </div>
+        {/* a SUA planta: SÓ a folhagem (hidePot), plantada POR CIMA da terra
+            — a base some dentro da elipse, como brotando dela */}
+        <div className="pointer-events-none absolute bottom-[36px] left-1/2 -translate-x-1/2">
+          <PlantArt variant={art.plant} tier={art.plantTier} size={3.4} pulseKey={leafN} hidePot />
+        </div>
         {/* regador na mão: desliza pra coluna regada e VERTE a cada tecla */}
         <div
           className="pointer-events-none absolute left-1/2 h-24 w-36"
           style={{
-            bottom: 150 + 150 + 26,
+            bottom: 150 + 110 + 22,
             transform: `translateX(calc(-50% + ${canX}px))`,
             transition: 'transform 240ms ease',
           }}
@@ -897,8 +893,9 @@ function PlantCloseup({ brk }: { brk: BreakState }) {
             <CanArt />
           </div>
         </div>
-        {/* rótulo + pips (a gramática), entre o regador e a terra */}
-        <div className="hud-night pointer-events-none absolute bottom-[76px] left-1/2 flex -translate-x-1/2 flex-col items-center gap-1.5">
+        {/* teclas FORA da terra (como nos outros rituais): cluster 3×3 no
+            corpo do vaso — 2/2 afunda (verde), 1/2 pulsa (falta uma) */}
+        <div className="hud-night pointer-events-none absolute bottom-[18px] left-1/2 flex -translate-x-1/2 flex-col items-center gap-1.5">
           <span
             className="font-mono text-[10px] uppercase tracking-[0.18em]"
             style={{
@@ -906,9 +903,29 @@ function PlantCloseup({ brk }: { brk: BreakState }) {
               textShadow: '0 1px 10px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.9)',
             }}
           >
-            {waterN >= WATER_TOTAL ? 'terra regada' : 'regue toda a terra'}
+            {waterN >= WATER_TOTAL ? 'terra regada' : 'regue toda a terra (2× cada)'}
           </span>
-          <Pips total={WATER_TOTAL} done={waterN} />
+          {SOIL.map((row, ri) => (
+            <span key={ri} className="flex items-center gap-1.5">
+              {row.map((k) => {
+                const cnt = wateredKeys.filter((x) => x === k).length;
+                return (
+                  <kbd
+                    key={k}
+                    className={`keycap !h-7 !min-w-7 !text-xs ${
+                      cnt >= WATER_PER_CELL
+                        ? 'keycap--done'
+                        : cnt === 1
+                          ? 'keycap--current animate-edgepulse'
+                          : ''
+                    }`}
+                  >
+                    {k.toUpperCase()}
+                  </kbd>
+                );
+              })}
+            </span>
+          ))}
         </div>
       </div>
     </div>

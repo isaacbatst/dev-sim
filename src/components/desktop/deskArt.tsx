@@ -82,7 +82,7 @@ function PotTerracotta() {
 
 /** A — PACOVÁ (Philodendron martianum): folhas largas em leque, do escuro
  *  (trás) ao claro (frente), cada uma com talo. Clássica de escritório BR. */
-function PlantPacova({ tier }: { tier: PlantTier }) {
+function PlantPacova({ tier, pot = true }: { tier: PlantTier; pot?: boolean }) {
   const leaf = (x: number, rot: number, sc: number, fill: string, vein: string, sx = 1) => (
     <g
       key={`${x}${rot}`}
@@ -126,14 +126,14 @@ function PlantPacova({ tier }: { tier: PlantTier }) {
       <g transform={`translate(60 112) scale(${k}) translate(-60 -112)`}>
         {leaves.filter((l) => l.minTier <= tier).map((l) => l.el)}
       </g>
-      <PotTerracotta />
+      {pot && <PotTerracotta />}
     </g>
   );
 }
 
 /** B — ESPADA-DE-SÃO-JORGE (Sansevieria trifasciata): lâminas eretas com
  *  borda variegada clara. Indestrutível — a planta de quem esquece de regar. */
-function PlantEspada({ tier }: { tier: PlantTier }) {
+function PlantEspada({ tier, pot = true }: { tier: PlantTier; pot?: boolean }) {
   const blade = (x: number, rot: number, h: number, w: number, phase = 0) => (
     <g key={`${x}${h}`} transform={`translate(${60 + x} 112) rotate(${rot})`}>
       <path
@@ -195,7 +195,7 @@ function PlantEspada({ tier }: { tier: PlantTier }) {
       <g transform={`translate(60 112) scale(${k}) translate(-60 -112)`}>
         {blades.filter((b) => b.minTier <= tier).map((b) => b.el)}
       </g>
-      <g>
+      <g style={pot ? undefined : { display: 'none' }}>
         <defs>
           <linearGradient id="potG" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0" stopColor="#3a3f4c" />
@@ -216,7 +216,7 @@ function PlantEspada({ tier }: { tier: PlantTier }) {
 
 /** C — JIBOIA (Epipremnum pinnatum): corações + ramos pendentes sobre o
  *  vaso. A trepadeira de estante de todo dev. */
-function PlantJiboia({ tier }: { tier: PlantTier }) {
+function PlantJiboia({ tier, pot = true }: { tier: PlantTier; pot?: boolean }) {
   const heart = (x: number, y: number, rot: number, sc: number, fill: string) => (
     <g key={`${x}${y}`} transform={`translate(${x} ${y}) rotate(${rot}) scale(${sc})`}>
       <path
@@ -266,7 +266,7 @@ function PlantJiboia({ tier }: { tier: PlantTier }) {
       <g transform={`translate(60 108) scale(${k}) translate(-60 -108)`}>
         {mound.filter((m) => m.minTier <= tier).map((m) => m.el)}
       </g>
-      <g>
+      <g style={pot ? undefined : { display: 'none' }}>
         <defs>
           <linearGradient id="potC" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0" stopColor="#e6dfd0" />
@@ -285,7 +285,7 @@ function PlantJiboia({ tier }: { tier: PlantTier }) {
   );
 }
 
-const PLANTS: Record<ArtVariant, (p: { tier: PlantTier }) => React.ReactNode> = {
+const PLANTS: Record<ArtVariant, (p: { tier: PlantTier; pot?: boolean }) => React.ReactNode> = {
   a: PlantPacova,
   b: PlantEspada,
   c: PlantJiboia,
@@ -305,12 +305,15 @@ export function PlantArt({
   size,
   pulseKey,
   highlight,
+  hidePot,
 }: {
   variant: ArtVariant;
   tier: PlantTier;
   size: number;
   pulseKey: number;
   highlight?: boolean;
+  /** Só a folhagem (o close-up de regar desenha o próprio vaso). */
+  hidePot?: boolean;
 }) {
   const Art = PLANTS[variant];
   return (
@@ -324,7 +327,7 @@ export function PlantArt({
       }}
     >
       <svg viewBox="0 0 120 160" className="size-full" aria-hidden>
-        {Art({ tier })}
+        {Art({ tier, pot: !hidePot })}
       </svg>
     </div>
   );
