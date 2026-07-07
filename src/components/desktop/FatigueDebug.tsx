@@ -4,7 +4,7 @@ import type { Snapshot } from '@/core/snapshot';
 import { useGameStore } from '@/store/gameStore';
 import { muffleCutoffHz } from '@/store/sound';
 import { screenFx, blurMaxPx } from './fatigueFx';
-import { setDeskArt, useDeskArt, type ArtVariant } from './deskArt';
+import { setDeskArt, setPlantTier, useDeskArt, type ArtVariant, type PlantTier } from './deskArt';
 
 /**
  * Overlay de DEBUG da fadiga (`?debug=1`): estado, chances ativas, contadores,
@@ -177,10 +177,24 @@ function ArtToggle() {
     </span>
   );
   return (
-    <div className="mt-1.5 flex items-center gap-3 border-t border-white/10 pt-1.5">
+    <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-white/10 pt-1.5">
       <span className="text-white/50">arte:</span>
       {row('plant', 'planta')}
       {row('mug', 'caneca')}
+      <span className="flex items-center gap-1">
+        <span className="text-white/50">tier</span>
+        {([1, 2, 3] as PlantTier[]).map((t) => (
+          <button
+            key={t}
+            onClick={() => setPlantTier(t)}
+            className={`rounded px-1.5 py-0.5 ${
+              art.plantTier === t ? 'bg-white/25 text-white' : 'bg-white/10 hover:bg-white/20'
+            }`}
+          >
+            {t}
+          </button>
+        ))}
+      </span>
     </div>
   );
 }

@@ -10,13 +10,16 @@ import { useSyncExternalStore } from 'react';
  */
 
 export type ArtVariant = 'a' | 'b' | 'c';
+export type PlantTier = 1 | 2 | 3;
 export interface DeskArtSel {
   plant: ArtVariant;
   mug: ArtVariant;
+  /** Estágio de crescimento (§2.1: a planta cresce com o cuidado). */
+  plantTier: PlantTier;
 }
 
 const KEY = 'devos-deskart';
-const DEFAULT_SEL: DeskArtSel = { plant: 'a', mug: 'a' };
+const DEFAULT_SEL: DeskArtSel = { plant: 'a', mug: 'a', plantTier: 3 };
 
 function load(): DeskArtSel {
   if (typeof window === 'undefined') return DEFAULT_SEL;
@@ -30,8 +33,14 @@ function load(): DeskArtSel {
 let sel: DeskArtSel = load();
 const subs = new Set<() => void>();
 
-export function setDeskArt(kind: keyof DeskArtSel, v: ArtVariant): void {
+export function setDeskArt(kind: 'plant' | 'mug', v: ArtVariant): void {
   sel = { ...sel, [kind]: v };
+  localStorage.setItem(KEY, JSON.stringify(sel));
+  subs.forEach((f) => f());
+}
+
+export function setPlantTier(t: PlantTier): void {
+  sel = { ...sel, plantTier: t };
   localStorage.setItem(KEY, JSON.stringify(sel));
   subs.forEach((f) => f());
 }
@@ -73,9 +82,12 @@ function PotTerracotta() {
 
 /** A — PACOVÁ (Philodendron martianum): folhas largas em leque, do escuro
  *  (trás) ao claro (frente), cada uma com talo. Clássica de escritório BR. */
-function PlantPacova() {
-  const leaf = (x: number, rot: number, sc: number, fill: string, vein: string) => (
-    <g transform={`translate(${60 + x} 112) rotate(${rot}) scale(${sc})`}>
+function PlantPacova({ tier }: { tier: PlantTier }) {
+  const leaf = (x: number, rot: number, sc: number, fill: string, vein: string, sx = 1) => (
+    <g
+      key={`${x}${rot}`}
+      transform={`translate(${60 + x} 112) rotate(${rot}) scale(${sc * sx} ${sc})`}
+    >
       <path d="M0 0 L0 -14" stroke={fill} strokeWidth="3" />
       <g transform="translate(0 -12)">
         <path
@@ -99,14 +111,21 @@ function PlantPacova() {
       </g>
     </g>
   );
+  // ordem de CRESCIMENTO: o broto central primeiro; as traseiras escuras por último
+  const leaves = [
+    { minTier: 1, el: leaf(-4, -12, 0.86, '#3f9a66', '#aade9f', 0.95) },
+    { minTier: 1, el: leaf(3, 7, 0.9, '#4cb277', '#c2f0cf', 1.08) },
+    { minTier: 2, el: leaf(-9, -33, 0.92, '#2b6e47', '#84c29a', 0.86) },
+    { minTier: 2, el: leaf(11, 23, 0.88, '#317a50', '#8fceA4', 1.05) },
+    { minTier: 3, el: leaf(-17, -54, 0.72, '#1d4a30', '#5f9974', 0.9) },
+    { minTier: 3, el: leaf(12, 39, 0.84, '#215538', '#6aa77f', 1.12) },
+  ];
+  const k = tier === 1 ? 0.72 : tier === 2 ? 0.88 : 1;
   return (
     <g>
-      {leaf(-14, -46, 0.78, '#1d4a30', '#5f9974')}
-      {leaf(14, 44, 0.8, '#215538', '#6aa77f')}
-      {leaf(-9, -26, 0.95, '#2b6e47', '#84c29a')}
-      {leaf(9, 25, 0.98, '#317a50', '#8fceA4')}
-      {leaf(-3, -9, 1.1, '#3f9a66', '#aade9f')}
-      {leaf(3, 8, 1.14, '#4cb277', '#c2f0cf')}
+      <g transform={`translate(60 112) scale(${k}) translate(-60 -112)`}>
+        {leaves.filter((l) => l.minTier <= tier).map((l) => l.el)}
+      </g>
       <PotTerracotta />
     </g>
   );
@@ -114,9 +133,9 @@ function PlantPacova() {
 
 /** B — ESPADA-DE-SÃO-JORGE (Sansevieria trifasciata): lâminas eretas com
  *  borda variegada clara. Indestrutível — a planta de quem esquece de regar. */
-function PlantEspada() {
-  const blade = (x: number, rot: number, h: number, w: number) => (
-    <g transform={`translate(${60 + x} 112) rotate(${rot})`}>
+function PlantEspada({ tier }: { tier: PlantTier }) {
+  const blade = (x: number, rot: number, h: number, w: number, phase = 0) => (
+    <g key={`${x}${h}`} transform={`translate(${60 + x} 112) rotate(${rot})`}>
       <path
         d={`M0 0 C ${-w} ${-h * 0.3} ${-w * 1.1} ${-h * 0.65} ${-w * 0.28} ${-h} C ${-w * 0.08} ${-h * 1.06} ${w * 0.08} ${-h * 1.06} ${w * 0.28} ${-h} C ${w * 1.1} ${-h * 0.65} ${w} ${-h * 0.3} 0 0 Z`}
         fill="#2f6f49"
@@ -138,16 +157,19 @@ function PlantEspada() {
         opacity="0.75"
       />
       {/* bandas zebradas horizontais (a assinatura da sansevieria) */}
-      {[0.22, 0.38, 0.54, 0.7, 0.84].map((t, i) => (
-        <path
-          key={i}
-          d={`M${-w * (1 - t * 0.7)} ${-h * t} Q 0 ${-h * (t + 0.045)} ${w * (1 - t * 0.7)} ${-h * t}`}
-          stroke={i % 2 === 0 ? '#224f34' : '#4f9c68'}
-          strokeWidth={3.2 - t * 1.6}
-          fill="none"
-          opacity="0.65"
-        />
-      ))}
+      {[0.22, 0.38, 0.54, 0.7, 0.84].map((tb, i) => {
+        const t = Math.min(0.9, tb + phase);
+        return (
+          <path
+            key={i}
+            d={`M${-w * (1 - t * 0.7)} ${-h * t} Q ${(i % 2 ? 1 : -1) * w * 0.15} ${-h * (t + 0.045)} ${w * (1 - t * 0.7)} ${-h * t}`}
+            stroke={i % 2 === 0 ? '#224f34' : '#4f9c68'}
+            strokeWidth={3.2 - t * 1.6}
+            fill="none"
+            opacity="0.65"
+          />
+        );
+      })}
       {/* brilho central sutil */}
       <path
         d={`M0 ${-h * 0.12} C ${w * 0.12} ${-h * 0.4} ${w * 0.1} ${-h * 0.7} 0 ${-h * 0.95}`}
@@ -157,14 +179,22 @@ function PlantEspada() {
       />
     </g>
   );
+  // ordem de crescimento: brotos centrais → lâminas altas por fora
+  const blades = [
+    { minTier: 1, el: blade(-3, -1, 74, 8, 0.02) },
+    { minTier: 1, el: blade(6, 4, 62, 7.4, 0.08) },
+    { minTier: 1, el: blade(-10, -6, 55, 7, 0) },
+    { minTier: 2, el: blade(11, 8, 80, 8.2, 0.05) },
+    { minTier: 2, el: blade(-16, -11, 68, 7.6, 0.04) },
+    { minTier: 3, el: blade(16, 12, 89, 8.6, 0.07) },
+    { minTier: 3, el: blade(-21, -16, 97, 9.2, 0.03) },
+  ];
+  const k = tier === 1 ? 0.7 : tier === 2 ? 0.88 : 1;
   return (
     <g>
-      {blade(-19, -13, 60, 7.5)}
-      {blade(17, 12, 64, 7.5)}
-      {blade(-11, -7, 82, 8.5)}
-      {blade(10, 6, 78, 8.5)}
-      {blade(-4, -2, 96, 9)}
-      {blade(4, 2, 90, 9)}
+      <g transform={`translate(60 112) scale(${k}) translate(-60 -112)`}>
+        {blades.filter((b) => b.minTier <= tier).map((b) => b.el)}
+      </g>
       <g>
         <defs>
           <linearGradient id="potG" x1="0" y1="0" x2="1" y2="0">
@@ -186,9 +216,9 @@ function PlantEspada() {
 
 /** C — JIBOIA (Epipremnum pinnatum): corações + ramos pendentes sobre o
  *  vaso. A trepadeira de estante de todo dev. */
-function PlantJiboia() {
+function PlantJiboia({ tier }: { tier: PlantTier }) {
   const heart = (x: number, y: number, rot: number, sc: number, fill: string) => (
-    <g transform={`translate(${x} ${y}) rotate(${rot}) scale(${sc})`}>
+    <g key={`${x}${y}`} transform={`translate(${x} ${y}) rotate(${rot}) scale(${sc})`}>
       <path
         d="M0 2 C -10 -3 -15 -13 -9 -20 C -5 -24.5 -0.5 -23.5 0 -18.5 C 0.5 -23.5 5 -24.5 9 -20 C 15 -13 10 -3 0 2 Z"
         fill={fill}
@@ -196,31 +226,46 @@ function PlantJiboia() {
       <path d="M0 -1 L0 -17" stroke="rgba(255,255,255,0.3)" strokeWidth="1.1" />
     </g>
   );
+  // moita em ordem de crescimento: núcleo → cheia; vinhas só de tier 2 em diante
+  const mound = [
+    { minTier: 1, el: heart(59, 101, -3, 1.18, '#49a86f') },
+    { minTier: 1, el: heart(47, 96, -9, 0.98, '#3a8c5d') },
+    { minTier: 1, el: heart(72, 98, 11, 1.02, '#3a8c5d') },
+    { minTier: 1, el: heart(61, 88, 3, 0.92, '#2c6a45') },
+    { minTier: 1, el: heart(50, 86, -16, 0.84, '#265c3c') },
+    { minTier: 2, el: heart(70, 84, 6, 0.98, '#265c3c') },
+    { minTier: 2, el: heart(34, 97, -24, 1.04, '#317a50') },
+    { minTier: 2, el: heart(86, 94, 15, 0.94, '#317a50') },
+    { minTier: 2, el: heart(44, 105, -17, 1.02, '#54b87a') },
+    { minTier: 3, el: heart(38, 84, -31, 0.9, '#1f5031') },
+    { minTier: 3, el: heart(82, 80, 19, 1.0, '#1f5031') },
+    { minTier: 3, el: heart(76, 103, 9, 1.14, '#50b276') },
+  ];
+  const k = tier === 1 ? 0.78 : tier === 2 ? 0.9 : 1;
   return (
     <g>
-      {/* vinhas pendentes: caem do vaso e escorrem pelas laterais */}
-      <path d="M44 108 C 30 116 22 130 20 148" stroke="#2f6a48" strokeWidth="2.4" fill="none" />
-      <path d="M76 108 C 90 118 97 132 98 150" stroke="#2b6142" strokeWidth="2.4" fill="none" />
-      <path d="M60 110 C 56 124 54 136 55 150" stroke="#2f6a48" strokeWidth="2" fill="none" />
-      {/* folhas das vinhas (escala cai conforme desce) */}
-      {heart(30, 122, -34, 0.85, '#3c8a5c')}
-      {heart(20, 148, -44, 0.7, '#316f4a')}
-      {heart(90, 124, 32, 0.9, '#38815a')}
-      {heart(98, 150, 42, 0.72, '#2d6845')}
-      {heart(55, 150, 8, 0.65, '#316f4a')}
-      {/* MOITA sobre o vaso: 3 camadas (escura → clara), sobrepostas */}
-      {heart(40, 82, -26, 0.95, '#1f5031')}
-      {heart(80, 82, 24, 0.95, '#1f5031')}
-      {heart(52, 76, -10, 1.0, '#265c3c')}
-      {heart(68, 76, 10, 1.0, '#265c3c')}
-      {heart(60, 72, 0, 1.05, '#2c6a45')}
-      {heart(36, 96, -20, 1.05, '#317a50')}
-      {heart(84, 96, 20, 1.05, '#317a50')}
-      {heart(48, 92, -7, 1.15, '#3a8c5d')}
-      {heart(72, 92, 7, 1.15, '#3a8c5d')}
-      {heart(60, 100, 0, 1.3, '#49a86f')}
-      {heart(46, 104, -13, 1.1, '#54b87a')}
-      {heart(74, 104, 13, 1.1, '#50b276')}
+      {/* vinhas pendentes: brotam no tier 2 (curtas) e escorrem no tier 3 */}
+      {tier >= 2 && (
+        <g>
+          <path d="M44 108 C 34 114 28 122 27 130" stroke="#2f6a48" strokeWidth="2.3" fill="none" />
+          <path d="M76 108 C 86 115 91 123 92 132" stroke="#2b6142" strokeWidth="2.3" fill="none" />
+          {heart(27, 128, -36, 0.76, '#3c8a5c')}
+          {heart(92, 130, 30, 0.82, '#38815a')}
+        </g>
+      )}
+      {tier >= 3 && (
+        <g>
+          <path d="M27 130 C 23 138 21 144 20 150" stroke="#2f6a48" strokeWidth="2" fill="none" />
+          <path d="M92 132 C 96 140 98 145 98 151" stroke="#2b6142" strokeWidth="2" fill="none" />
+          <path d="M60 110 C 56 124 54 136 55 150" stroke="#2f6a48" strokeWidth="2" fill="none" />
+          {heart(19, 149, -47, 0.62, '#316f4a')}
+          {heart(99, 151, 45, 0.7, '#2d6845')}
+          {heart(56, 149, 12, 0.58, '#316f4a')}
+        </g>
+      )}
+      <g transform={`translate(60 108) scale(${k}) translate(-60 -108)`}>
+        {mound.filter((m) => m.minTier <= tier).map((m) => m.el)}
+      </g>
       <g>
         <defs>
           <linearGradient id="potC" x1="0" y1="0" x2="1" y2="0">
@@ -240,7 +285,7 @@ function PlantJiboia() {
   );
 }
 
-const PLANTS: Record<ArtVariant, () => React.ReactNode> = {
+const PLANTS: Record<ArtVariant, (p: { tier: PlantTier }) => React.ReactNode> = {
   a: PlantPacova,
   b: PlantEspada,
   c: PlantJiboia,
@@ -256,11 +301,13 @@ export const PLANT_NAMES: Record<ArtVariant, string> = {
 /** Planta da mesa (SVG). Mesma API da antiga: size/pulseKey/highlight. */
 export function PlantArt({
   variant,
+  tier,
   size,
   pulseKey,
   highlight,
 }: {
   variant: ArtVariant;
+  tier: PlantTier;
   size: number;
   pulseKey: number;
   highlight?: boolean;
@@ -277,7 +324,7 @@ export function PlantArt({
       }}
     >
       <svg viewBox="0 0 120 160" className="size-full" aria-hidden>
-        {Art()}
+        {Art({ tier })}
       </svg>
     </div>
   );
