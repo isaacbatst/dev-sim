@@ -507,30 +507,26 @@ export function MugCloseup({ variant, sips }: { variant: ArtVariant; sips: numbe
           <stop offset="1" stopColor={c.body2} />
         </linearGradient>
       </defs>
-      {/* vapor (só com café) */}
+      {/* vapor (só com café): fios ancorados NA BORDA, finos e definidos —
+          contorno escuro por baixo + fio claro por cima (lê no monitor claro
+          e na parede escura), pulso defasado */}
       {!empty && (
-        <g opacity="0.5">
-          <path
-            d="M100 34 C 94 24 104 18 100 8"
-            stroke="rgba(255,255,255,0.5)"
-            strokeWidth="4"
-            fill="none"
-            strokeLinecap="round"
-          />
-          <path
-            d="M130 30 C 124 20 134 14 130 2"
-            stroke="rgba(255,255,255,0.4)"
-            strokeWidth="4"
-            fill="none"
-            strokeLinecap="round"
-          />
-          <path
-            d="M158 36 C 152 26 162 20 158 10"
-            stroke="rgba(255,255,255,0.35)"
-            strokeWidth="4"
-            fill="none"
-            strokeLinecap="round"
-          />
+        <g fill="none" strokeLinecap="round">
+          {[
+            { d: 'M104 54 C 98 44 108 36 104 26 C 102 20 106 13 104 7', o: 0.9, delay: '0ms' },
+            { d: 'M130 52 C 124 41 134 33 130 21 C 128 14 132 8 130 1', o: 1, delay: '300ms' },
+            { d: 'M156 54 C 150 45 160 37 156 27 C 154 21 158 15 156 9', o: 0.8, delay: '600ms' },
+          ].map((w, i) => (
+            <g
+              key={i}
+              className="animate-edgepulse"
+              style={{ animationDelay: w.delay }}
+              opacity={w.o}
+            >
+              <path d={w.d} stroke="rgba(90,75,60,0.35)" strokeWidth="4.5" />
+              <path d={w.d} stroke="rgba(255,255,255,0.9)" strokeWidth="2.2" />
+            </g>
+          ))}
         </g>
       )}
       {/* alça (atrás do corpo, à direita) */}
