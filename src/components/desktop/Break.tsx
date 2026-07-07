@@ -124,7 +124,6 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
   const tiltRef = useRef({ dx: 0, dy: 0 });
   const seq = useRef<{ a: number; t: number }[]>([]);
   const seqT = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const spinTs = useRef<ReturnType<typeof setTimeout>[]>([]);
   const tiltT = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [notes, setNotes] = useState<{ id: number; idx: number }[]>([]);
   const [lit, setLit] = useState<Record<number, number>>({});
@@ -395,7 +394,7 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
         crackTs.current.push(t);
       }
     },
-    [spinning, setTilt, completeRitual],
+    [spinning, setTilt],
   );
 
   const playNote = useCallback(
@@ -452,6 +451,8 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
     },
     [completeRitual],
   );
+
+  const ownedKey = owned.join(',');
 
   useEffect(() => {
     if (!active) return;
@@ -536,7 +537,7 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
   }, [
     active,
     mode,
-    owned.join(','),
+    ownedKey,
     roll,
     water,
     playNote,
