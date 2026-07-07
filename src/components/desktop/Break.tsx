@@ -34,6 +34,11 @@ const SOIL: string[][] = [
   ['z', 'x', 'c'],
 ];
 const SOILKEYS = SOIL.flat();
+/** Café: DUAS voltas de colher (8 setas em círculo) antes dos goles. */
+const STIR_TOTAL = 8;
+/** Pescoço: DUAS voltas completas (8 setas em ordem de rotação). */
+const NECK_TOTAL = 8;
+
 /** Cada célula bebe 2 regas: na 1ª a água INFILTRA (escurece e seca aos
  *  poucos); na 2ª fica molhada de vez. */
 const WATER_PER_CELL = 2;
@@ -56,7 +61,7 @@ export interface BreakState {
   flowing: boolean;
   /** Contra-giro automático do fecho do combo em curso. */
   spinning: boolean;
-  /** Progresso do combo circular (0..4 — uma volta completa). */
+  /** Progresso do combo circular (0..8 — duas voltas completas). */
   neckProgress: number;
   /** Ângulos (0=↑ 1=→ 2=↓ 3=←) que continuam o giro agora (pro HUD pulsar). */
   neckNexts: number[];
@@ -158,7 +163,7 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
   const stirPress = useCallback((key: string) => {
     const ANGLE: Record<string, number> = { ArrowUp: 0, ArrowRight: 1, ArrowDown: 2, ArrowLeft: 3 };
     const a = ANGLE[key];
-    if (a === undefined || stirSeq.current.length >= 4) return;
+    if (a === undefined || stirSeq.current.length >= STIR_TOTAL) return;
     const seq = stirSeq.current;
     let delta = 0;
     let ok = seq.length === 0;
@@ -184,10 +189,11 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
     const cur = stirSeq.current;
     S.stir(cur.length - 1);
     setStirN(cur.length);
-    setStirHits([...cur]);
+    // a cruz enche POR VOLTA: na 2ª volta os keycaps levantam e afundam de novo
+    setStirHits(cur.slice(Math.floor((cur.length - 1) / 4) * 4));
     const lastA = cur[cur.length - 1];
     setStirNexts(
-      cur.length >= 4
+      cur.length >= STIR_TOTAL
         ? []
         : cur.length === 1
           ? [(lastA + 1) % 4, (lastA + 3) % 4]
@@ -238,8 +244,8 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
   // Alongamento natural: entra suave (~650ms), SEGURA no fundo (~1s) e solta
   // devagar (~1s) — nada de tique mecânico. CADA aperto agenda o SEU estalo
   // (independente, ~380ms depois, perto do fundo do movimento) — encadear
-  // rápido toca todos, em série. COMBO CIRCULAR: uma volta completa (4 setas
-  // em ordem de rotação, qualquer sentido) = ritual do pescoço.
+  // rápido toca todos, em série. COMBO CIRCULAR: DUAS voltas completas (8
+  // setas em ordem de rotação, qualquer sentido) = ritual do pescoço.
   const setTilt = useCallback((d: { dx: number; dy: number }) => {
     tiltRef.current = d;
     setTiltState(d);
@@ -266,9 +272,9 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
       setTilt(d);
       if (tiltT.current) clearTimeout(tiltT.current);
       tiltT.current = setTimeout(() => setTilt({ dx: 0, dy: 0 }), 1650);
-      // sequência circular: UMA volta completa (4 setas em ordem de rotação,
-      // qualquer sentido). Mantém só o SUFIXO consistente — errar uma direção
-      // não zera tudo, recomeça dali.
+      // sequência circular: DUAS voltas completas (8 setas em ordem de
+      // rotação, qualquer sentido). Mantém só o SUFIXO consistente — errar
+      // uma direção não zera tudo, recomeça dali.
       const now = performance.now();
       let s = seq.current;
       if (s.length && now - s[s.length - 1].t > 1300) s = [];
@@ -284,11 +290,12 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
       }
       s = s.slice(start);
       seq.current = s;
-      const rot: 1 | -1 | 0 = s.length >= 4 ? (rotDelta === 1 ? 1 : -1) : 0;
+      const rot: 1 | -1 | 0 = s.length >= NECK_TOTAL ? (rotDelta === 1 ? 1 : -1) : 0;
       // HUD: progresso + quais direções continuam o giro agora
       if (rot === 0) {
         setNeckProgress(s.length);
-        setNeckHits(s.map((e) => e.a));
+        // a cruz enche POR VOLTA (na 2ª os keycaps levantam e afundam de novo)
+        setNeckHits(s.slice(Math.floor((s.length - 1) / 4) * 4).map((e) => e.a));
         setNeckNexts(
           s.length === 1
             ? [(a + 1) % 4, (a + 3) % 4]
@@ -307,7 +314,7 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
       }
       if (rot !== 0) {
         if (seqT.current) clearTimeout(seqT.current);
-        setNeckProgress(4);
+        setNeckProgress(NECK_TOTAL);
         setNeckNexts([]);
         setNeckHits([]);
         // COMBO: contra-giro automático no sentido INVERSO, junto com o mix
@@ -443,11 +450,11 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
         // mexer com a colher: CÍRCULO de setas (como o pescoço)
         if (e.key.startsWith('Arrow')) {
           e.preventDefault();
-          if (stirN < 4) stirPress(e.key);
+          if (stirN < STIR_TOTAL) stirPress(e.key);
           return;
         }
         // goles só depois de mexer (a colher sai da xícara)
-        if (k === 'c' && stirN >= 4) {
+        if (k === 'c' && stirN >= STIR_TOTAL) {
           e.preventDefault();
           return sip();
         }
@@ -661,12 +668,12 @@ export function BreakHud({
       {mode === 'mesa' && (
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="hud-night flex items-start gap-10" aria-hidden>
-            <RitualOption k="P" label="pescoço" total={4} done={0} />
+            <RitualOption k="P" label="pescoço" total={NECK_TOTAL} done={0} />
             {owned.includes('planta') && (
               <RitualOption k="R" label="regar" total={12} done={waterN} />
             )}
             {owned.includes('cafe') && (
-              <RitualOption k="C" label="café" total={6} done={stirN + sipDoneN} />
+              <RitualOption k="C" label="café" total={STIR_TOTAL + 2} done={stirN + sipDoneN} />
             )}
             {owned.includes('teclado') && (
               <RitualOption k="A–K" label="tocar" total={8} done={noteDoneN} wide />
@@ -708,7 +715,7 @@ function NeckCluster({
   hits: number[];
   spinning: boolean;
 }) {
-  const done = spinning || progress >= 4;
+  const done = spinning || progress >= NECK_TOTAL;
   // hud-night: o cluster flutua sobre o QUARTO/monitor — keycaps sempre escuros
   const cap = (i: number, g: string) => (
     <kbd
@@ -734,7 +741,7 @@ function NeckCluster({
         </div>
         {cap(2, '↓')}
       </div>
-      <Pips total={4} done={done ? 4 : progress} />
+      <Pips total={NECK_TOTAL} done={done ? NECK_TOTAL : progress} />
       <span
         className="font-mono text-[10px] uppercase tracking-[0.2em]"
         style={{
@@ -1026,7 +1033,7 @@ function Hint({ k, label, wide }: { k: string; label: string; wide?: boolean }) 
 function CoffeeCloseup({ brk }: { brk: BreakState }) {
   const art = useDeskArt();
   const { sipDoneN: sips, sipN, stirN, stirTheta } = brk;
-  const stirring = stirN < 4;
+  const stirring = stirN < STIR_TOTAL;
   return (
     <div className="absolute inset-x-0 bottom-0 flex justify-center">
       <div className="animate-mugrise relative flex flex-col items-center">
@@ -1046,7 +1053,7 @@ function CoffeeCloseup({ brk }: { brk: BreakState }) {
  *  pra mexer em círculo; depois C C pros goles. */
 function CoffeePrompt({ brk }: { brk: BreakState }) {
   const { sipDoneN: sips, stirN, stirHits, stirNexts } = brk;
-  const stirring = stirN < 4;
+  const stirring = stirN < STIR_TOTAL;
   const finished = !stirring && sips >= 2;
   const ARROWS = ['↑', '→', '↓', '←'];
   const arrowKey = (a: number) => (
@@ -1088,7 +1095,7 @@ function CoffeePrompt({ brk }: { brk: BreakState }) {
           ))}
         </div>
       )}
-      <Pips total={6} done={stirN + sips} />
+      <Pips total={STIR_TOTAL + 2} done={stirN + sips} />
       <span
         className="font-mono text-[10px] uppercase tracking-[0.2em]"
         style={{

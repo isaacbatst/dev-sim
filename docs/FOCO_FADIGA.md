@@ -85,9 +85,9 @@ mesmo efeito:
 
 | Ritual | Requer | Gesto |
 | --- | --- | --- |
-| **Pescoço** | nada (todos têm) | o **combo circular**: uma volta completa (4 setas em ordem; o CLUSTER de keycaps central guia — apertada afunda, próxima pulsa, pips); contra-giro + mix são o feedback |
+| **Pescoço** | nada (todos têm) | o **combo circular**: DUAS voltas completas (8 setas em ordem; o CLUSTER central guia — a cruz enche POR VOLTA, pips 8); contra-giro + mix são o feedback; fecha e volta à mesa |
 | **Regar** | planta (💰) | MODO (R → close-up da SUA planta): 9 células (QWE/ASD/ZXC) × 2 regas — 1ª INFILTRA, 2ª fica molhada; regador desliza/verte; PROMPT CENTRAL no molde do pescoço (2/2 afunda, 1/2 pulsa); 18/18 → volta à mesa |
-| **Café** | café (💰) | MODO (C pega a xícara → close-up): mexer em CÍRCULO (4 setas, a gramática do pescoço; a colher ORBITA a xícara, samples stir-1/2) + 2 goles (C C); PROMPT CENTRAL no molde do pescoço; volta à mesa |
+| **Café** | café (💰) | MODO (C pega a xícara → close-up): mexer em CÍRCULO — DUAS voltas (8 setas, a gramática do pescoço; a colher ORBITA, samples stir-1/2) + 2 goles (C C); PROMPT CENTRAL no molde do pescoço; volta à mesa |
 | **Tocar** | teclado (💰) | ~8 notas |
 
 - Feedback de restaurado: alívio (anel/suspiro) + visão limpa na hora (blur some,
