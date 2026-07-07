@@ -341,6 +341,7 @@ export function GameScreen() {
           waterN={brk.waterN}
           sipDoneN={brk.sipDoneN}
           noteDoneN={brk.noteDoneN}
+          sipN={brk.sipN}
           spinning={brk.spinning}
           onResume={() => setBreak(false)}
         />

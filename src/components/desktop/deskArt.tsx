@@ -477,3 +477,116 @@ export function MugArt({ variant, steaming }: { variant: ArtVariant; steaming: b
     </div>
   );
 }
+
+/* ── CAFÉ EM PRIMEIRA PESSOA (modo café) ─────────────────────── */
+
+/** Paleta do close-up por variante (mesmas famílias dos MUGS). */
+const MUG_CLOSEUP: Record<
+  ArtVariant,
+  { rim: string; body1: string; body2: string; interior: string; band?: string }
+> = {
+  a: { rim: '#565e72', body1: '#454c5e', body2: '#1d212b', interior: '#14161c' },
+  b: { rim: '#efe7d6', body1: '#7e5540', body2: '#3c2419', interior: '#1a130e' },
+  c: { rim: '#fff8e9', body1: '#f2ebdb', body2: '#b3a78c', interior: '#181209', band: '#d99a3b' },
+};
+
+/**
+ * A xícara PERTO DA CÂMERA (vista de quem segura): borda elíptica grande,
+ * café visível por dentro — o nível BAIXA a cada gole (sips 0..3). Vapor
+ * enquanto tem café. Reusa a paleta da variante escolhida.
+ */
+export function MugCloseup({ variant, sips }: { variant: ArtVariant; sips: number }) {
+  const c = MUG_CLOSEUP[variant];
+  const f = Math.max(0, (3 - sips) / 3); // fração de café restante
+  const empty = f === 0;
+  return (
+    <svg viewBox="0 0 260 250" className="size-full" aria-hidden>
+      <defs>
+        <linearGradient id="cupBody" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor={c.body1} />
+          <stop offset="1" stopColor={c.body2} />
+        </linearGradient>
+      </defs>
+      {/* vapor (só com café) */}
+      {!empty && (
+        <g opacity="0.5">
+          <path
+            d="M100 34 C 94 24 104 18 100 8"
+            stroke="rgba(255,255,255,0.5)"
+            strokeWidth="4"
+            fill="none"
+            strokeLinecap="round"
+          />
+          <path
+            d="M130 30 C 124 20 134 14 130 2"
+            stroke="rgba(255,255,255,0.4)"
+            strokeWidth="4"
+            fill="none"
+            strokeLinecap="round"
+          />
+          <path
+            d="M158 36 C 152 26 162 20 158 10"
+            stroke="rgba(255,255,255,0.35)"
+            strokeWidth="4"
+            fill="none"
+            strokeLinecap="round"
+          />
+        </g>
+      )}
+      {/* alça (atrás do corpo, à direita) */}
+      <path
+        d="M212 108 C 252 106 254 168 210 172"
+        stroke={c.body2}
+        strokeWidth="20"
+        fill="none"
+        strokeLinecap="round"
+      />
+      <path
+        d="M212 112 C 244 110 246 162 210 166"
+        stroke={c.body1}
+        strokeWidth="8"
+        fill="none"
+        strokeLinecap="round"
+      />
+      {/* corpo (grande, sai do quadro por baixo — está na sua mão) */}
+      <path
+        d="M30 88 L30 210 Q30 250 78 250 L182 250 Q230 250 230 210 L230 88 Z"
+        fill="url(#cupBody)"
+      />
+      {c.band && <rect x="30" y="150" width="200" height="22" fill={c.band} opacity="0.9" />}
+      {/* brilho vertical de cerâmica */}
+      <path
+        d="M46 104 C 44 140 44 176 47 214"
+        stroke="rgba(255,255,255,0.18)"
+        strokeWidth="9"
+        fill="none"
+        strokeLinecap="round"
+      />
+      {/* borda + interior */}
+      <ellipse cx="130" cy="88" rx="100" ry="34" fill={c.rim} />
+      <ellipse cx="130" cy="89" rx="88" ry="28" fill={c.interior} />
+      {/* CAFÉ: o nível baixa (elipse encolhe e afunda a cada gole) */}
+      {!empty ? (
+        <g>
+          <ellipse
+            cx="130"
+            cy={91 + (1 - f) * 7}
+            rx={80 * (0.62 + 0.38 * f)}
+            ry={22 * (0.6 + 0.4 * f)}
+            fill="#3b2a1a"
+          />
+          <ellipse
+            cx={112 - (1 - f) * 6}
+            cy={88 + (1 - f) * 7}
+            rx={26 * f + 8}
+            ry={6 * f + 2}
+            fill="#5c4630"
+            opacity="0.85"
+          />
+        </g>
+      ) : (
+        <ellipse cx="130" cy="96" rx="46" ry="10" fill="#241a10" opacity="0.9" />
+      )}
+    </svg>
+  );
+}

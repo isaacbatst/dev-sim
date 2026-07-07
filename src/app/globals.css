@@ -488,6 +488,50 @@ body {
   }
 }
 
+/* ── Café em primeira pessoa (modo café da pausa) ── */
+/* pegar a xícara: sobe do peito pra perto da câmera */
+@keyframes mugrise {
+  0% {
+    opacity: 0;
+    transform: translateY(55%) scale(0.88);
+  }
+  65% {
+    opacity: 1;
+    transform: translateY(-2.5%) scale(1.01);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.animate-mugrise {
+  animation: mugrise 0.5s cubic-bezier(0.2, 0.85, 0.3, 1) both;
+}
+/* o GOLE: inclina em direção à boca e assenta de volta */
+@keyframes sipdrink {
+  0% {
+    transform: none;
+  }
+  38% {
+    transform: translateY(-7%) rotate(-7deg) scale(1.06);
+  }
+  70% {
+    transform: translateY(-4%) rotate(-3deg) scale(1.03);
+  }
+  100% {
+    transform: none;
+  }
+}
+.animate-sipdrink {
+  animation: sipdrink 0.62s cubic-bezier(0.3, 0.7, 0.3, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-mugrise,
+  .animate-sipdrink {
+    animation: none;
+  }
+}
+
 @keyframes edgepulse {
   0%,
   100% {

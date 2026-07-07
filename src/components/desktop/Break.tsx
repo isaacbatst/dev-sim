@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as S from '@/store/breakSound';
-import { MugArt, useDeskArt } from './deskArt';
+import { MugArt, MugCloseup, useDeskArt } from './deskArt';
 
 /**
  * PAUSA ("-", a qualquer momento): o personagem se AFASTA do computador — zoom
@@ -41,7 +41,7 @@ const DIRS: Record<string, { dx: number; dy: number }> = {
   ArrowRight: { dx: 1, dy: 0 },
 };
 
-export type BreakMode = 'mesa' | 'planta' | 'pescoco';
+export type BreakMode = 'mesa' | 'planta' | 'pescoco' | 'cafe';
 
 export interface BreakState {
   /** Pausa aberta? (prompts da cena só aparecem na pausa) */
@@ -141,6 +141,23 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
     },
     [onRitual],
   );
+
+  /** Um gole no MODO café: 3 goles completam o ritual e a xícara volta pra
+   *  mesa (sai do close-up). */
+  const sip = useCallback(() => {
+    S.sip();
+    setSipN((n) => n + 1);
+    sipCount.current += 1;
+    setSipDoneN(sipCount.current);
+    if (sipCount.current >= 3) {
+      sipCount.current = 0;
+      setTimeout(() => {
+        setSipDoneN(0);
+        completeRitual(true);
+        setMode('mesa'); // devolve a xícara à mesa
+      }, 550); // depois do "ahh" do gole
+    }
+  }, [completeRitual]);
 
   // Alongamento natural: entra suave (~650ms), SEGURA no fundo (~1s) e solta
   // devagar (~1s) — nada de tique mecânico. CADA aperto agenda o SEU estalo
@@ -332,6 +349,17 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
         }
         return;
       }
+      if (mode === 'cafe') {
+        if (e.key === 'Backspace') {
+          e.preventDefault();
+          return setMode('mesa');
+        }
+        if (k === 'c') {
+          e.preventDefault();
+          return sip();
+        }
+        return;
+      }
       if (mode === 'planta') {
         if (e.key === 'Backspace') {
           e.preventDefault();
@@ -353,19 +381,7 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
       }
       if (k === 'c' && has('cafe')) {
         e.preventDefault();
-        S.sip();
-        setSipN((n) => n + 1);
-        // ritual: 3 goles
-        sipCount.current += 1;
-        setSipDoneN(sipCount.current);
-        if (sipCount.current >= 3) {
-          sipCount.current = 0;
-          setTimeout(() => {
-            setSipDoneN(0);
-            completeRitual(true);
-          }, 500); // depois do "ahh" do gole
-        }
-        return;
+        return setMode('cafe'); // pega a xícara (o gole acontece no close-up)
       }
       if (PIANO_IDX[k] !== undefined && has('teclado')) {
         e.preventDefault();
@@ -375,7 +391,7 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, mode, owned.join(','), roll, water, playNote]);
+  }, [active, mode, owned.join(','), roll, water, playNote, sip]);
 
   return {
     active,
@@ -405,7 +421,7 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
 
 export function DeskItems({ owned, brk }: { owned: string[]; brk: BreakState }) {
   const has = (id: string) => owned.includes(id);
-  const { mode, notes, setNotes, lit, sipN, wet, setWet, water } = brk;
+  const { mode, notes, setNotes, lit, wet, setWet, water } = brk;
   const art = useDeskArt();
 
   return (
@@ -420,9 +436,11 @@ export function DeskItems({ owned, brk }: { owned: string[]; brk: BreakState }) 
       <div className="flex items-end gap-14">
         {/* caneca FORA do plano inclinado: é arte de frente — dentro do
             rotateX ela sai cisalhada ("itálico") por estar fora do eixo. */}
-        <div key={sipN} className={`mb-1 ${sipN > 0 ? 'animate-sipmug' : ''}`}>
-          <MugArt variant={art.mug} steaming={has('cafe')} />
-        </div>
+        {mode !== 'cafe' && (
+          <div className="mb-1">
+            <MugArt variant={art.mug} steaming={has('cafe')} />
+          </div>
+        )}
 
         <div style={{ perspective: '1100px' }}>
           <div
@@ -498,6 +516,7 @@ export function BreakHud({
   waterN,
   sipDoneN,
   noteDoneN,
+  sipN,
   spinning,
   onResume,
 }: {
@@ -511,6 +530,7 @@ export function BreakHud({
   waterN: number;
   sipDoneN: number;
   noteDoneN: number;
+  sipN: number;
   spinning: boolean;
   onResume: () => void;
 }) {
@@ -537,6 +557,9 @@ export function BreakHud({
           />
         </div>
       )}
+      {/* CAFÉ em primeira pessoa: a xícara na SUA mão, perto da câmera.
+          Cada gole (C) inclina pra boca; o nível baixa; 3º gole devolve à mesa. */}
+      {mode === 'cafe' && <CoffeeCloseup sips={sipDoneN} sipKey={sipN} />}
       {mode === 'mesa' && (
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="hud-night flex items-start gap-10" aria-hidden>
@@ -743,5 +766,54 @@ function Hint({ k, label, wide }: { k: string; label: string; wide?: boolean }) 
       <kbd className={`keycap !h-5 !text-[10px] ${wide ? '!min-w-10' : '!min-w-5'}`}>{k}</kbd>
       {label}
     </span>
+  );
+}
+
+/** O modo café: xícara GRANDE em primeira pessoa, subindo do peito pra perto
+ *  da câmera (mugrise); cada gole inclina em direção à boca (sipdrink) e o
+ *  nível de café baixa. Keycap C + pips embaixo — a mesma gramática. */
+function CoffeeCloseup({ sips, sipKey }: { sips: number; sipKey: number }) {
+  const art = useDeskArt();
+  return (
+    <div className="absolute inset-x-0 bottom-0 flex justify-center overflow-hidden">
+      <div className="animate-mugrise relative flex flex-col items-center">
+        <div
+          key={sipKey}
+          className={`h-[46vh] w-[46vh] ${sipKey > 0 ? 'animate-sipdrink' : ''}`}
+          style={{ transformOrigin: '30% 85%' }}
+        >
+          <MugCloseup variant={art.mug} sips={sips} />
+        </div>
+        {/* prompt do gole (hud-night: legível sobre qualquer cena) */}
+        <div className="hud-night pointer-events-none absolute bottom-6 left-1/2 flex -translate-x-1/2 flex-col items-center gap-1.5">
+          <kbd
+            className={`keycap ${sips < 3 ? 'keycap--current animate-edgepulse' : 'keycap--done'}`}
+          >
+            C
+          </kbd>
+          <span
+            className="font-mono text-[10px] uppercase tracking-[0.18em]"
+            style={{
+              color: 'rgba(255,255,255,0.8)',
+              textShadow: '0 1px 10px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.9)',
+            }}
+          >
+            {sips < 3 ? 'gole' : 'café tomado'}
+          </span>
+          <span className="flex items-center gap-1">
+            {[0, 1, 2].map((i) => (
+              <span
+                key={i}
+                className="size-1.5 rounded-full"
+                style={{
+                  background: i < sips ? 'var(--pass)' : 'rgba(255,255,255,0.25)',
+                  boxShadow: '0 1px 4px rgba(0,0,0,0.8)',
+                }}
+              />
+            ))}
+          </span>
+        </div>
+      </div>
+    </div>
   );
 }
