@@ -117,30 +117,41 @@ function PlantPacova() {
 function PlantEspada() {
   const blade = (x: number, rot: number, h: number, w: number) => (
     <g transform={`translate(${60 + x} 112) rotate(${rot})`}>
+      {/* silhueta com MARGEM amarelada (o traço contorna a lâmina) */}
       <path
         d={`M0 0 C ${-w} ${-h * 0.3} ${-w * 1.1} ${-h * 0.65} ${-w * 0.28} ${-h} C ${-w * 0.08} ${-h * 1.06} ${w * 0.08} ${-h * 1.06} ${w * 0.28} ${-h} C ${w * 1.1} ${-h * 0.65} ${w} ${-h * 0.3} 0 0 Z`}
-        fill="#2c6b46"
+        fill="#2f6f49"
+        stroke="#cdd07e"
+        strokeWidth="1.8"
       />
+      {/* bandas zebradas horizontais (a assinatura da sansevieria) */}
+      {[0.22, 0.38, 0.54, 0.7, 0.84].map((t, i) => (
+        <path
+          key={i}
+          d={`M${-w * (1 - t * 0.7)} ${-h * t} Q 0 ${-h * (t + 0.045)} ${w * (1 - t * 0.7)} ${-h * t}`}
+          stroke={i % 2 === 0 ? '#224f34' : '#4f9c68'}
+          strokeWidth={3.2 - t * 1.6}
+          fill="none"
+          opacity="0.65"
+        />
+      ))}
+      {/* brilho central sutil */}
       <path
-        d={`M0 -2 C ${-w * 0.5} ${-h * 0.32} ${-w * 0.55} ${-h * 0.62} ${-w * 0.15} ${-h * 0.94} C ${-w * 0.04} ${-h * 0.99} ${w * 0.04} ${-h * 0.99} ${w * 0.15} ${-h * 0.94} C ${w * 0.55} ${-h * 0.62} ${w * 0.5} ${-h * 0.32} 0 -2 Z`}
-        fill="#3f8f5f"
-      />
-      <path
-        d={`M${-w * 0.26} ${-h * 0.55} C ${-w * 0.3} ${-h * 0.75} ${-w * 0.16} ${-h * 0.92} ${-w * 0.1} ${-h * 0.97}`}
-        stroke="#cfe8b8"
+        d={`M0 ${-h * 0.12} C ${w * 0.12} ${-h * 0.4} ${w * 0.1} ${-h * 0.7} 0 ${-h * 0.95}`}
+        stroke="rgba(255,255,255,0.14)"
         strokeWidth="2"
         fill="none"
-        opacity="0.85"
       />
     </g>
   );
   return (
     <g>
-      {blade(-16, -10, 66, 8)}
-      {blade(14, 9, 72, 8)}
-      {blade(-7, -4, 88, 9)}
-      {blade(7, 4, 82, 9)}
-      {blade(0, 0, 98, 9.5)}
+      {blade(-19, -13, 60, 7.5)}
+      {blade(17, 12, 64, 7.5)}
+      {blade(-11, -7, 82, 8.5)}
+      {blade(10, 6, 78, 8.5)}
+      {blade(-4, -2, 96, 9)}
+      {blade(4, 2, 90, 9)}
       <g>
         <defs>
           <linearGradient id="potG" x1="0" y1="0" x2="1" y2="0">
@@ -166,25 +177,37 @@ function PlantJiboia() {
   const heart = (x: number, y: number, rot: number, sc: number, fill: string) => (
     <g transform={`translate(${x} ${y}) rotate(${rot}) scale(${sc})`}>
       <path
-        d="M0 0 C -9 -4 -14 -13 -9 -20 C -6 -24 -1 -24 0 -19 C 1 -24 6 -24 9 -20 C 14 -13 9 -4 0 0 Z"
+        d="M0 2 C -10 -3 -15 -13 -9 -20 C -5 -24.5 -0.5 -23.5 0 -18.5 C 0.5 -23.5 5 -24.5 9 -20 C 15 -13 10 -3 0 2 Z"
         fill={fill}
       />
-      <path d="M0 -3 L0 -18" stroke="rgba(255,255,255,0.35)" strokeWidth="1" />
+      <path d="M0 -1 L0 -17" stroke="rgba(255,255,255,0.3)" strokeWidth="1.1" />
     </g>
   );
   return (
     <g>
-      <path d="M60 110 C 40 104 30 96 26 82" stroke="#3c7a52" strokeWidth="2.4" fill="none" />
-      <path d="M60 110 C 80 102 92 92 96 76" stroke="#356e49" strokeWidth="2.4" fill="none" />
-      <path d="M42 110 C 34 120 30 132 31 144" stroke="#3c7a52" strokeWidth="2.2" fill="none" />
-      <path d="M80 110 C 88 122 91 134 89 148" stroke="#356e49" strokeWidth="2.2" fill="none" />
-      {heart(26, 82, -18, 0.9, '#46a06c')}
-      {heart(96, 76, 16, 0.95, '#3f9463')}
-      {heart(44, 92, -8, 1.0, '#52b47b')}
-      {heart(76, 90, 10, 1.05, '#49aa72')}
-      {heart(60, 84, 0, 1.2, '#57c084')}
-      {heart(31, 144, -30, 0.8, '#3f9463')}
-      {heart(89, 148, 26, 0.85, '#46a06c')}
+      {/* vinhas pendentes: caem do vaso e escorrem pelas laterais */}
+      <path d="M44 108 C 30 116 22 130 20 148" stroke="#2f6a48" strokeWidth="2.4" fill="none" />
+      <path d="M76 108 C 90 118 97 132 98 150" stroke="#2b6142" strokeWidth="2.4" fill="none" />
+      <path d="M60 110 C 56 124 54 136 55 150" stroke="#2f6a48" strokeWidth="2" fill="none" />
+      {/* folhas das vinhas (escala cai conforme desce) */}
+      {heart(30, 122, -34, 0.85, '#3c8a5c')}
+      {heart(20, 148, -44, 0.7, '#316f4a')}
+      {heart(90, 124, 32, 0.9, '#38815a')}
+      {heart(98, 150, 42, 0.72, '#2d6845')}
+      {heart(55, 150, 8, 0.65, '#316f4a')}
+      {/* MOITA sobre o vaso: 3 camadas (escura → clara), sobrepostas */}
+      {heart(40, 82, -26, 0.95, '#1f5031')}
+      {heart(80, 82, 24, 0.95, '#1f5031')}
+      {heart(52, 76, -10, 1.0, '#265c3c')}
+      {heart(68, 76, 10, 1.0, '#265c3c')}
+      {heart(60, 72, 0, 1.05, '#2c6a45')}
+      {heart(36, 96, -20, 1.05, '#317a50')}
+      {heart(84, 96, 20, 1.05, '#317a50')}
+      {heart(48, 92, -7, 1.15, '#3a8c5d')}
+      {heart(72, 92, 7, 1.15, '#3a8c5d')}
+      {heart(60, 100, 0, 1.3, '#49a86f')}
+      {heart(46, 104, -13, 1.1, '#54b87a')}
+      {heart(74, 104, 13, 1.1, '#50b276')}
       <g>
         <defs>
           <linearGradient id="potC" x1="0" y1="0" x2="1" y2="0">

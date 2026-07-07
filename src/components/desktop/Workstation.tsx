@@ -197,7 +197,7 @@ export function Room({
           className="absolute"
           style={{
             bottom: `${WORLD_H - HORIZON}dvh`,
-            left: 'calc(50% - min(560px, 47.5vw))',
+            left: 'calc(50% - min(560px, 47.5vw) - 84px)',
             transform: 'translateX(-70%)',
           }}
         >
