@@ -507,6 +507,29 @@ body {
 .animate-mugrise {
   animation: mugrise 0.5s cubic-bezier(0.2, 0.85, 0.3, 1) both;
 }
+/* 1ª rega: a água INFILTRA — escurece na hora e seca aos poucos (fica só
+   um úmido leve); a 2ª rega mantém escuro (ver .soil-wet) */
+@keyframes infiltrate {
+  0% {
+    opacity: 0.88;
+  }
+  25% {
+    opacity: 0.82;
+  }
+  100% {
+    opacity: 0.26;
+  }
+}
+.animate-infiltrate {
+  animation: infiltrate 2.2s ease-out forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-infiltrate {
+    animation: none;
+    opacity: 0.26;
+  }
+}
+
 /* VERTER o regador: inclina o bico pra baixo e volta */
 @keyframes pour {
   0% {

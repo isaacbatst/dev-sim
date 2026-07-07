@@ -31,11 +31,13 @@ const PIANO_IDX: Record<string, number> = Object.fromEntries(PIANO.map((p, i) =>
 const SOIL: string[][] = [
   ['q', 'w', 'e'],
   ['a', 's', 'd'],
+  ['z', 'x', 'c'],
 ];
 const SOILKEYS = SOIL.flat();
-/** Cada célula bebe 2 regas: seca → úmida → encharcada. */
+/** Cada célula bebe 2 regas: na 1ª a água INFILTRA (escurece e seca aos
+ *  poucos); na 2ª fica molhada de vez. */
 const WATER_PER_CELL = 2;
-const WATER_TOTAL = SOILKEYS.length * WATER_PER_CELL; // 12
+const WATER_TOTAL = SOILKEYS.length * WATER_PER_CELL; // 18
 const DIRS: Record<string, { dx: number; dy: number }> = {
   ArrowUp: { dx: 0, dy: -1 },
   ArrowDown: { dx: 0, dy: 1 },
@@ -727,6 +729,11 @@ function RitualOption({
   );
 }
 
+/** Grão da terra: pontinhos ínfimos num pattern repetido (1 data-URI pra
+ *  todas as células — custo de UMA imagem, não de N nós). */
+const SOIL_GRAIN =
+  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='20'%3E%3Cg fill='%23000' fill-opacity='.25'%3E%3Ccircle cx='3' cy='4' r='1'/%3E%3Ccircle cx='12' cy='2' r='.8'/%3E%3Ccircle cx='20' cy='6' r='1.1'/%3E%3Ccircle cx='7' cy='11' r='.9'/%3E%3Ccircle cx='16' cy='13' r='1'/%3E%3Ccircle cx='23' cy='16' r='.7'/%3E%3Ccircle cx='4' cy='17' r='.8'/%3E%3C/g%3E%3Cg fill='%23fff' fill-opacity='.06'%3E%3Ccircle cx='9' cy='6' r='.8'/%3E%3Ccircle cx='19' cy='10' r='.7'/%3E%3Ccircle cx='13' cy='17' r='.8'/%3E%3C/g%3E%3C/svg%3E\")";
+
 /** Aro do vaso por espécie (terracota / grafite / creme — deskArt). */
 const POT_RIM: Record<'a' | 'b' | 'c', [string, string, string]> = {
   a: ['#c9713a', '#a85a2a', '#7d3f1c'],
@@ -761,7 +768,7 @@ function PlantCloseup({ brk }: { brk: BreakState }) {
       const i = row.indexOf(last);
       if (i >= 0) col = i;
     }
-  const canX = (col - 1) * 96;
+  const canX = (col - 1) * 90;
   return (
     <div className="absolute inset-x-0 bottom-0 flex justify-center">
       <div className="animate-mugrise relative" style={{ width: 520, height: '72vh' }}>
@@ -773,18 +780,30 @@ function PlantCloseup({ brk }: { brk: BreakState }) {
             background: 'radial-gradient(58% 62% at 50% 72%, rgba(0,0,0,0.55), transparent 72%)',
           }}
         />
-        {/* a SUA planta (espécie + estágio), vaso na base — atrás da terra */}
-        <div className="absolute bottom-[-56px] left-1/2 -translate-x-1/2">
+        {/* a SUA planta (espécie + estágio): a folhagem sobe INTEIRA de trás
+            da boca do vaso; o vaso original da arte fica escondido atrás do
+            corpo desenhado abaixo (um vaso só, coerente) */}
+        <div className="absolute bottom-[124px] left-1/2 -translate-x-1/2">
           <PlantArt variant={art.plant} tier={art.plantTier} size={3.4} pulseKey={leafN} />
         </div>
-        {/* a BOCA DO VASO vista de cima: ARO na cor do vaso da espécie +
-            TERRA dentro (células orgânicas clipadas pela curva da elipse).
-            Cada célula bebe 2 regas: seca → úmida → encharcada. */}
+        {/* CORPO do vaso (esconde o vasinho da arte e sustenta a boca) */}
         <div
-          className="pointer-events-auto absolute bottom-[104px] left-1/2 -translate-x-1/2"
+          aria-hidden
+          className="absolute bottom-0 left-1/2 -translate-x-1/2"
           style={{
-            width: 312,
-            height: 164,
+            width: 296,
+            height: 226,
+            clipPath: 'polygon(2% 0, 98% 0, 82% 100%, 18% 100%)',
+            background: `linear-gradient(105deg, ${POT_RIM[art.plant][0]} 0%, ${POT_RIM[art.plant][1]} 52%, ${POT_RIM[art.plant][2]} 100%)`,
+          }}
+        />
+        {/* a BOCA DO VASO: elipse assentada no topo do corpo (mesma direção),
+            terra com GRÃO fino; 1ª rega infiltra e seca, 2ª fica molhada */}
+        <div
+          className="pointer-events-auto absolute bottom-[150px] left-1/2 -translate-x-1/2"
+          style={{
+            width: 300,
+            height: 150,
             borderRadius: '50%',
             background: `linear-gradient(165deg, ${POT_RIM[art.plant][0]} 0%, ${POT_RIM[art.plant][1]} 55%, ${POT_RIM[art.plant][2]} 100%)`,
             boxShadow: '0 22px 44px -14px rgba(0,0,0,0.75), inset 0 -3px 8px rgba(0,0,0,0.35)',
@@ -793,7 +812,7 @@ function PlantCloseup({ brk }: { brk: BreakState }) {
           <div
             className="absolute overflow-hidden"
             style={{
-              inset: 13,
+              inset: 11,
               borderRadius: '50%',
               background: 'radial-gradient(80% 80% at 50% 38%, #4a3826, #332517)',
               boxShadow: 'inset 0 6px 14px rgba(0,0,0,0.6), inset 0 -2px 6px rgba(0,0,0,0.4)',
@@ -809,25 +828,43 @@ function PlantCloseup({ brk }: { brk: BreakState }) {
                     className="absolute overflow-hidden"
                     style={{
                       width: 84,
-                      height: 54,
-                      left: 9 + ci * 92,
-                      top: 12 + ri * 60,
+                      height: 36,
+                      left: 12 + ci * 90,
+                      top: 8 + ri * 40,
                       borderRadius: SOIL_SHAPE[k],
-                      background: cnt >= 2 ? '#20170e' : cnt === 1 ? '#3c2d1c' : '#5e4936',
-                      boxShadow:
-                        cnt >= 2
-                          ? 'inset 0 3px 6px rgba(0,0,0,0.65), 0 0 0 1px rgba(0,0,0,0.3)'
-                          : cnt === 1
-                            ? 'inset 0 2px 5px rgba(0,0,0,0.5)'
-                            : 'inset 0 -2px 4px rgba(0,0,0,0.35)',
-                      transition: 'background 400ms ease, box-shadow 400ms ease',
+                      background: `${SOIL_GRAIN} #55412f`,
+                      backgroundSize: '26px 20px',
+                      boxShadow: 'inset 0 -2px 4px rgba(0,0,0,0.3)',
                     }}
                     aria-label={`regar ${k} (${cnt}/2)`}
                   >
+                    {/* a água: 1ª rega INFILTRA (escurece → seca aos poucos);
+                        2ª rega permanece (key remonta a animação) */}
+                    {cnt > 0 && (
+                      <span
+                        key={cnt}
+                        aria-hidden
+                        className={`absolute inset-0 ${cnt >= WATER_PER_CELL ? '' : 'animate-infiltrate'}`}
+                        style={{
+                          borderRadius: SOIL_SHAPE[k],
+                          background: '#170f08',
+                          opacity: cnt >= WATER_PER_CELL ? 0.82 : undefined,
+                          transition: 'opacity 300ms ease',
+                        }}
+                      />
+                    )}
+                    {/* brilho d'água só quando molhada de vez */}
+                    {cnt >= WATER_PER_CELL && (
+                      <span
+                        aria-hidden
+                        className="absolute left-1/2 top-1 -translate-x-1/2 rounded-full"
+                        style={{ width: 46, height: 7, background: 'rgba(159,208,230,0.2)' }}
+                      />
+                    )}
                     {wet[k] !== undefined && (
                       <span
                         key={`s${wet[k]}`}
-                        className="animate-watersplash absolute left-1/2 top-1 -ml-2 size-4 rounded-full border-2"
+                        className="animate-watersplash absolute left-1/2 top-0.5 -ml-2 size-4 rounded-full border-2"
                         style={{ borderColor: '#9fd0e6' }}
                         onAnimationEnd={() =>
                           setWet((w) => {
@@ -838,20 +875,7 @@ function PlantCloseup({ brk }: { brk: BreakState }) {
                         }
                       />
                     )}
-                    {/* poça: aparece úmida, cresce encharcada */}
-                    {cnt > 0 && (
-                      <span
-                        aria-hidden
-                        className="absolute left-1/2 top-1.5 -translate-x-1/2 rounded-full"
-                        style={{
-                          width: cnt >= 2 ? 52 : 28,
-                          height: cnt >= 2 ? 10 : 6,
-                          background: 'rgba(159,208,230,0.16)',
-                          transition: 'width 300ms ease, height 300ms ease',
-                        }}
-                      />
-                    )}
-                    <kbd className="absolute bottom-1 right-2 font-mono text-[11px] uppercase text-white/55">
+                    <kbd className="absolute bottom-0.5 right-1.5 font-mono text-[10px] uppercase text-white/50">
                       {k}
                     </kbd>
                   </button>
@@ -864,7 +888,7 @@ function PlantCloseup({ brk }: { brk: BreakState }) {
         <div
           className="pointer-events-none absolute left-1/2 h-24 w-36"
           style={{
-            bottom: 104 + 164 + 30,
+            bottom: 150 + 150 + 26,
             transform: `translateX(calc(-50% + ${canX}px))`,
             transition: 'transform 240ms ease',
           }}
@@ -874,7 +898,7 @@ function PlantCloseup({ brk }: { brk: BreakState }) {
           </div>
         </div>
         {/* rótulo + pips (a gramática), entre o regador e a terra */}
-        <div className="hud-night pointer-events-none absolute bottom-[58px] left-1/2 flex -translate-x-1/2 flex-col items-center gap-1.5">
+        <div className="hud-night pointer-events-none absolute bottom-[76px] left-1/2 flex -translate-x-1/2 flex-col items-center gap-1.5">
           <span
             className="font-mono text-[10px] uppercase tracking-[0.18em]"
             style={{
