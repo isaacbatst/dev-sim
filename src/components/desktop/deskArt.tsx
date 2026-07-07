@@ -411,9 +411,9 @@ function MugBarrel() {
         fill="url(#mugB)"
       />
       <path d="M24 34 C 22 26 74 26 72 34 L73 46 C 73 52 23 52 23 46 Z" fill="#e9e1cf" />
-      <ellipse cx="48" cy="31" rx="24.5" ry="7.5" fill="#efe7d6" />
-      <ellipse cx="48" cy="31.5" rx="20.5" ry="6" fill="#1a130e" />
-      <ellipse cx="48" cy="32.5" rx="17" ry="4.8" fill="#43301d" />
+      <ellipse cx="48" cy="33" rx="24" ry="6" fill="#efe7d6" />
+      <ellipse cx="48" cy="33.5" rx="20.5" ry="4.9" fill="#1a130e" />
+      <ellipse cx="48" cy="34.3" rx="17" ry="3.9" fill="#43301d" />
       <path
         d="M30 44 C 28 60 28 74 31 88"
         stroke="rgba(255,255,255,0.12)"
