@@ -117,12 +117,25 @@ function PlantPacova() {
 function PlantEspada() {
   const blade = (x: number, rot: number, h: number, w: number) => (
     <g transform={`translate(${60 + x} 112) rotate(${rot})`}>
-      {/* silhueta com MARGEM amarelada (o traço contorna a lâmina) */}
       <path
         d={`M0 0 C ${-w} ${-h * 0.3} ${-w * 1.1} ${-h * 0.65} ${-w * 0.28} ${-h} C ${-w * 0.08} ${-h * 1.06} ${w * 0.08} ${-h * 1.06} ${w * 0.28} ${-h} C ${w * 1.1} ${-h * 0.65} ${w} ${-h * 0.3} 0 0 Z`}
         fill="#2f6f49"
-        stroke="#cdd07e"
-        strokeWidth="1.8"
+      />
+      {/* margem variegada ('Laurentii') SÓ nas laterais, por dentro — traço
+          na silhueta inteira virava "brilho"/halo */}
+      <path
+        d={`M${-w * 0.12} ${-h * 0.05} C ${-w * 0.86} ${-h * 0.3} ${-w * 0.94} ${-h * 0.62} ${-w * 0.24} ${-h * 0.96}`}
+        stroke="#a8b06a"
+        strokeWidth="1.6"
+        fill="none"
+        opacity="0.75"
+      />
+      <path
+        d={`M${w * 0.12} ${-h * 0.05} C ${w * 0.86} ${-h * 0.3} ${w * 0.94} ${-h * 0.62} ${w * 0.24} ${-h * 0.96}`}
+        stroke="#a8b06a"
+        strokeWidth="1.6"
+        fill="none"
+        opacity="0.75"
       />
       {/* bandas zebradas horizontais (a assinatura da sansevieria) */}
       {[0.22, 0.38, 0.54, 0.7, 0.84].map((t, i) => (
