@@ -384,10 +384,11 @@ const MUGS: Record<ArtVariant, () => React.ReactNode> = {
   c: MugDiner,
 };
 
-/** Caneca da mesa (SVG), com vapor quando o café é seu. */
+/** Caneca da mesa (SVG), com vapor quando o café é seu. Proporção real de
+ *  mesa: bem maior que o mouse, na sombra do teclado. */
 export function MugArt({ variant, steaming }: { variant: ArtVariant; steaming: boolean }) {
   return (
-    <div className="relative mb-1 h-28 w-24 shrink-0">
+    <div className="relative mb-1 h-40 w-[8.5rem] shrink-0">
       {steaming && <Steam />}
       {MUGS[variant]()}
     </div>
