@@ -285,6 +285,7 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
               setTilt({ dx: 0, dy: 0 });
               setSpinning(false);
               setNeckProgress(0);
+              setMode('mesa'); // ritual fechado — de volta à mesa (como os outros)
             },
             420 + 4 * 240,
           ),
@@ -344,7 +345,9 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
           setTimeout(() => {
             setWateredKeys([]);
             setWaterN(0);
-            completeRitual(true);
+            S.success(); // rega completa = conquista (não o suspiro corporal)
+            completeRitual(false);
+            setRelief((r) => r + 1);
             setMode('mesa'); // terra regada — de volta à mesa
           }, 650);
         }

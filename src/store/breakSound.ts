@@ -186,6 +186,15 @@ export function sip(): void {
   tone(330, 0.4, { type: 'sine', gain: 0.05, slideTo: 215, attack: 0.06, delay: 0.28 });
 }
 
+/** Sucesso de ritual (rega completa): arpejo curto subindo + brilho — mais
+ *  "conquista" que o suspiro do alívio corporal. */
+export function success(): void {
+  tone(523.25, 0.16, { type: 'sine', gain: 0.11, attack: 0.008 });
+  tone(659.25, 0.18, { type: 'sine', gain: 0.1, attack: 0.008, delay: 0.11 });
+  tone(783.99, 0.34, { type: 'sine', gain: 0.1, attack: 0.01, delay: 0.22 });
+  noise(0.18, { type: 'highpass', freq: 6000, q: 1, gain: 0.03, delay: 0.22 });
+}
+
 /** Mexer o café com a colher: clink de cerâmica curto, tom alternando com a
  *  direção (vai-e-vem) — sobe de leve a cada mexida. */
 export function stir(n: number): void {
