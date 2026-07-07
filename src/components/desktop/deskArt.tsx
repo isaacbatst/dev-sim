@@ -512,18 +512,23 @@ const MUG_CLOSEUP: Record<
 export function MugCloseup({
   variant,
   sips,
-  stirN = 4,
+  stirring = false,
+  theta = 0,
 }: {
   variant: ArtVariant;
   sips: number;
-  /** Mexidas com a colher (0..4). <4 = colher NA xícara, alternando o ângulo. */
-  stirN?: number;
+  /** Colher NA xícara (fase de mexer do ritual). */
+  stirring?: boolean;
+  /** Ângulo acumulado do giro (graus) — a colher ORBITA o centro. */
+  theta?: number;
 }) {
   const c = MUG_CLOSEUP[variant];
   const f = Math.max(0, (2 - sips) / 2); // fração de café restante (2 goles)
   const empty = f === 0;
-  const stirring = stirN < 4;
-  const spoonAngle = stirN % 2 === 0 ? 16 : -14;
+  const rad = (theta * Math.PI) / 180;
+  // órbita da colher na superfície (elipse: funda nas laterais, rasa no eixo)
+  const bx = 46 * Math.sin(rad);
+  const by = -13 * Math.cos(rad);
   return (
     <svg viewBox="0 0 260 250" className="size-full" aria-hidden>
       <defs>
@@ -596,11 +601,13 @@ export function MugCloseup({
             ry={22 * (0.6 + 0.4 * f)}
             fill="#3b2a1a"
           />
-          {/* crema desliza com a colher (swirl) */}
+          {/* crema REDEMOINHA atrás da colher (segue a órbita, com atraso) */}
           <g
             style={{
-              transform: `translateX(${stirring ? (stirN % 2 === 0 ? -8 : 10) : 0}px)`,
-              transition: 'transform 260ms ease',
+              transform: stirring
+                ? `translate(${(10 * Math.sin(rad - 0.9)).toFixed(1)}px, ${(-3 * Math.cos(rad - 0.9)).toFixed(1)}px)`
+                : 'translate(0px, 0px)',
+              transition: 'transform 700ms cubic-bezier(0.3, 0.7, 0.3, 1)',
             }}
           >
             <ellipse
@@ -612,19 +619,31 @@ export function MugCloseup({
               opacity="0.85"
             />
           </g>
-          {/* COLHER: na xícara enquanto mexe (←→←→); sai antes dos goles */}
+          {/* COLHER: ORBITA o centro a cada seta (mão gira, cabo em pé com
+              leve inclinação pro lado do movimento); sai antes dos goles */}
           {stirring && (
             <g
               style={{
-                transform: `rotate(${spoonAngle}deg)`,
-                transformOrigin: '138px 92px',
-                transition: 'transform 220ms cubic-bezier(0.3, 0.8, 0.4, 1)',
+                transform: `translate(${bx.toFixed(1)}px, ${by.toFixed(1)}px) rotate(${(7 * Math.sin(rad)).toFixed(1)}deg)`,
+                transformOrigin: '130px 91px',
+                transition: 'transform 520ms cubic-bezier(0.35, 0.7, 0.3, 1)',
               }}
             >
-              <path d="M138 92 L172 18" stroke="#39404d" strokeWidth="9" strokeLinecap="round" />
-              <path d="M138 92 L172 18" stroke="#cdd3df" strokeWidth="6" strokeLinecap="round" />
-              <path d="M167 24 L174 12" stroke="#f0f3f8" strokeWidth="6" strokeLinecap="round" />
-              <ellipse cx="139" cy="90" rx="13" ry="5" fill="#2c2117" opacity="0.85" />
+              {/* onda que a colher empurra */}
+              <ellipse
+                cx="130"
+                cy="92"
+                rx="17"
+                ry="6.5"
+                fill="none"
+                stroke="#5c4630"
+                strokeWidth="1.5"
+                opacity="0.5"
+              />
+              <ellipse cx="130" cy="91.5" rx="12" ry="4.6" fill="#2c2117" opacity="0.85" />
+              <path d="M133 88 L160 16" stroke="#39404d" strokeWidth="8.5" strokeLinecap="round" />
+              <path d="M133 88 L160 16" stroke="#cdd3df" strokeWidth="5.5" strokeLinecap="round" />
+              <path d="M156 22 L162 10" stroke="#f0f3f8" strokeWidth="5.5" strokeLinecap="round" />
             </g>
           )}
         </g>

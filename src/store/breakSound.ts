@@ -108,6 +108,8 @@ const SAMPLES: Record<string, string> = {
   gulp: '/sounds/gulp-action.wav', // gole do café (Isaac)
   gulpFinal: '/sounds/gulp-final.wav', // último gole — fecha o ritual (Isaac)
   regar: '/sounds/regar.wav', // água na terra por rega (Ultra-Edward, CC0)
+  stir1: '/sounds/stir-1.wav', // colher no café, mexida A (levi_cunha, CC0)
+  stir2: '/sounds/stir-2.wav', // colher no café, mexida B (levi_cunha, CC0)
 };
 const bufs: Record<string, AudioBuffer> = {};
 const loadingSet = new Set<string>();
@@ -200,9 +202,12 @@ export function success(): void {
   noise(0.18, { type: 'highpass', freq: 6000, q: 1, gain: 0.03, delay: 0.22 });
 }
 
-/** Mexer o café com a colher: clink de cerâmica curto, tom alternando com a
- *  direção (vai-e-vem) — sobe de leve a cada mexida. */
+/** Mexer o café com a colher: samples reais alternando (A/B) com leve
+ *  variação de pitch — círculo completo sem soar repetido. */
 export function stir(n: number): void {
+  const name = n % 2 === 0 ? 'stir1' : 'stir2';
+  if (bufs[name]) return playSample(name, 0.7, 0.95 + Math.random() * 0.08);
+  // fallback sintetizado (samples ainda carregando)
   const base = n % 2 === 0 ? 1900 : 2150;
   tone(base + n * 40, 0.05, { type: 'sine', gain: 0.09, slideTo: base * 0.8, attack: 0.002 });
   noise(0.03, { type: 'highpass', freq: 3200, q: 1, gain: 0.05 });

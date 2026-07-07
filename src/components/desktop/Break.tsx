@@ -66,8 +66,13 @@ export interface BreakState {
   waterN: number;
   /** Células já regadas (a terra FICA molhada até completar). */
   wateredKeys: string[];
-  /** Café: mexidas com a colher (0..4, ← → ← →) antes dos goles. */
+  /** Café: mexidas com a colher (0..4) — CÍRCULO como o pescoço. */
   stirN: number;
+  /** Ângulos já mexidos (0=↑ 1=→ 2=↓ 3=←) e os que continuam o giro. */
+  stirHits: number[];
+  stirNexts: number[];
+  /** Ângulo acumulado da colher (graus — anima a órbita no close-up). */
+  stirTheta: number;
   sipDoneN: number;
   noteDoneN: number;
   relief: number;
@@ -96,6 +101,10 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
   const [waterN, setWaterN] = useState(0);
   const [wateredKeys, setWateredKeys] = useState<string[]>([]);
   const [stirN, setStirN] = useState(0);
+  const [stirHits, setStirHits] = useState<number[]>([]);
+  const [stirNexts, setStirNexts] = useState<number[]>([0, 1, 2, 3]);
+  const [stirTheta, setStirTheta] = useState(0);
+  const stirSeq = useRef<number[]>([]);
   const [sipDoneN, setSipDoneN] = useState(0);
   const [noteDoneN, setNoteDoneN] = useState(0);
   const [relief, setRelief] = useState(0);
@@ -128,6 +137,9 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
       setWaterN(0);
       setWateredKeys([]);
       setStirN(0);
+      setStirHits([]);
+      setStirNexts([0, 1, 2, 3]);
+      setStirTheta(0);
       setSipDoneN(0);
       setNoteDoneN(0);
     }
@@ -136,8 +148,52 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
     if (!active) {
       sipCount.current = 0;
       noteCount.current = 0;
+      stirSeq.current = [];
     }
   }, [active]);
+
+  /** Mexida circular da colher (café): 4 setas em ordem de rotação, qualquer
+   *  sentido — o espelho do combo do pescoço. Direção errada RECOMEÇA dali
+   *  (sufixo consistente); a colher orbita a xícara (stirTheta). */
+  const stirPress = useCallback((key: string) => {
+    const ANGLE: Record<string, number> = { ArrowUp: 0, ArrowRight: 1, ArrowDown: 2, ArrowLeft: 3 };
+    const a = ANGLE[key];
+    if (a === undefined || stirSeq.current.length >= 4) return;
+    const seq = stirSeq.current;
+    let delta = 0;
+    let ok = seq.length === 0;
+    if (!ok) {
+      const last = seq[seq.length - 1];
+      const diff = (a - last + 4) % 4; // 1 = horário, 3 = anti-horário
+      if (diff === 1 || diff === 3) {
+        const dirNew = diff === 1 ? 1 : -1;
+        const dir = seq.length >= 2 ? ((seq[1] - seq[0] + 4) % 4 === 1 ? 1 : -1) : dirNew;
+        if (dirNew === dir) {
+          ok = true;
+          delta = dir * 90;
+        }
+      }
+    }
+    if (ok) {
+      seq.push(a);
+      setStirTheta((t) => (seq.length === 1 ? a * 90 : t + delta));
+    } else {
+      stirSeq.current = [a]; // recomeça DALI, sem punir
+      setStirTheta(a * 90);
+    }
+    const cur = stirSeq.current;
+    S.stir(cur.length - 1);
+    setStirN(cur.length);
+    setStirHits([...cur]);
+    const lastA = cur[cur.length - 1];
+    setStirNexts(
+      cur.length >= 4
+        ? []
+        : cur.length === 1
+          ? [(lastA + 1) % 4, (lastA + 3) % 4]
+          : [(lastA + ((cur[1] - cur[0] + 4) % 4 === 1 ? 1 : 3)) % 4],
+    );
+  }, []);
 
   /** Ritual completado: restaura a fadiga + feedback de alívio (o pescoço já
    *  tem o próprio — contra-giro + mix). */
@@ -168,6 +224,10 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
       setTimeout(() => {
         setSipDoneN(0);
         setStirN(0);
+        stirSeq.current = [];
+        setStirHits([]);
+        setStirNexts([0, 1, 2, 3]);
+        setStirTheta(0);
         completeRitual(false);
         setRelief((r) => r + 1); // anel de alívio (o "ahh" veio do sample)
         setMode('mesa'); // devolve a xícara à mesa
@@ -380,14 +440,10 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
           e.preventDefault();
           return setMode('mesa');
         }
-        // mexer com a colher: ← → ← → (só a direção esperada avança)
-        if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        // mexer com a colher: CÍRCULO de setas (como o pescoço)
+        if (e.key.startsWith('Arrow')) {
           e.preventDefault();
-          const expected = stirN % 2 === 0 ? 'ArrowLeft' : 'ArrowRight';
-          if (stirN < 4 && e.key === expected) {
-            S.stir(stirN);
-            setStirN(stirN + 1);
-          }
+          if (stirN < 4) stirPress(e.key);
           return;
         }
         // goles só depois de mexer (a colher sai da xícara)
@@ -428,7 +484,7 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, mode, owned.join(','), roll, water, playNote, sip, stirN]);
+  }, [active, mode, owned.join(','), roll, water, playNote, sip, stirN, stirPress]);
 
   return {
     active,
@@ -442,6 +498,9 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
     waterN,
     wateredKeys,
     stirN,
+    stirHits,
+    stirNexts,
+    stirTheta,
     sipDoneN,
     noteDoneN,
     relief,
@@ -558,7 +617,6 @@ export function BreakHud({
     stirN,
     sipDoneN,
     noteDoneN,
-    sipN,
     spinning,
   } = brk;
   return (
@@ -586,10 +644,20 @@ export function BreakHud({
       )}
       {/* CAFÉ em primeira pessoa: a xícara na SUA mão, perto da câmera.
           Cada gole (C) inclina pra boca; o nível baixa; 3º gole devolve à mesa. */}
-      {mode === 'cafe' && <CoffeeCloseup sips={sipDoneN} sipKey={sipN} stirN={stirN} />}
+      {mode === 'cafe' && <CoffeeCloseup brk={brk} />}
+      {mode === 'cafe' && (
+        <div className="beat-in absolute inset-0 flex items-center justify-center">
+          <CoffeePrompt brk={brk} />
+        </div>
+      )}
       {/* REGAR em primeira pessoa: a planta perto, regador na mão, terra que
           escurece de verdade — célula a célula, até cobrir tudo. */}
       {mode === 'planta' && <PlantCloseup brk={brk} />}
+      {mode === 'planta' && (
+        <div className="beat-in absolute inset-0 flex items-center justify-center">
+          <RegarPrompt brk={brk} />
+        </div>
+      )}
       {mode === 'mesa' && (
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="hud-night flex items-start gap-10" aria-hidden>
@@ -896,41 +964,50 @@ function PlantCloseup({ brk }: { brk: BreakState }) {
             <CanArt />
           </div>
         </div>
-        {/* teclas FORA da terra (como nos outros rituais): cluster 3×3 no
-            corpo do vaso — 2/2 afunda (verde), 1/2 pulsa (falta uma) */}
-        <div className="hud-night pointer-events-none absolute bottom-[18px] left-1/2 flex -translate-x-1/2 flex-col items-center gap-1.5">
-          <span
-            className="font-mono text-[10px] uppercase tracking-[0.18em]"
-            style={{
-              color: 'rgba(255,255,255,0.8)',
-              textShadow: '0 1px 10px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.9)',
-            }}
-          >
-            {waterN >= WATER_TOTAL ? 'terra regada' : 'regue toda a terra (2× cada)'}
-          </span>
-          {SOIL.map((row, ri) => (
-            <span key={ri} className="flex items-center gap-1.5">
-              {row.map((k) => {
-                const cnt = wateredKeys.filter((x) => x === k).length;
-                return (
-                  <kbd
-                    key={k}
-                    className={`keycap !h-7 !min-w-7 !text-xs ${
-                      cnt >= WATER_PER_CELL
-                        ? 'keycap--done'
-                        : cnt === 1
-                          ? 'keycap--current animate-edgepulse'
-                          : ''
-                    }`}
-                  >
-                    {k.toUpperCase()}
-                  </kbd>
-                );
-              })}
-            </span>
-          ))}
-        </div>
       </div>
+    </div>
+  );
+}
+
+/** Prompt do REGAR — o molde do NeckCluster: teclado 3×3 da terra no CENTRO
+ *  DA TELA; 2/2 afunda em verde, 1/2 pulsa (falta uma). */
+function RegarPrompt({ brk }: { brk: BreakState }) {
+  const { wateredKeys, waterN } = brk;
+  return (
+    <div className="hud-night flex flex-col items-center gap-2.5" aria-hidden>
+      <div className="flex flex-col items-center gap-1.5">
+        {SOIL.map((row, ri) => (
+          <div key={ri} className="flex items-center gap-1.5">
+            {row.map((k) => {
+              const cnt = wateredKeys.filter((x) => x === k).length;
+              return (
+                <kbd
+                  key={k}
+                  className={`keycap ${
+                    cnt >= WATER_PER_CELL
+                      ? 'keycap--done'
+                      : cnt === 1
+                        ? 'keycap--current animate-edgepulse'
+                        : ''
+                  }`}
+                >
+                  {k.toUpperCase()}
+                </kbd>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+      <Pips total={WATER_TOTAL} done={waterN} />
+      <span
+        className="font-mono text-[10px] uppercase tracking-[0.2em]"
+        style={{
+          color: waterN >= WATER_TOTAL ? 'var(--pass)' : 'rgba(255,255,255,0.75)',
+          textShadow: '0 1px 10px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.9)',
+        }}
+      >
+        {waterN >= WATER_TOTAL ? 'terra regada ✓' : 'regue toda a terra (2× cada)'}
+      </span>
     </div>
   );
 }
@@ -946,47 +1023,81 @@ function Hint({ k, label, wide }: { k: string; label: string; wide?: boolean }) 
 /** O modo café: xícara GRANDE em primeira pessoa, subindo do peito pra perto
  *  da câmera (mugrise); cada gole inclina em direção à boca (sipdrink) e o
  *  nível de café baixa. Keycap C + pips embaixo — a mesma gramática. */
-function CoffeeCloseup({ sips, sipKey, stirN }: { sips: number; sipKey: number; stirN: number }) {
+function CoffeeCloseup({ brk }: { brk: BreakState }) {
   const art = useDeskArt();
-  // a receita do café: mexer com a colher (← → ← →) e dois goles (C C)
-  const STEPS = ['←', '→', '←', '→', 'C', 'C'];
-  const done = stirN + sips;
-  const finished = done >= 6;
+  const { sipDoneN: sips, sipN, stirN, stirTheta } = brk;
+  const stirring = stirN < 4;
   return (
     <div className="absolute inset-x-0 bottom-0 flex justify-center">
       <div className="animate-mugrise relative flex flex-col items-center">
         <div
-          key={sipKey}
-          className={`h-[46vh] w-[46vh] ${sipKey > 0 ? 'animate-sipdrink' : ''}`}
+          key={sipN}
+          className={`h-[46vh] w-[46vh] ${sipN > 0 ? 'animate-sipdrink' : ''}`}
           style={{ transformOrigin: '30% 85%' }}
         >
-          <MugCloseup variant={art.mug} sips={sips} stirN={stirN} />
-        </div>
-        {/* a RECEITA (hud-night): apertada afunda, a próxima pulsa */}
-        <div className="hud-night pointer-events-none absolute bottom-6 left-1/2 flex -translate-x-1/2 flex-col items-center gap-1.5">
-          <span className="flex items-center gap-1.5">
-            {STEPS.map((g, i) => (
-              <kbd
-                key={i}
-                className={`keycap !h-7 !min-w-7 !text-xs ${
-                  i < done ? 'keycap--done' : i === done ? 'keycap--current animate-edgepulse' : ''
-                }`}
-              >
-                {g}
-              </kbd>
-            ))}
-          </span>
-          <span
-            className="font-mono text-[10px] uppercase tracking-[0.18em]"
-            style={{
-              color: 'rgba(255,255,255,0.8)',
-              textShadow: '0 1px 10px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.9)',
-            }}
-          >
-            {finished ? 'café tomado' : done < 4 ? 'mexa o café' : 'gole'}
-          </span>
+          <MugCloseup variant={art.mug} sips={sips} stirring={stirring} theta={stirTheta} />
         </div>
       </div>
+    </div>
+  );
+}
+
+/** Prompt do CAFÉ — o molde do NeckCluster, no CENTRO DA TELA: cruz de setas
+ *  pra mexer em círculo; depois C C pros goles. */
+function CoffeePrompt({ brk }: { brk: BreakState }) {
+  const { sipDoneN: sips, stirN, stirHits, stirNexts } = brk;
+  const stirring = stirN < 4;
+  const finished = !stirring && sips >= 2;
+  const ARROWS = ['↑', '→', '↓', '←'];
+  const arrowKey = (a: number) => (
+    <kbd
+      key={a}
+      className={`keycap ${
+        !stirring || stirHits.includes(a)
+          ? 'keycap--done'
+          : stirNexts.includes(a)
+            ? 'keycap--current animate-edgepulse'
+            : ''
+      }`}
+    >
+      {ARROWS[a]}
+    </kbd>
+  );
+  return (
+    <div className="hud-night flex flex-col items-center gap-2.5" aria-hidden>
+      {stirring ? (
+        <div className="flex flex-col items-center gap-1.5">
+          {arrowKey(0)}
+          <div className="flex items-center gap-14">
+            {arrowKey(3)}
+            {arrowKey(1)}
+          </div>
+          {arrowKey(2)}
+        </div>
+      ) : (
+        <div className="flex items-center gap-3">
+          {[0, 1].map((i) => (
+            <kbd
+              key={i}
+              className={`keycap ${
+                i < sips ? 'keycap--done' : i === sips ? 'keycap--current animate-edgepulse' : ''
+              }`}
+            >
+              C
+            </kbd>
+          ))}
+        </div>
+      )}
+      <Pips total={6} done={stirN + sips} />
+      <span
+        className="font-mono text-[10px] uppercase tracking-[0.2em]"
+        style={{
+          color: finished ? 'var(--pass)' : 'rgba(255,255,255,0.75)',
+          textShadow: '0 1px 10px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.9)',
+        }}
+      >
+        {finished ? 'café tomado ✓' : stirring ? 'mexa em círculo' : 'beba'}
+      </span>
     </div>
   );
 }

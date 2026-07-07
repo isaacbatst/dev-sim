@@ -19,3 +19,7 @@ CC0 não exige, mas creditamos por cortesia.
   "Watering Plants" por **Ultra-Edward**
   (freesound.org/people/Ultra-Edward/sounds/839096/) · **CC0** (não exige
   atribuição; creditado por cortesia).
+- `stir-1.wav` / `stir-2.wav` — colher mexendo o café: edição (REAPER,
+  Isaac Batista) de som por **levi_cunha**
+  (freesound.org/people/levi_cunha/sounds/657179/) · **CC0** (não exige
+  atribuição; creditado por cortesia).
