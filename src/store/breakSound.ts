@@ -186,6 +186,14 @@ export function sip(): void {
   tone(330, 0.4, { type: 'sine', gain: 0.05, slideTo: 215, attack: 0.06, delay: 0.28 });
 }
 
+/** Mexer o café com a colher: clink de cerâmica curto, tom alternando com a
+ *  direção (vai-e-vem) — sobe de leve a cada mexida. */
+export function stir(n: number): void {
+  const base = n % 2 === 0 ? 1900 : 2150;
+  tone(base + n * 40, 0.05, { type: 'sine', gain: 0.09, slideTo: base * 0.8, attack: 0.002 });
+  noise(0.03, { type: 'highpass', freq: 3200, q: 1, gain: 0.05 });
+}
+
 /** Último gole — fecha o ritual do café (o "ahh" já vem no sample). */
 export function sipFinal(): void {
   if (bufs['gulpFinal']) return playSample('gulpFinal', 0.85);

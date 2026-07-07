@@ -339,6 +339,7 @@ export function GameScreen() {
           neckNexts={brk.neckNexts}
           neckHits={brk.neckHits}
           waterN={brk.waterN}
+          stirN={brk.stirN}
           sipDoneN={brk.sipDoneN}
           noteDoneN={brk.noteDoneN}
           sipN={brk.sipN}

@@ -87,7 +87,7 @@ mesmo efeito:
 | --- | --- | --- |
 | **Pescoço** | nada (todos têm) | o **combo circular**: uma volta completa (4 setas em ordem; o CLUSTER de keycaps central guia — apertada afunda, próxima pulsa, pips); contra-giro + mix são o feedback |
 | **Regar** | planta (💰) | molhar todas as células da terra |
-| **Café** | café (💰) | MODO (C pega a xícara → close-up em 1ª pessoa): 3 goles, o nível baixa, a xícara volta à mesa |
+| **Café** | café (💰) | MODO (C pega a xícara → close-up em 1ª pessoa): mexer com a colher (← → ← →) + 2 goles (C C); o nível baixa e a xícara volta à mesa |
 | **Tocar** | teclado (💰) | ~8 notas |
 
 - Feedback de restaurado: alívio (anel/suspiro) + visão limpa na hora (blur some,

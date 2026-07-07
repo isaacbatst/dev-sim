@@ -506,10 +506,21 @@ const MUG_CLOSEUP: Record<
  * café visível por dentro — o nível BAIXA a cada gole (sips 0..3). Vapor
  * enquanto tem café. Reusa a paleta da variante escolhida.
  */
-export function MugCloseup({ variant, sips }: { variant: ArtVariant; sips: number }) {
+export function MugCloseup({
+  variant,
+  sips,
+  stirN = 4,
+}: {
+  variant: ArtVariant;
+  sips: number;
+  /** Mexidas com a colher (0..4). <4 = colher NA xícara, alternando o ângulo. */
+  stirN?: number;
+}) {
   const c = MUG_CLOSEUP[variant];
-  const f = Math.max(0, (3 - sips) / 3); // fração de café restante
+  const f = Math.max(0, (2 - sips) / 2); // fração de café restante (2 goles)
   const empty = f === 0;
+  const stirring = stirN < 4;
+  const spoonAngle = stirN % 2 === 0 ? 16 : -14;
   return (
     <svg viewBox="0 0 260 250" className="size-full" aria-hidden>
       <defs>
@@ -582,14 +593,37 @@ export function MugCloseup({ variant, sips }: { variant: ArtVariant; sips: numbe
             ry={22 * (0.6 + 0.4 * f)}
             fill="#3b2a1a"
           />
-          <ellipse
-            cx={112 - (1 - f) * 6}
-            cy={88 + (1 - f) * 7}
-            rx={26 * f + 8}
-            ry={6 * f + 2}
-            fill="#5c4630"
-            opacity="0.85"
-          />
+          {/* crema desliza com a colher (swirl) */}
+          <g
+            style={{
+              transform: `translateX(${stirring ? (stirN % 2 === 0 ? -8 : 10) : 0}px)`,
+              transition: 'transform 260ms ease',
+            }}
+          >
+            <ellipse
+              cx={112 - (1 - f) * 6}
+              cy={88 + (1 - f) * 7}
+              rx={26 * f + 8}
+              ry={6 * f + 2}
+              fill="#5c4630"
+              opacity="0.85"
+            />
+          </g>
+          {/* COLHER: na xícara enquanto mexe (←→←→); sai antes dos goles */}
+          {stirring && (
+            <g
+              style={{
+                transform: `rotate(${spoonAngle}deg)`,
+                transformOrigin: '138px 92px',
+                transition: 'transform 220ms cubic-bezier(0.3, 0.8, 0.4, 1)',
+              }}
+            >
+              <path d="M138 92 L172 18" stroke="#39404d" strokeWidth="9" strokeLinecap="round" />
+              <path d="M138 92 L172 18" stroke="#cdd3df" strokeWidth="6" strokeLinecap="round" />
+              <path d="M167 24 L174 12" stroke="#f0f3f8" strokeWidth="6" strokeLinecap="round" />
+              <ellipse cx="139" cy="90" rx="13" ry="5" fill="#2c2117" opacity="0.85" />
+            </g>
+          )}
         </g>
       ) : (
         <ellipse cx="130" cy="96" rx="46" ry="10" fill="#241a10" opacity="0.9" />

@@ -60,6 +60,8 @@ export interface BreakState {
   neckHits: number[];
   /** Progresso dos rituais de objeto (pips nos prompts da cena). */
   waterN: number;
+  /** Café: mexidas com a colher (0..4, ← → ← →) antes dos goles. */
+  stirN: number;
   sipDoneN: number;
   noteDoneN: number;
   relief: number;
@@ -86,6 +88,7 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
   const [neckNexts, setNeckNexts] = useState<number[]>([]);
   const [neckHits, setNeckHits] = useState<number[]>([]);
   const [waterN, setWaterN] = useState(0);
+  const [stirN, setStirN] = useState(0);
   const [sipDoneN, setSipDoneN] = useState(0);
   const [noteDoneN, setNoteDoneN] = useState(0);
   const [relief, setRelief] = useState(0);
@@ -117,6 +120,7 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
     if (!active) {
       setMode('mesa');
       setWaterN(0);
+      setStirN(0);
       setSipDoneN(0);
       setNoteDoneN(0);
     }
@@ -145,7 +149,7 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
   /** Um gole no MODO café: 3 goles completam o ritual e a xícara volta pra
    *  mesa (sai do close-up). */
   const sip = useCallback(() => {
-    const isLast = sipCount.current + 1 >= 3;
+    const isLast = sipCount.current + 1 >= 2;
     // o último gole tem sample próprio (gulp-final, com o "ahh" embutido —
     // completeRitual(false) pra não dobrar com o sigh sintetizado)
     if (isLast) S.sipFinal();
@@ -157,6 +161,7 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
       sipCount.current = 0;
       setTimeout(() => {
         setSipDoneN(0);
+        setStirN(0);
         completeRitual(false);
         setRelief((r) => r + 1); // anel de alívio (o "ahh" veio do sample)
         setMode('mesa'); // devolve a xícara à mesa
@@ -359,7 +364,18 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
           e.preventDefault();
           return setMode('mesa');
         }
-        if (k === 'c') {
+        // mexer com a colher: ← → ← → (só a direção esperada avança)
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+          e.preventDefault();
+          const expected = stirN % 2 === 0 ? 'ArrowLeft' : 'ArrowRight';
+          if (stirN < 4 && e.key === expected) {
+            S.stir(stirN);
+            setStirN(stirN + 1);
+          }
+          return;
+        }
+        // goles só depois de mexer (a colher sai da xícara)
+        if (k === 'c' && stirN >= 4) {
           e.preventDefault();
           return sip();
         }
@@ -396,7 +412,7 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, mode, owned.join(','), roll, water, playNote, sip]);
+  }, [active, mode, owned.join(','), roll, water, playNote, sip, stirN]);
 
   return {
     active,
@@ -408,6 +424,7 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
     neckNexts,
     neckHits,
     waterN,
+    stirN,
     sipDoneN,
     noteDoneN,
     relief,
@@ -519,6 +536,7 @@ export function BreakHud({
   neckNexts,
   neckHits,
   waterN,
+  stirN,
   sipDoneN,
   noteDoneN,
   sipN,
@@ -533,6 +551,7 @@ export function BreakHud({
   neckNexts: number[];
   neckHits: number[];
   waterN: number;
+  stirN: number;
   sipDoneN: number;
   noteDoneN: number;
   sipN: number;
@@ -564,7 +583,7 @@ export function BreakHud({
       )}
       {/* CAFÉ em primeira pessoa: a xícara na SUA mão, perto da câmera.
           Cada gole (C) inclina pra boca; o nível baixa; 3º gole devolve à mesa. */}
-      {mode === 'cafe' && <CoffeeCloseup sips={sipDoneN} sipKey={sipN} />}
+      {mode === 'cafe' && <CoffeeCloseup sips={sipDoneN} sipKey={sipN} stirN={stirN} />}
       {mode === 'mesa' && (
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="hud-night flex items-start gap-10" aria-hidden>
@@ -573,7 +592,7 @@ export function BreakHud({
               <RitualOption k="R" label="regar" total={12} done={waterN} />
             )}
             {owned.includes('cafe') && (
-              <RitualOption k="C" label="café" total={3} done={sipDoneN} />
+              <RitualOption k="C" label="café" total={6} done={stirN + sipDoneN} />
             )}
             {owned.includes('teclado') && (
               <RitualOption k="A–K" label="tocar" total={8} done={noteDoneN} wide />
@@ -777,25 +796,36 @@ function Hint({ k, label, wide }: { k: string; label: string; wide?: boolean }) 
 /** O modo café: xícara GRANDE em primeira pessoa, subindo do peito pra perto
  *  da câmera (mugrise); cada gole inclina em direção à boca (sipdrink) e o
  *  nível de café baixa. Keycap C + pips embaixo — a mesma gramática. */
-function CoffeeCloseup({ sips, sipKey }: { sips: number; sipKey: number }) {
+function CoffeeCloseup({ sips, sipKey, stirN }: { sips: number; sipKey: number; stirN: number }) {
   const art = useDeskArt();
+  // a receita do café: mexer com a colher (← → ← →) e dois goles (C C)
+  const STEPS = ['←', '→', '←', '→', 'C', 'C'];
+  const done = stirN + sips;
+  const finished = done >= 6;
   return (
-    <div className="absolute inset-x-0 bottom-0 flex justify-center overflow-hidden">
+    <div className="absolute inset-x-0 bottom-0 flex justify-center">
       <div className="animate-mugrise relative flex flex-col items-center">
         <div
           key={sipKey}
           className={`h-[46vh] w-[46vh] ${sipKey > 0 ? 'animate-sipdrink' : ''}`}
           style={{ transformOrigin: '30% 85%' }}
         >
-          <MugCloseup variant={art.mug} sips={sips} />
+          <MugCloseup variant={art.mug} sips={sips} stirN={stirN} />
         </div>
-        {/* prompt do gole (hud-night: legível sobre qualquer cena) */}
+        {/* a RECEITA (hud-night): apertada afunda, a próxima pulsa */}
         <div className="hud-night pointer-events-none absolute bottom-6 left-1/2 flex -translate-x-1/2 flex-col items-center gap-1.5">
-          <kbd
-            className={`keycap ${sips < 3 ? 'keycap--current animate-edgepulse' : 'keycap--done'}`}
-          >
-            C
-          </kbd>
+          <span className="flex items-center gap-1.5">
+            {STEPS.map((g, i) => (
+              <kbd
+                key={i}
+                className={`keycap !h-7 !min-w-7 !text-xs ${
+                  i < done ? 'keycap--done' : i === done ? 'keycap--current animate-edgepulse' : ''
+                }`}
+              >
+                {g}
+              </kbd>
+            ))}
+          </span>
           <span
             className="font-mono text-[10px] uppercase tracking-[0.18em]"
             style={{
@@ -803,19 +833,7 @@ function CoffeeCloseup({ sips, sipKey }: { sips: number; sipKey: number }) {
               textShadow: '0 1px 10px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.9)',
             }}
           >
-            {sips < 3 ? 'gole' : 'café tomado'}
-          </span>
-          <span className="flex items-center gap-1">
-            {[0, 1, 2].map((i) => (
-              <span
-                key={i}
-                className="size-1.5 rounded-full"
-                style={{
-                  background: i < sips ? 'var(--pass)' : 'rgba(255,255,255,0.25)',
-                  boxShadow: '0 1px 4px rgba(0,0,0,0.8)',
-                }}
-              />
-            ))}
+            {finished ? 'café tomado' : done < 4 ? 'mexa o café' : 'gole'}
           </span>
         </div>
       </div>
