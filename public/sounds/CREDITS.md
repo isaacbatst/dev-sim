@@ -15,3 +15,7 @@ CC0 não exige, mas creditamos por cortesia.
   Isaac Batista) de som por **LewisEmmott5**
   (freesound.org/people/LewisEmmott5/sounds/732576/) · **CC0** (não exige
   atribuição; creditado por cortesia).
+- `regar.wav` — água na terra (rega): edição (REAPER, Isaac Batista) de
+  "Watering Plants" por **Ultra-Edward**
+  (freesound.org/people/Ultra-Edward/sounds/839096/) · **CC0** (não exige
+  atribuição; creditado por cortesia).

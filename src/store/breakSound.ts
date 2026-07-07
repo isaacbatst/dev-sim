@@ -107,6 +107,7 @@ const SAMPLES: Record<string, string> = {
   neckCombo: '/sounds/neck-combo.wav', // fecho do combo circular (mix do Isaac)
   gulp: '/sounds/gulp-action.wav', // gole do café (Isaac)
   gulpFinal: '/sounds/gulp-final.wav', // último gole — fecha o ritual (Isaac)
+  regar: '/sounds/regar.wav', // água na terra por rega (Ultra-Edward, CC0)
 };
 const bufs: Record<string, AudioBuffer> = {};
 const loadingSet = new Set<string>();
@@ -169,8 +170,12 @@ export function pianoNote(freq: number): void {
   tone(freq * 2, 0.3, { type: 'sine', gain: 0.04, cutoff: 3200, attack: 0.004 });
 }
 
-/** Regar: "plip" aguado (tom curto caindo + esguicho macio na terra). */
+/** Regar: água de verdade na terra (sample), pitch variando por rega e
+ *  subindo de leve com o combo — sem efeito metralhadora nas 18 teclas. */
 export function waterDrop(v = 0): void {
+  if (bufs['regar'])
+    return playSample('regar', 0.65, 0.92 + Math.random() * 0.1 + Math.min(0.12, v * 0.012));
+  // fallback sintetizado (sample ainda carregando)
   const pitch = 680 + v * 160;
   tone(pitch, 0.09, { type: 'sine', gain: 0.11, slideTo: 280, attack: 0.001 });
   noise(0.07, { type: 'lowpass', freq: 1100, gain: 0.05, slideTo: 380 });
