@@ -204,7 +204,7 @@ export function Room({
           <PlantArt
             variant={art.plant}
             tier={art.plantTier}
-            size={1.15}
+            size={1.9}
             pulseKey={brk.leafN}
             highlight={brk.mode === 'planta'}
           />
