@@ -28,7 +28,16 @@ const STAGE_COLOR: Record<string, string> = {
   exhausted: '#ff5c57',
 };
 
-export function FatigueDebug({ snapshot, resting }: { snapshot: Snapshot; resting: boolean }) {
+export function FatigueDebug({
+  snapshot,
+  resting,
+  melodyTitle,
+}: {
+  snapshot: Snapshot;
+  resting: boolean;
+  /** A cola atual do tecladinho — revelada aqui pra depurar sem tocar. */
+  melodyTitle: string;
+}) {
   const debugFatigue = useGameStore((s) => s.debugFatigue);
   const debugLapse = useGameStore((s) => s.debugLapse);
   const restoreFatigue = useGameStore((s) => s.restoreFatigue);
@@ -151,6 +160,9 @@ export function FatigueDebug({ snapshot, resting }: { snapshot: Snapshot; restin
         >
           desfocar
         </button>
+      </div>
+      <div className="mt-1.5 border-t border-white/10 pt-1.5 text-white/50">
+        cola do tecladinho: <b className="text-white/80">{melodyTitle}</b>
       </div>
       <ArtToggle />
     </div>

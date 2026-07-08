@@ -88,7 +88,7 @@ mesmo efeito:
 | **Pescoço** | nada (todos têm) | ABERTURA com peso: SEGURAR ← e → ~1s cada (câmera inclina fundo e FICA; medidor enche no keycap; soltar antes recomeça; crack grave por lado) → depois o **giro**: DUAS voltas (8 setas; 1ª âmbar, 2ª verde) fecham com contra-giro automático + mix + alívio; volta à mesa |
 | **Regar** | planta (💰) | MODO (R → close-up da SUA planta): 9 células (QWE/ASD/ZXC) × 2 regas — 1ª INFILTRA, 2ª fica molhada; regador desliza/verte; PROMPT CENTRAL no molde do pescoço (2/2 afunda, 1/2 pulsa); 18/18 → volta à mesa |
 | **Café** | café (💰) | MODO (C pega a xícara → close-up): mexer em CÍRCULO — DUAS voltas (8 setas, a gramática do pescoço; a colher ORBITA, samples stir-1/2) + 2 goles (C C); PROMPT CENTRAL no molde do pescoço; volta à mesa |
-| **Tocar** | teclado (💰) | MODO (T → close-up do tecladinho mecânico): 8 notas em A–K (teclas afundam, ♪ sobe da tecla); PROMPT CENTRAL no molde do pescoço; volta à mesa |
+| **Tocar** | teclado (💰) | MODO (T → close-up do tecladinho): tocar A MELODIA DA COLA (notas certas em sequência; errou recomeça) — colas verificadas de hits 2000s/80s, ← → folheiam, título REVELADO ao completar; a próxima nota pulsa no prompt; volta à mesa |
 
 - Feedback de restaurado: o MESMO toque de sucesso (arpejo C5-E5-G5) fecha os
   4 rituais — a pontuação comum — sobre o sabor próprio de cada um (mix do
