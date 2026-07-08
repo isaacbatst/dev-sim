@@ -36,17 +36,8 @@ const PIANO_IDX: Record<string, number> = Object.fromEntries(PIANO.map((p, i) =>
 type MelodyNote = { k: string; d: number };
 const MELODY_HINTS: { seq: MelodyNote[]; title: string }[] = [
   {
-    // riff em Am (A-A-C-A-G-F-E), DOIS versos — como a música gira;
-    // a resolução do segundo sustenta mais
+    // o verso-VARIAÇÃO do riff, com a descida dobrada (A-A-C-A-G-F-G-F-E)
     seq: [
-      { k: 'h', d: 3 },
-      { k: 'h', d: 1 },
-      { k: 'k', d: 1 },
-      { k: 'h', d: 2 },
-      { k: 'g', d: 2 },
-      { k: 'f', d: 3 },
-      { k: 'd', d: 3 },
-      // 2º verso: a VARIAÇÃO com a descida dobrada (A-A-C-A-G-F-G-F-E)
       { k: 'h', d: 3 },
       { k: 'h', d: 1 },
       { k: 'k', d: 1 },
@@ -87,6 +78,25 @@ const MELODY_HINTS: { seq: MelodyNote[]; title: string }[] = [
       { k: 'a', d: 3 },
     ],
     title: 'Super Mario Bros — o tema',
+  },
+  {
+    // refrão: o "oh-oh-oh-oh-oooh" + "caught in a bad romance" (Am;
+    // RASCUNHO de ouvido — sem fonte de notas disponível, afinar tocando)
+    seq: [
+      { k: 'k', d: 1 },
+      { k: 'k', d: 1 },
+      { k: 'k', d: 1 },
+      { k: 'k', d: 2 },
+      { k: 'j', d: 1 },
+      { k: 'h', d: 3 },
+      { k: 'h', d: 1 },
+      { k: 'h', d: 1 },
+      { k: 'j', d: 1 },
+      { k: 'k', d: 1 },
+      { k: 'j', d: 2 },
+      { k: 'h', d: 4 },
+    ],
+    title: 'Bad Romance — Lady Gaga',
   },
   // anos 80
   {
