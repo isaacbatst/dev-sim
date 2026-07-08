@@ -39,14 +39,14 @@
 da espiral — 45 e não 60: escalada ~33% mais rápida). Implementação:
 `fatigueRates()` em game.ts — fonte da verdade dos números):
 
-| Trabalho contínuo | x    | O que acontece                                                                                                                        |
-| ----------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| até ~2h30         | 0    | nada                                                                                                                                  |
-| ~2h30             | 0    | **telegraph**: bocejo; hint `- pausa` acende em âmbar                                                                                 |
-| 2h30–3h30         | 0–1  | lapsos leves crescendo; dessaturação/blur começam                                                                                     |
-| ~3h15 (exausto)   | 1    | esquecimento entra; hint da pausa PULSA                                                                                               |
-| ~4h00             | 2    | desfoques frequentes (pico ~2.8px), esquecer ~30%/min por ~48min, 2 slots juntos                                                      |
-| ~4h30+            | 2.5+ | comicamente disfuncional: emperrar ~80%/tecla (base 40%), esquecer ~40%/min por ~57min, até 3 slots esquecidos — ignorar não é viável |
+| Trabalho contínuo | x | O que acontece |
+| --- | --- | --- |
+| até ~2h30 | 0 | nada |
+| ~2h30 | 0 | **telegraph**: bocejo; hint `- pausa` acende em âmbar |
+| 2h30–3h30 | 0–1 | lapsos leves crescendo; dessaturação/blur começam |
+| ~3h15 (exausto) | 1 | esquecimento entra; hint da pausa PULSA |
+| ~4h00 | 2 | desfoques frequentes (pico ~2.8px), esquecer ~30%/min por ~48min, 2 slots juntos |
+| ~4h30+ | 2.5+ | comicamente disfuncional: emperrar ~80%/tecla (base 40%), esquecer ~40%/min por ~57min, até 3 slots esquecidos — ignorar não é viável |
 
 - **Peso perceptual (D):** dessaturação/brilho CONTÍNUOS escalam com x; o
   DESFOQUE é um LAPSO discreto (`defocusN`): a vista sai de foco em **1s REAL**
@@ -64,7 +64,6 @@ da espiral — 45 e não 60: escalada ~33% mais rápida). Implementação:
 ## 4. Catálogo de lapsos
 
 **V1 (construir):**
-
 - **Bocejo/piscada** (telegraph + lapso forte): tela escurece 150–250ms reais;
   bocejo com áudio + a visão "estica" (linguagem de câmera do pescoço).
 - **Tecla emperra** (motor): o keycap afunda e não registra; precisa do 2º toque.
@@ -84,12 +83,12 @@ dessaturação progressivos, Slack fantasma (pings de distração), "o PC tá le
 Completar **um** ritual → fresco de novo (reset total). Todos ~4–8s de gesto,
 mesmo efeito:
 
-| Ritual      | Requer           | Gesto                                                                                                                                                                                                                                                                       |
-| ----------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Ritual | Requer | Gesto |
+| --- | --- | --- |
 | **Pescoço** | nada (todos têm) | ABERTURA com peso: SEGURAR ← e → ~1s cada (câmera inclina fundo e FICA; medidor enche no keycap; soltar antes recomeça; crack grave por lado) → depois o **giro**: DUAS voltas (8 setas; 1ª âmbar, 2ª verde) fecham com contra-giro automático + mix + alívio; volta à mesa |
-| **Regar**   | planta (💰)      | MODO (R → close-up da SUA planta): 9 células (QWE/ASD/ZXC) × 2 regas — 1ª INFILTRA, 2ª fica molhada; regador desliza/verte; PROMPT CENTRAL no molde do pescoço (2/2 afunda, 1/2 pulsa); 18/18 → volta à mesa                                                                |
-| **Café**    | café (💰)        | MODO (C pega a xícara → close-up): mexer em CÍRCULO — DUAS voltas (8 setas, a gramática do pescoço; a colher ORBITA, samples stir-1/2) + 2 goles (C C); PROMPT CENTRAL no molde do pescoço; volta à mesa                                                                    |
-| **Tocar**   | teclado (💰)     | MODO (T → close-up do tecladinho): tocar A MELODIA DA COLA (notas certas em sequência; errou recomeça) — colas verificadas de hits 2000s/80s, ← → folheiam, título REVELADO ao completar; a próxima nota pulsa no prompt; volta à mesa                                      |
+| **Regar** | planta (💰) | MODO (R → close-up da SUA planta): 9 células (QWE/ASD/ZXC) × 2 regas — 1ª INFILTRA, 2ª fica molhada; regador desliza/verte; PROMPT CENTRAL no molde do pescoço (2/2 afunda, 1/2 pulsa); 18/18 → volta à mesa |
+| **Café** | café (💰) | MODO (C pega a xícara → close-up): mexer em CÍRCULO — DUAS voltas (8 setas, a gramática do pescoço; a colher ORBITA, samples stir-1/2) + 2 goles (C C); PROMPT CENTRAL no molde do pescoço; volta à mesa |
+| **Tocar** | teclado (💰) | MODO (T → close-up do tecladinho): tocar A MELODIA DA COLA (notas certas em sequência; errou recomeça) — colas verificadas de hits 2000s/80s, ← → folheiam, título REVELADO ao completar; a próxima nota pulsa no prompt; volta à mesa |
 
 - Feedback de restaurado: o MESMO toque de sucesso (arpejo C5-E5-G5) fecha os
   4 rituais — a pontuação comum — sobre o sabor próprio de cada um (mix do
