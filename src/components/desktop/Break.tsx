@@ -36,8 +36,16 @@ const PIANO_IDX: Record<string, number> = Object.fromEntries(PIANO.map((p, i) =>
 type MelodyNote = { k: string; d: number };
 const MELODY_HINTS: { seq: MelodyNote[]; title: string }[] = [
   {
-    // riff em Am, inteiro: A-A-C-A-G-F-E
+    // riff em Am (A-A-C-A-G-F-E), DOIS versos — como a música gira;
+    // a resolução do segundo sustenta mais
     seq: [
+      { k: 'h', d: 3 },
+      { k: 'h', d: 1 },
+      { k: 'k', d: 1 },
+      { k: 'h', d: 2 },
+      { k: 'g', d: 2 },
+      { k: 'f', d: 3 },
+      { k: 'd', d: 3 },
       { k: 'h', d: 3 },
       { k: 'h', d: 1 },
       { k: 'k', d: 1 },
@@ -47,21 +55,6 @@ const MELODY_HINTS: { seq: MelodyNote[]; title: string }[] = [
       { k: 'd', d: 4 },
     ],
     title: 'Seven Nation Army — The White Stripes',
-  },
-  {
-    // arpejos reais do 1º/3º acordes — colcheias CONSTANTES (a assinatura)
-    seq: [
-      { k: 'k', d: 1 },
-      { k: 'g', d: 1 },
-      { k: 'd', d: 1 },
-      { k: 'k', d: 1 },
-      { k: 'g', d: 1 },
-      { k: 'd', d: 1 },
-      { k: 'h', d: 1 },
-      { k: 'f', d: 1 },
-      { k: 's', d: 1 },
-    ],
-    title: 'Clocks — Coldplay',
   },
   {
     // riff em Dm dentro da oitava (ouvido do Isaac): D-A-A-F-E-E-E-E-F-D
@@ -110,20 +103,6 @@ const MELODY_HINTS: { seq: MelodyNote[]; title: string }[] = [
       { k: 'j', d: 4 },
     ],
     title: 'I Want to Break Free — Queen',
-  },
-  {
-    // refrão "but the kid is not my son" (noobnotes: F#-F#-C#'-B-B-F#-D-C#),
-    // F#m→Em pra caber na oitava; o melisma final do "son" fica na 1ª nota
-    seq: [
-      { k: 'd', d: 1 },
-      { k: 'd', d: 1 },
-      { k: 'j', d: 2 },
-      { k: 'h', d: 1 },
-      { k: 'h', d: 1 },
-      { k: 'd', d: 1 },
-      { k: 'a', d: 4 },
-    ],
-    title: 'Billie Jean — Michael Jackson',
   },
   {
     // F#m→Em exato: o "da-da DAAA DAAA · da-da-da-da DAAA"
