@@ -254,6 +254,8 @@ export function useBreak(
   const [melodyRevealed, setMelodyRevealed] = useState(false);
   const matchRef = useRef(0);
   const revealedRef = useRef(false);
+  /** Última nota tocada e ainda pressionada — o fecho espera o keyup. */
+  const pendingFinish = useRef<number | null>(null);
   const [relief, setRelief] = useState(0);
   const tiltRef = useRef({ dx: 0, dy: 0 });
   const seq = useRef<{ a: number; t: number }[]>([]);
@@ -303,6 +305,7 @@ export function useBreak(
       matchRef.current = 0;
       revealedRef.current = false;
       stirSeq.current = [];
+      pendingFinish.current = null;
       stretchRef.current = 0;
       seq.current = [];
       doneSet.current.clear();
@@ -635,32 +638,42 @@ export function useBreak(
         matchRef.current = 0;
         revealedRef.current = true;
         setMelodyRevealed(true); // o título se revela
-        setTimeout(() => {
-          setNoteDoneN(0);
-          setMelodyMatchN(0);
-          S.success(); // o MESMO toque de conquista de todos os rituais
-          completeRitual(false);
-          setRelief((r) => r + 1);
-          setMode('mesa'); // melodia tocada — de volta à mesa
-          markDone('teclado');
-        }, 350); // depois da última nota soar
+        // o fecho ESPERA o release da última nota (senão corta o sustain)
+        pendingFinish.current = idx;
       }
     },
-    [completeRitual, markDone, hintIdx],
+    [hintIdx],
   );
+
+  /** Fecho do ritual do tecladinho — só depois de SOLTAR a última nota
+   *  (o sustain dela termina inteiro; o sucesso entra no respiro). */
+  const finishMelody = useCallback(() => {
+    pendingFinish.current = null;
+    setNoteDoneN(0);
+    setMelodyMatchN(0);
+    S.success(); // o MESMO toque de conquista de todos os rituais
+    completeRitual(false);
+    setRelief((r) => r + 1);
+    setMode('mesa'); // melodia tocada — de volta à mesa
+    markDone('teclado');
+  }, [completeRitual, markDone]);
 
   /** Solta a tecla do tecladinho (keyup) — 90ms de graça pro toque seco
    *  ainda dar um flash visível. */
-  const releaseNote = useCallback((idx: number) => {
-    S.pianoNoteOff(idx);
-    setTimeout(() => {
-      setLit((l) => {
-        const c = { ...l };
-        delete c[idx];
-        return c;
-      });
-    }, 90);
-  }, []);
+  const releaseNote = useCallback(
+    (idx: number) => {
+      S.pianoNoteOff(idx);
+      if (pendingFinish.current === idx) setTimeout(finishMelody, 280); // deixa o release soar
+      setTimeout(() => {
+        setLit((l) => {
+          const c = { ...l };
+          delete c[idx];
+          return c;
+        });
+      }, 90);
+    },
+    [finishMelody],
+  );
 
   // Keyup PERDIDO (blur, troca de foco) não pode deixar nota presa: ao sair
   // do modo teclado ou perder o foco da janela, solta tudo (som e luz).
@@ -734,6 +747,7 @@ export function useBreak(
       if (mode === 'teclado') {
         if (e.key === 'Backspace') {
           e.preventDefault();
+          if (pendingFinish.current !== null) return finishMelody(); // já mereceu
           return setMode('mesa');
         }
         if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
@@ -826,6 +840,7 @@ export function useBreak(
     navHint,
     startPreview,
     releaseNote,
+    finishMelody,
   ]);
 
   return {
