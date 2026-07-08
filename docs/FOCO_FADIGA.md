@@ -90,8 +90,10 @@ mesmo efeito:
 | **Café** | café (💰) | MODO (C pega a xícara → close-up): mexer em CÍRCULO — DUAS voltas (8 setas, a gramática do pescoço; a colher ORBITA, samples stir-1/2) + 2 goles (C C); PROMPT CENTRAL no molde do pescoço; volta à mesa |
 | **Tocar** | teclado (💰) | ~8 notas |
 
-- Feedback de restaurado: alívio (anel/suspiro) + visão limpa na hora (blur some,
-  sons crocantes) — sentido, não anunciado.
+- Feedback de restaurado: o MESMO toque de sucesso (arpejo C5-E5-G5) fecha os
+  4 rituais — a pontuação comum — sobre o sabor próprio de cada um (mix do
+  pescoço, "ahh" do café, melodia do teclado); anel de alívio + visão limpa na
+  hora (blur some, sons crocantes) — sentido, não anunciado.
 - Refazer ritual sem estar cansado = só o prazer (nenhum stack/bônus).
 - O relógio segue correndo na pausa: o custo da pausa continua sendo tempo (§9);
   o ritual dá o quê fazer nesse tempo.

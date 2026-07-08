@@ -247,6 +247,7 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
         setStirHits([]);
         setStirNexts([0, 1, 2, 3]);
         setStirTheta(0);
+        S.success(); // o MESMO toque de conquista de todos os rituais
         completeRitual(false);
         setRelief((r) => r + 1); // anel de alívio (o "ahh" veio do sample)
         setMode('mesa'); // devolve a xícara à mesa
@@ -385,6 +386,7 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
           setRelief((r) => r + 1);
           completeRitual(false); // feedback próprio (contra-giro + mix)
         }, 420);
+        setTimeout(() => S.success(), 900); // o MESMO toque de conquista de todos
         for (let i = 1; i <= 4; i++) {
           setTimeout(() => setTilt(ANGLES[(a - rot * i + 8) % 4]), 420 + (i - 1) * 240);
         }
@@ -431,7 +433,11 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
       if (noteCount.current >= 8) {
         noteCount.current = 0;
         setNoteDoneN(0);
-        completeRitual(true);
+        setTimeout(() => {
+          S.success(); // o MESMO toque de conquista de todos os rituais
+          completeRitual(false);
+          setRelief((r) => r + 1);
+        }, 350); // depois da última nota soar
       }
     },
     [completeRitual],
