@@ -1658,7 +1658,7 @@ function PianoPrompt({ brk }: { brk: BreakState }) {
           textShadow: '0 1px 10px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.9)',
         }}
       >
-        {finished ? 'melodia tocada ✓' : 'toque a melodia da cola'}
+        {finished ? 'melodia tocada ✓' : 'toque a melodia'}
       </span>
     </div>
   );
