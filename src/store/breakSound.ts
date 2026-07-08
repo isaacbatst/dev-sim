@@ -168,9 +168,52 @@ export function sigh(): void {
 }
 
 /** Tecladinho: nota "piano" macia (fundamental + oitava de brilho). */
-export function pianoNote(freq: number): void {
-  tone(freq, 0.55, { type: 'triangle', gain: 0.16, cutoff: 2400, attack: 0.004 });
-  tone(freq * 2, 0.3, { type: 'sine', gain: 0.04, cutoff: 3200, attack: 0.004 });
+/** Tecladinho SUSTENTADO: note-on segura a nota (ataque → corpo) até o
+ *  note-off soltar com release suave. Re-pressionar corta a anterior. */
+const heldNotes: Record<number, { o1: OscillatorNode; o2: OscillatorNode; g: GainNode }> = {};
+
+export function pianoNoteOn(idx: number, freq: number): void {
+  const c = ac();
+  if (!c || !master) return;
+  pianoNoteOff(idx, true);
+  const o1 = c.createOscillator();
+  o1.type = 'triangle';
+  o1.frequency.value = freq;
+  const o2 = c.createOscillator(); // oitava acima, leve — corpo de "piano"
+  o2.type = 'sine';
+  o2.frequency.value = freq * 2;
+  const g = c.createGain();
+  const g2 = c.createGain();
+  g2.gain.value = 0.3;
+  const t = c.currentTime;
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(0.16, t + 0.014); // ataque
+  g.gain.exponentialRampToValueAtTime(0.07, t + 0.5); // assenta no corpo
+  o1.connect(g);
+  o2.connect(g2);
+  g2.connect(g);
+  g.connect(master);
+  o1.start();
+  o2.start();
+  heldNotes[idx] = { o1, o2, g };
+}
+
+export function pianoNoteOff(idx: number, hard = false): void {
+  const c = ac();
+  const h = heldNotes[idx];
+  if (!c || !h) return;
+  delete heldNotes[idx];
+  const t = c.currentTime;
+  h.g.gain.cancelScheduledValues(t);
+  h.g.gain.setValueAtTime(Math.max(h.g.gain.value, 0.0001), t);
+  h.g.gain.exponentialRampToValueAtTime(0.0001, t + (hard ? 0.03 : 0.28)); // release
+  h.o1.stop(t + (hard ? 0.05 : 0.34));
+  h.o2.stop(t + (hard ? 0.05 : 0.34));
+}
+
+/** Solta TODAS (troca de modo, blur — keyup perdido não deixa nota presa). */
+export function pianoAllOff(): void {
+  Object.keys(heldNotes).forEach((k) => pianoNoteOff(Number(k)));
 }
 
 /** Regar: água de verdade na terra (sample), pitch variando por rega e

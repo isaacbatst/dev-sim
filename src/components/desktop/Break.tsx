@@ -609,7 +609,7 @@ export function useBreak(
 
   const playNote = useCallback(
     (idx: number) => {
-      S.pianoNote(PIANO[idx].f);
+      S.pianoNoteOn(idx, PIANO[idx].f); // sustenta até o keyup
       const id = ++nonce.current;
       setNotes((ns) => [...ns, { id, idx }]);
       // acesa ENQUANTO segurada — releaseNote (keyup) apaga
@@ -642,6 +642,7 @@ export function useBreak(
   /** Solta a tecla do tecladinho (keyup) — 90ms de graça pro toque seco
    *  ainda dar um flash visível. */
   const releaseNote = useCallback((idx: number) => {
+    S.pianoNoteOff(idx);
     setTimeout(() => {
       setLit((l) => {
         const c = { ...l };
@@ -650,6 +651,18 @@ export function useBreak(
       });
     }, 90);
   }, []);
+
+  // Keyup PERDIDO (blur, troca de foco) não pode deixar nota presa: ao sair
+  // do modo teclado ou perder o foco da janela, solta tudo (som e luz).
+  useEffect(() => {
+    const allOff = () => {
+      S.pianoAllOff();
+      setLit({});
+    };
+    if (mode !== 'teclado') allOff();
+    window.addEventListener('blur', allOff);
+    return () => window.removeEventListener('blur', allOff);
+  }, [mode]);
 
   const water = useCallback(
     (k: string) => {
