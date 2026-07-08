@@ -36,8 +36,6 @@ const PIANO_IDX: Record<string, number> = Object.fromEntries(PIANO.map((p, i) =>
 type MelodyNote = { k: string; d: number };
 /** Velocidade da fita: ms por unidade de duração (d=1 → 200ms no cursor). */
 const RUN_UNIT = 200;
-/** Respiro antes da 1ª nota chegar ao cursor (a fita se aproxima). */
-const RUN_LEAD = 900;
 const MELODY_HINTS: { seq: MelodyNote[]; title: string }[] = [
   {
     // riff em Am, inteiro: A-A-C-A-G-F-E
@@ -610,7 +608,7 @@ export function useBreak(
     runningRef.current = true;
     setMelodyRunning(true);
     runStart.current = performance.now();
-    const total = RUN_LEAD + seq.reduce((a, n) => a + n.d, 0) * RUN_UNIT;
+    const total = seq.reduce((a, n) => a + n.d, 0) * RUN_UNIT;
     const loop = () => {
       if (!runningRef.current) return;
       const t = performance.now() - runStart.current;
@@ -661,8 +659,8 @@ export function useBreak(
       const t = performance.now() - runStart.current;
       let u = 0;
       for (let i = 0; i < seq.length; i++) {
-        const s0 = RUN_LEAD + u * RUN_UNIT;
-        const s1 = RUN_LEAD + (u + seq[i].d) * RUN_UNIT;
+        const s0 = u * RUN_UNIT;
+        const s1 = (u + seq[i].d) * RUN_UNIT;
         u += seq[i].d;
         if (t < s0 - 160) break; // notas do futuro: fora da janela
         if (hitsRef.current.includes(i)) continue;
@@ -1608,11 +1606,10 @@ function PianoPrompt({ brk }: { brk: BreakState }) {
   );
   const LANE_W = 380;
   const MARKER = 110; // o "agora" (px da borda esquerda da lane)
-  // a fita corre no TEMPO, com RESPIRO antes da 1ª nota (aproximação)
-  const runU = (runT - RUN_LEAD) / RUN_UNIT; // unidades além do cursor
-  const shift = MARKER - (running || finished ? runU * PXU : -(RUN_LEAD / RUN_UNIT) * PXU);
+  // a fita corre no TEMPO: px = (t / RUN_UNIT) × PXU; parada = início
+  const shift = MARKER - (running || finished ? (runT / RUN_UNIT) * PXU : 0);
   // nota sob o cursor agora (pro highlight)
-  const curU = runU;
+  const curU = runT / RUN_UNIT;
   let acc = 0;
   const curIdx = running
     ? melody.seq.findIndex((n) => {
