@@ -1224,10 +1224,58 @@ function CoffeeCloseup({ brk }: { brk: BreakState }) {
   );
 }
 
+/** Colas de melodia (hits dos 2000s adaptados pra 1 oitava branca) — o
+ *  título NÃO aparece: é revelado quando o jogador TOCA a sequência. */
+const MELODY_HINTS: { seq: string[]; title: string }[] = [
+  { seq: ['d', 'd', 'g', 'd', 's', 'a'], title: 'Seven Nation Army — The White Stripes' },
+  { seq: ['k', 'g', 'd', 'k', 'g', 'd', 'j', 'g', 's'], title: 'Clocks — Coldplay' },
+  { seq: ['k', 'k', 'k', 'j', 'k'], title: 'In the End — Linkin Park' },
+  { seq: ['g', 'd', 'g', 'd'], title: 'Irreplaceable — Beyoncé' },
+  { seq: ['a', 'd', 'g', 'k', 'g', 'd', 'a'], title: 'Hallelujah — a do Shrek' },
+  // anos 80 (transposições aproximadas)
+  { seq: ['g', 'g', 'h', 'j', 'k'], title: 'I Want to Break Free — Queen' },
+  { seq: ['h', 'd', 'g', 'h', 'g', 'd', 's', 'd'], title: 'Billie Jean — Michael Jackson' },
+  { seq: ['j', 'h', 'j', 'd', 'k', 'j', 'k', 'j', 'h'], title: 'The Final Countdown — Europe' },
+];
+
 /** TOCAR em primeira pessoa: o tecladinho mecânico perto da câmera — 8
  *  teclas largas (A–K impressas), afundam ao tocar, ♪ sobe da tecla. */
 function PianoCloseup({ brk }: { brk: BreakState }) {
   const { notes, setNotes, lit } = brk;
+  // casa o que foi tocado com a cola (ajuste NA RENDER, padrão sancionado:
+  // cada tecla adiciona UMA nota; processa só a mais nova)
+  const [matchN, setMatchN] = useState(0);
+  const [revealed, setRevealed] = useState(false);
+  const [seenId, setSeenId] = useState(0);
+  // uma cola por visita (sorteada); ← → navegam o caderninho de colas
+  const [hintIdx, setHintIdx] = useState(() => Math.floor(Math.random() * MELODY_HINTS.length));
+  const hint = MELODY_HINTS[hintIdx];
+  const nav = useCallback((dir: number) => {
+    setHintIdx((i) => (i + dir + MELODY_HINTS.length) % MELODY_HINTS.length);
+    setMatchN(0);
+    setRevealed(false);
+  }, []);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        nav(e.key === 'ArrowRight' ? 1 : -1);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [nav]);
+
+  const latest = notes[notes.length - 1];
+  if (latest && latest.id > seenId) {
+    setSeenId(latest.id);
+    if (!revealed) {
+      const want = PIANO_IDX[hint.seq[matchN]];
+      const m = latest.idx === want ? matchN + 1 : latest.idx === PIANO_IDX[hint.seq[0]] ? 1 : 0;
+      if (m >= hint.seq.length) setRevealed(true);
+      setMatchN(m);
+    }
+  }
   return (
     <div className="absolute inset-0 flex items-end justify-center">
       <div className="animate-mugrise relative" style={{ width: 'min(640px, 82vw)' }}>
@@ -1280,6 +1328,43 @@ function PianoCloseup({ brk }: { brk: BreakState }) {
                 </div>
               );
             })}
+          </div>
+          {/* a COLA: uma sequência rabiscada sob as teclas — toque-a inteira
+              e o título se revela */}
+          <div className="hud-night mt-4 flex items-center justify-center gap-1.5">
+            <button
+              onClick={() => nav(-1)}
+              className="keycap pointer-events-auto !h-5 !min-w-5 !text-[10px] opacity-60 transition-opacity hover:opacity-100"
+              aria-label="cola anterior"
+            >
+              ←
+            </button>
+            <span className="mx-1 font-mono text-sm text-white/45" aria-hidden>
+              ♪
+            </span>
+            {hint.seq.map((k, i) => (
+              <kbd
+                key={i}
+                className={`keycap !h-5 !min-w-5 !text-[10px] ${
+                  revealed || i < matchN ? 'keycap--done' : 'opacity-75'
+                }`}
+              >
+                {k.toUpperCase()}
+              </kbd>
+            ))}
+            <span
+              className="ml-1 font-mono text-[10px] uppercase tracking-[0.18em]"
+              style={{ color: revealed ? 'var(--pass)' : 'rgba(255,255,255,0.35)' }}
+            >
+              {revealed ? `${hint.title} ✓` : '?'}
+            </span>
+            <button
+              onClick={() => nav(1)}
+              className="keycap pointer-events-auto ml-1 !h-5 !min-w-5 !text-[10px] opacity-60 transition-opacity hover:opacity-100"
+              aria-label="próxima cola"
+            >
+              →
+            </button>
           </div>
         </div>
       </div>
