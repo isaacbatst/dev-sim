@@ -359,9 +359,7 @@ export function useBreak(
   // daqui NÃO pode reanexar o efeito do teclado a cada frame (o keyup real
   // se perdia no thrash de attach/detach).
   const onRitualRef = useRef(onRitual);
-  onRitualRef.current = onRitual;
   const onAllDoneRef = useRef(onAllDone);
-  onAllDoneRef.current = onAllDone;
 
   /** Ritual completado: restaura a fadiga + feedback de alívio (o pescoço já
    *  tem o próprio — contra-giro + mix). */
@@ -376,7 +374,11 @@ export function useBreak(
   /** Marca um ritual fechado nesta pausa; com TODOS os que o jogador possui
    *  fechados, volta pro trabalho sozinho (já descansou — 1s de respiro). */
   const ownedRef = useRef(owned);
-  ownedRef.current = owned;
+  useEffect(() => {
+    onRitualRef.current = onRitual;
+    onAllDoneRef.current = onAllDone;
+    ownedRef.current = owned;
+  }); // sem deps: espelha o último render (refs não se tocam NA render)
   const markDone = useCallback((kind: string) => {
     doneSet.current.add(kind);
     const need = [
