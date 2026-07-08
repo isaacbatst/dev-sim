@@ -112,16 +112,16 @@ const MELODY_HINTS: { seq: MelodyNote[]; title: string }[] = [
     title: 'I Want to Break Free — Queen',
   },
   {
-    // baixo F#m→Am exato — colcheias constantes (a assinatura)
+    // refrão "but the kid is not my son" (noobnotes: F#-F#-C#'-B-B-F#-D-C#),
+    // F#m→Em pra caber na oitava; o melisma final do "son" fica na 1ª nota
     seq: [
+      { k: 'd', d: 1 },
+      { k: 'd', d: 1 },
+      { k: 'j', d: 2 },
+      { k: 'h', d: 1 },
       { k: 'h', d: 1 },
       { k: 'd', d: 1 },
-      { k: 'g', d: 1 },
-      { k: 'h', d: 1 },
-      { k: 'g', d: 1 },
-      { k: 'd', d: 1 },
-      { k: 's', d: 1 },
-      { k: 'd', d: 1 },
+      { k: 'a', d: 4 },
     ],
     title: 'Billie Jean — Michael Jackson',
   },
