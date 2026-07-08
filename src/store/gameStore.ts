@@ -60,9 +60,9 @@ const DEFAULT_CAREER: Career = {
   wallet: 0,
   streak: 0,
   lastPlayedDate: '',
-  // TESTE: planta+café de fábrica pra provar os rituais da pausa — reverter
-  // pra [] antes de qualquer release (cosmético é conquista da loja).
-  owned: ['planta', 'cafe'],
+  // TESTE: planta+café+teclado de fábrica pra provar os rituais da pausa —
+  // reverter pra [] antes de qualquer release (cosmético é conquista da loja).
+  owned: ['planta', 'cafe', 'teclado'],
   unlockedTasks: [],
   lastPickDay: 0,
 };
