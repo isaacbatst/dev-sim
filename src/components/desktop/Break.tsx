@@ -1623,15 +1623,6 @@ function PianoPrompt({ brk }: { brk: BreakState }) {
           maskImage: 'linear-gradient(90deg, transparent, black 12%, black 88%, transparent)',
         }}
       >
-        {/* o marcador do AGORA */}
-        <div
-          className="absolute inset-y-0 w-px"
-          style={{
-            left: MARKER,
-            background: 'var(--amber)',
-            boxShadow: '0 0 8px 1px color-mix(in srgb, var(--amber) 60%, transparent)',
-          }}
-        />
         {/* a fita: desliza a cada acerto; rebobina ao errar */}
         <div
           className="absolute inset-y-0 flex items-center"
