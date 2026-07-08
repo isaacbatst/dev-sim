@@ -1572,8 +1572,8 @@ function PianoPrompt({ brk }: { brk: BreakState }) {
   const offsets = widths.map((_, i) => widths.slice(0, i).reduce((a, w) => a + w + GAP, 0));
   const LANE_W = 380;
   const MARKER = 110; // o "agora" (px da borda esquerda da lane)
-  const curNote = melody.seq[cur];
-  const shift = MARKER - (offsets[cur] + W(curNote.d) / 2);
+  // o cursor toca o INÍCIO da nota atual — o glide a atravessa inteira
+  const shift = MARKER - offsets[cur];
   return (
     <div className="hud-night flex flex-col items-center gap-2.5" aria-hidden>
       <div
