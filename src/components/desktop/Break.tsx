@@ -612,15 +612,8 @@ export function useBreak(
       S.pianoNote(PIANO[idx].f);
       const id = ++nonce.current;
       setNotes((ns) => [...ns, { id, idx }]);
+      // acesa ENQUANTO segurada — releaseNote (keyup) apaga
       setLit((l) => ({ ...l, [idx]: id }));
-      setTimeout(() => {
-        setLit((l) => {
-          if (l[idx] !== id) return l;
-          const c = { ...l };
-          delete c[idx];
-          return c;
-        });
-      }, 180);
       // o ritual É a melodia da cola: as notas CERTAS em sequência avançam;
       // errada recomeça (como errar a direção no círculo — sem punir)
       const seq = MELODY_HINTS[hintIdx].seq;
@@ -645,6 +638,18 @@ export function useBreak(
     },
     [completeRitual, markDone, hintIdx],
   );
+
+  /** Solta a tecla do tecladinho (keyup) — 90ms de graça pro toque seco
+   *  ainda dar um flash visível. */
+  const releaseNote = useCallback((idx: number) => {
+    setTimeout(() => {
+      setLit((l) => {
+        const c = { ...l };
+        delete c[idx];
+        return c;
+      });
+    }, 90);
+  }, []);
 
   const water = useCallback(
     (k: string) => {
@@ -718,7 +723,8 @@ export function useBreak(
         }
         if (PIANO_IDX[k] !== undefined) {
           e.preventDefault();
-          return playNote(PIANO_IDX[k]);
+          if (!e.repeat) playNote(PIANO_IDX[k]); // segurar sustenta, não re-toca
+          return;
         }
         return;
       }
@@ -770,6 +776,9 @@ export function useBreak(
     };
     const onUp = (e: KeyboardEvent) => {
       if (mode === 'pescoco' && DIRS[e.key]) stretchCancel();
+      // soltar tecla do tecladinho apaga a nota (qualquer modo — inofensivo)
+      const pi = PIANO_IDX[e.key.toLowerCase()];
+      if (pi !== undefined) releaseNote(pi);
     };
     window.addEventListener('keydown', onKey);
     window.addEventListener('keyup', onUp);
@@ -793,6 +802,7 @@ export function useBreak(
     stretchCancel,
     navHint,
     startPreview,
+    releaseNote,
   ]);
 
   return {
@@ -1390,7 +1400,9 @@ function RegarPrompt({ brk }: { brk: BreakState }) {
 function Hint({ k, label, wide }: { k: string; label: string; wide?: boolean }) {
   return (
     <span className="flex items-center gap-1.5">
-      <kbd className={`keycap !h-5 !text-[10px] ${wide ? '!min-w-10' : '!min-w-5'}`}>{k}</kbd>
+      <kbd className={`keycap !h-5 !min-w-0 !px-0 !text-[10px] ${wide ? '!min-w-10' : '!min-w-5'}`}>
+        {k}
+      </kbd>
       {label}
     </span>
   );
@@ -1500,14 +1512,14 @@ function PianoCloseup({ brk }: { brk: BreakState }) {
             {hint.seq.map((n, i) => (
               <kbd
                 key={i}
-                className={`keycap !h-5 !text-[10px] ${
+                className={`keycap !h-5 !min-w-0 !px-0 !text-[10px] ${
                   previewIdx === i
                     ? 'keycap--current'
                     : revealed || i < matchN
                       ? 'keycap--done'
                       : 'opacity-75'
                 }`}
-                style={{ minWidth: 20 + (n.d - 1) * 13 }}
+                style={{ width: 20 + (n.d - 1) * 13 }}
               >
                 {n.k.toUpperCase()}
               </kbd>
@@ -1605,7 +1617,7 @@ function PianoPrompt({ brk }: { brk: BreakState }) {
           {melody.seq.map((n, i) => (
             <kbd
               key={i}
-              className={`keycap !h-7 !text-xs ${
+              className={`keycap !h-7 !min-w-0 !px-0 !text-xs ${
                 previewIdx === i
                   ? 'keycap--current'
                   : previewIdx < 0 && (finished || i < noteDoneN)
@@ -1614,7 +1626,7 @@ function PianoPrompt({ brk }: { brk: BreakState }) {
                       ? 'keycap--current animate-edgepulse'
                       : ''
               }`}
-              style={{ minWidth: W(n.d), marginRight: GAP }}
+              style={{ width: W(n.d), marginRight: GAP }}
             >
               {n.k.toUpperCase()}
             </kbd>
