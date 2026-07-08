@@ -3,6 +3,13 @@
 # This is NOT the Next.js you know
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
+
+> Aprendizado (Next 16/Turbopack): `NEXT_PUBLIC_*` **ausente** no ambiente do
+> build NÃO é inlinada — vira lookup em runtime num shim de `process.env` e o
+> dead-code elimination não roda (os dois lados do branch embarcam). Para
+> branch de dados por env (ex.: `src/data/melodies.ts`), defina um default na
+> chave `env` do `next.config.ts` — aí o valor sempre vira literal e o lado
+> morto sai do bundle. Confira com grep no `.next/static/chunks/`.
 <!-- END:nextjs-agent-rules -->
 
 # Dev Task Chef

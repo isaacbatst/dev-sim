@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as S from '@/store/breakSound';
+import { MELODIES, type MelodyNote } from '@/data/melodies';
 import { CanArt, MugArt, MugCloseup, PlantArt, useDeskArt } from './deskArt';
 
 /**
@@ -27,113 +28,6 @@ const PIANO: { k: string; f: number }[] = [
   { k: 'k', f: 523.25 },
 ];
 const PIANO_IDX: Record<string, number> = Object.fromEntries(PIANO.map((p, i) => [p.k, i]));
-
-/** ⚠ COPYRIGHT — TROCAR ANTES DE QUALQUER RELEASE PÚBLICO: melodias
- *  reconhecíveis são o núcleo protegido das composições (sem regra de
- *  "poucas notas é livre"; Mario = Nintendo, a mais litigiosa). Pool atual
- *  é DE TESTE. Substituir por domínio público (Ode à Alegria, Für Elise,
- *  cirandas/cantigas BR) ou originais — a mecânica fica, os DADOS trocam.
- *
- *  Colas de melodia (2000s+80s) AUDITADAS (partituras/tabs + ouvido do
- *  Isaac no próprio jogo) e transpostas pra 1 oitava branca (A=dó4..K=dó5).
- *  `d` = duração RELATIVA da nota (1=rápida, 2=média, 3-4=segura) — vira
- *  largura do keycap (piano-roll) e o ritmo do preview mudo (espaço).
- *  O ritmo NUNCA é julgado (latência web) — é dica pra soar certo. */
-type MelodyNote = { k: string; d: number };
-const MELODY_HINTS: { seq: MelodyNote[] }[] = [
-  {
-    // Seven Nation Army (White Stripes) — o verso-VARIAÇÃO do riff, com a
-    // descida dobrada (A-A-C-A-G-F-G-F-E)
-    seq: [
-      { k: 'h', d: 3 },
-      { k: 'h', d: 1 },
-      { k: 'k', d: 1 },
-      { k: 'h', d: 2 },
-      { k: 'g', d: 2 },
-      { k: 'f', d: 1 },
-      { k: 'g', d: 1 },
-      { k: 'f', d: 1 },
-      { k: 'd', d: 4 },
-    ],
-  },
-  {
-    // In the End (Linkin Park) — riff em Dm dentro da oitava (ouvido do
-    // Isaac): D-A-A-F-E-E-E-E-F-D
-    seq: [
-      { k: 's', d: 3 },
-      { k: 'h', d: 1 },
-      { k: 'h', d: 1 },
-      { k: 'f', d: 2 },
-      { k: 'd', d: 1 },
-      { k: 'd', d: 1 },
-      { k: 'd', d: 1 },
-      { k: 'd', d: 1 },
-      { k: 'f', d: 2 },
-      { k: 's', d: 3 },
-    ],
-  },
-  {
-    // Super Mario Bros (o tema) — transposto pra caber inteiro, intervalos
-    // exatos + dó grave final
-    seq: [
-      { k: 'h', d: 1 },
-      { k: 'h', d: 1 },
-      { k: 'h', d: 2 },
-      { k: 'f', d: 1 },
-      { k: 'h', d: 2 },
-      { k: 'k', d: 3 },
-      { k: 'a', d: 3 },
-    ],
-  },
-  {
-    // Bad Romance (Lady Gaga) — refrão: o "OOOH" ondulado (C-D-E-C-F-E-F-E-D,
-    // ouvido do Isaac)
-    seq: [
-      { k: 'a', d: 1 },
-      { k: 's', d: 1 },
-      { k: 'd', d: 1 },
-      { k: 'a', d: 1 },
-      { k: 'f', d: 1 },
-      { k: 'd', d: 1 },
-      { k: 'f', d: 1 },
-      { k: 'd', d: 1 },
-      { k: 's', d: 3 },
-    ],
-  },
-  // anos 80
-  {
-    // I Want to Break Free (Queen) — 2 versos (ouvido do Isaac sobre a
-    // partitura em Mi): D-G-A-A-A-B · D-G-A-^C-B
-    seq: [
-      { k: 's', d: 1 },
-      { k: 'g', d: 2 },
-      { k: 'h', d: 1 },
-      { k: 'h', d: 1 },
-      { k: 'h', d: 2 },
-      { k: 'j', d: 4 },
-      { k: 's', d: 1 },
-      { k: 'g', d: 2 },
-      { k: 'h', d: 1 },
-      { k: 'k', d: 2 },
-      { k: 'j', d: 4 },
-    ],
-  },
-  {
-    // The Final Countdown (Europe) — F#m→Em exato: o "da-da DAAA DAAA ·
-    // da-da-da-da DAAA"
-    seq: [
-      { k: 'j', d: 1 },
-      { k: 'h', d: 1 },
-      { k: 'j', d: 2 },
-      { k: 'd', d: 4 },
-      { k: 'k', d: 1 },
-      { k: 'j', d: 1 },
-      { k: 'k', d: 2 },
-      { k: 'j', d: 2 },
-      { k: 'h', d: 4 },
-    ],
-  },
-];
 
 const SOIL: string[][] = [
   ['q', 'w', 'e'],
@@ -242,7 +136,7 @@ export function useBreak(
   const stirSeq = useRef<number[]>([]);
   const [sipDoneN, setSipDoneN] = useState(0);
   const [noteDoneN, setNoteDoneN] = useState(0);
-  const [hintIdx, setHintIdx] = useState(() => Math.floor(Math.random() * MELODY_HINTS.length));
+  const [hintIdx, setHintIdx] = useState(() => Math.floor(Math.random() * MELODIES.length));
   const [melodyMatchN, setMelodyMatchN] = useState(0);
   const [melodyDone, setMelodyDone] = useState(false);
   const matchRef = useRef(0);
@@ -581,7 +475,7 @@ export function useBreak(
   }, []);
   const startPreview = useCallback(() => {
     if (previewTs.current.length) return; // já rodando
-    const seq = MELODY_HINTS[hintIdx].seq;
+    const seq = MELODIES[hintIdx].seq;
     const UNIT = 170; // ms por unidade de duração
     let t = 0;
     seq.forEach((n, i) => {
@@ -600,7 +494,7 @@ export function useBreak(
    *  (a quantidade de notas do ritual segue a cola). */
   const navHint = useCallback(
     (dir: number) => {
-      setHintIdx((i) => (i + dir + MELODY_HINTS.length) % MELODY_HINTS.length);
+      setHintIdx((i) => (i + dir + MELODIES.length) % MELODIES.length);
       matchRef.current = 0;
       setMelodyMatchN(0);
       setMelodyDone(false);
@@ -619,7 +513,7 @@ export function useBreak(
       setLit((l) => ({ ...l, [idx]: id }));
       // o ritual É a melodia da cola: as notas CERTAS em sequência avançam;
       // errada recomeça (como errar a direção no círculo — sem punir)
-      const seq = MELODY_HINTS[hintIdx].seq;
+      const seq = MELODIES[hintIdx].seq;
       const want = PIANO_IDX[seq[matchRef.current].k];
       matchRef.current = idx === want ? matchRef.current + 1 : idx === PIANO_IDX[seq[0].k] ? 1 : 0;
       setMelodyMatchN(matchRef.current);
@@ -851,7 +745,7 @@ export function useBreak(
     stirTheta,
     sipDoneN,
     noteDoneN,
-    melody: MELODY_HINTS[hintIdx],
+    melody: MELODIES[hintIdx],
     melodyMatchN,
     melodyDone,
     navHint,

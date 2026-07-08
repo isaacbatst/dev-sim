@@ -6,6 +6,10 @@ Port dos arquivos `.tres` do Godot para objetos TS. **Migração concluída** (F
   do input map do `project.godot`.
 - `tasks.ts` — **9 tasks** compostas de segments.
 - `tickets.ts` — **13 tickets** (9 single-task wrap + 4 multi-task) + `TICKET_POOL`.
+- `melodies.ts` — colas do tecladinho da pausa. Dois sets injetados NO BUILD:
+  `melodies.free.ts` (domínio público, **default de release**) e
+  `melodies.proprietary.ts` (⚠ copyright — só teste local, via
+  `NEXT_PUBLIC_MELODY_SET=proprietary`; o set não usado sai do bundle por DCE).
 
 Templates são **estáticos** (definição de conteúdo). O estado de runtime
 (`*Instance`, cursor, progresso) vive em `core/domain/instance.ts` — não misturar.

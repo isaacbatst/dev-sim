@@ -1,0 +1,130 @@
+import type { Melody } from './melodies';
+
+/** Pool FREE — composições em domínio público (autor 70+ anos morto ou
+ *  tradicional/folclore; a letra do Parabéns tem dono, a MELODIA não).
+ *  É o set default de release. Transcrições próprias pra 1 oitava branca.
+ *
+ *  ⚠ PENDENTE a auditoria de ouvido do Isaac no próprio jogo (o set de
+ *  teste teve) — conferir notas E durações antes do release. Candidatas
+ *  pra ampliar depois de auditar: Ciranda Cirandinha, Escravos de Jó,
+ *  Atirei o Pau no Gato, Marcha Soldado, O Cravo e a Rosa. */
+export const MELODIES_FREE: Melody[] = [
+  {
+    // Ode à Alegria (Beethoven, 9ª) — a frase inteira, em dó:
+    // E-E-F-G-G-F-E-D-C-C-D-E · E.-D-D
+    seq: [
+      { k: 'd', d: 1 },
+      { k: 'd', d: 1 },
+      { k: 'f', d: 1 },
+      { k: 'g', d: 1 },
+      { k: 'g', d: 1 },
+      { k: 'f', d: 1 },
+      { k: 'd', d: 1 },
+      { k: 's', d: 1 },
+      { k: 'a', d: 1 },
+      { k: 'a', d: 1 },
+      { k: 's', d: 1 },
+      { k: 'd', d: 1 },
+      { k: 'd', d: 2 },
+      { k: 's', d: 1 },
+      { k: 's', d: 3 },
+    ],
+  },
+  {
+    // Brilha Brilha Estrelinha (tradicional) — pergunta e resposta:
+    // C-C-G-G-A-A-G · F-F-E-E-D-D-C
+    seq: [
+      { k: 'a', d: 1 },
+      { k: 'a', d: 1 },
+      { k: 'g', d: 1 },
+      { k: 'g', d: 1 },
+      { k: 'h', d: 1 },
+      { k: 'h', d: 1 },
+      { k: 'g', d: 3 },
+      { k: 'f', d: 1 },
+      { k: 'f', d: 1 },
+      { k: 'd', d: 1 },
+      { k: 'd', d: 1 },
+      { k: 's', d: 1 },
+      { k: 's', d: 1 },
+      { k: 'a', d: 3 },
+    ],
+  },
+  {
+    // Frère Jacques (tradicional) — os 2 primeiros versos:
+    // C-D-E-C ×2 · E-F-G ×2
+    seq: [
+      { k: 'a', d: 1 },
+      { k: 's', d: 1 },
+      { k: 'd', d: 1 },
+      { k: 'a', d: 1 },
+      { k: 'a', d: 1 },
+      { k: 's', d: 1 },
+      { k: 'd', d: 1 },
+      { k: 'a', d: 1 },
+      { k: 'd', d: 1 },
+      { k: 'f', d: 1 },
+      { k: 'g', d: 3 },
+      { k: 'd', d: 1 },
+      { k: 'f', d: 1 },
+      { k: 'g', d: 3 },
+    ],
+  },
+  {
+    // Parabéns pra Você (melodia = "Good Morning to All", 1893) —
+    // transposta pra FÁ pra caber na oitava: C-C-D-C-F-E · C-C-D-C-G-F
+    seq: [
+      { k: 'a', d: 1 },
+      { k: 'a', d: 1 },
+      { k: 's', d: 2 },
+      { k: 'a', d: 2 },
+      { k: 'f', d: 2 },
+      { k: 'd', d: 3 },
+      { k: 'a', d: 1 },
+      { k: 'a', d: 1 },
+      { k: 's', d: 2 },
+      { k: 'a', d: 2 },
+      { k: 'g', d: 2 },
+      { k: 'f', d: 3 },
+    ],
+  },
+  {
+    // When the Saints (tradicional) — as 3 chamadas e a resposta:
+    // C-E-F-G ×3 · E-C-E-D
+    seq: [
+      { k: 'a', d: 1 },
+      { k: 'd', d: 1 },
+      { k: 'f', d: 1 },
+      { k: 'g', d: 4 },
+      { k: 'a', d: 1 },
+      { k: 'd', d: 1 },
+      { k: 'f', d: 1 },
+      { k: 'g', d: 4 },
+      { k: 'a', d: 1 },
+      { k: 'd', d: 1 },
+      { k: 'f', d: 1 },
+      { k: 'g', d: 2 },
+      { k: 'd', d: 2 },
+      { k: 'a', d: 2 },
+      { k: 'd', d: 1 },
+      { k: 's', d: 4 },
+    ],
+  },
+  {
+    // Jingle Bells (Pierpont, 1857) — o refrão:
+    // E-E-E · E-E-E · E-G-C-D-E
+    seq: [
+      { k: 'd', d: 1 },
+      { k: 'd', d: 1 },
+      { k: 'd', d: 2 },
+      { k: 'd', d: 1 },
+      { k: 'd', d: 1 },
+      { k: 'd', d: 2 },
+      { k: 'd', d: 1 },
+      { k: 'g', d: 1 },
+      { k: 'a', d: 1 },
+      { k: 's', d: 1 },
+      { k: 'd', d: 4 },
+    ],
+  },
+];
