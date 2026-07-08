@@ -1465,22 +1465,14 @@ function CoffeeCloseup({ brk }: { brk: BreakState }) {
 /** TOCAR em primeira pessoa: o tecladinho mecânico perto da câmera — 8
  *  teclas largas (A–K impressas), afundam ao tocar, ♪ sobe da tecla. */
 function PianoCloseup({ brk }: { brk: BreakState }) {
-  const {
-    notes,
-    setNotes,
-    lit,
-    melody: hint,
-    melodyMatchN: matchN,
-    melodyRevealed: revealed,
-    navHint: nav,
-    previewIdx,
-  } = brk;
+  const { notes, setNotes, lit } = brk;
   return (
     <div className="absolute inset-0 flex items-end justify-center">
       <div className="animate-mugrise relative" style={{ width: 'min(640px, 82vw)' }}>
-        {/* corpo do tecladinho (o mecânico RGB da mesa, de perto) */}
+        {/* o corpo do tecladinho: SÓ as teclas — o teclado mesmo, nas cores
+            dos keycaps da casa (borda com saia, âmbar ao afundar) */}
         <div
-          className="relative rounded-t-[26px] px-5 pb-10 pt-5"
+          className="relative rounded-t-[26px] px-5 pb-8 pt-5"
           style={{
             background: 'linear-gradient(180deg, #232632, #0c0e14)',
             boxShadow:
@@ -1493,21 +1485,21 @@ function PianoCloseup({ brk }: { brk: BreakState }) {
               return (
                 <div
                   key={pk.k}
-                  className="relative h-28 flex-1 rounded-md"
+                  className="relative flex h-28 flex-1 items-center justify-center rounded-lg"
                   style={{
                     background: pressed
-                      ? 'linear-gradient(180deg, #f5a623, #b97c1a)'
-                      : 'linear-gradient(180deg, #3a3f50, #23273a)',
-                    boxShadow: pressed
-                      ? 'inset 0 3px 8px rgba(0,0,0,0.5)'
-                      : '0 4px 0 #14161f, 0 1px 0 rgba(255,255,255,0.12) inset',
+                      ? 'color-mix(in srgb, #f5a623 14%, #12141d)'
+                      : 'linear-gradient(180deg, #1a1d26, #12141d)',
+                    border: `1px solid ${pressed ? '#f5a623' : '#2b3140'}`,
+                    borderBottomWidth: pressed ? 2 : 6,
                     transform: pressed ? 'translateY(4px)' : 'none',
-                    transition: 'transform 90ms ease, background 120ms ease, box-shadow 90ms ease',
+                    transition:
+                      'transform 70ms ease, background 110ms ease, border-color 110ms ease',
                   }}
                 >
                   <span
-                    className="absolute bottom-1.5 left-1/2 -translate-x-1/2 font-mono text-xs uppercase"
-                    style={{ color: pressed ? 'rgba(0,0,0,0.65)' : 'rgba(255,255,255,0.4)' }}
+                    className="font-mono text-2xl font-bold uppercase"
+                    style={{ color: pressed ? '#f5a623' : 'rgba(255,255,255,0.72)' }}
                   >
                     {pk.k}
                   </span>
@@ -1528,76 +1520,17 @@ function PianoCloseup({ brk }: { brk: BreakState }) {
               );
             })}
           </div>
-          {/* a COLA: uma sequência rabiscada sob as teclas — toque-a inteira
-              e o título se revela */}
-          <div className="hud-night mt-4 flex items-center justify-center gap-1.5">
-            <button
-              onClick={() => nav(-1)}
-              className="keycap pointer-events-auto !h-5 !min-w-5 !text-[10px] opacity-60 transition-opacity hover:opacity-100"
-              aria-label="cola anterior"
-            >
-              ←
-            </button>
-            <span className="mx-1 font-mono text-sm text-white/45" aria-hidden>
-              ♪
-            </span>
-            {hint.seq.map((n, i) => (
-              <kbd
-                key={i}
-                className={`keycap !h-5 !min-w-0 !px-0 !text-[10px] ${
-                  previewIdx === i
-                    ? 'keycap--current'
-                    : revealed || i < matchN
-                      ? 'keycap--done'
-                      : 'opacity-75'
-                }`}
-                style={{ width: 20 + (n.d - 1) * 13 }}
-              >
-                {n.k.toUpperCase()}
-              </kbd>
-            ))}
-            <span
-              className="ml-1 font-mono text-[10px] uppercase tracking-[0.18em]"
-              style={{ color: revealed ? 'var(--pass)' : 'rgba(255,255,255,0.35)' }}
-            >
-              {revealed ? '✓' : '?'}
-            </span>
-            <button
-              onClick={() => nav(1)}
-              className="keycap pointer-events-auto ml-1 !h-5 !min-w-5 !text-[10px] opacity-60 transition-opacity hover:opacity-100"
-              aria-label="próxima cola"
-            >
-              →
-            </button>
-          </div>
-          {/* dica do preview: espaço acende a cola no RITMO (mudo) */}
-          {!revealed && (
-            <div className="mt-1.5 flex items-center justify-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.18em] text-white/35">
-              <kbd className="keycap !h-4 !min-w-8 !text-[9px] opacity-60">␣</kbd>
-              ritmo
-            </div>
-          )}
-          {/* a REVELAÇÃO: o nome da música em linha própria, abaixo da cola */}
-          {revealed && (
-            <div
-              className="beat-in mt-2 text-center font-mono text-xs tracking-[0.14em]"
-              style={{ color: 'var(--pass)', textShadow: '0 1px 10px rgba(0,0,0,0.8)' }}
-            >
-              ♫ {hint.title}
-            </div>
-          )}
         </div>
       </div>
     </div>
   );
 }
-
 /** Prompt do TOCAR — LANE estilo guitar hero, horizontal: o marcador do
  *  AGORA é fixo; a fita de notas (largura = duração) desliza a cada acerto
  *  (e REBOBINA ao errar). O preview (espaço) faz a fita correr no ritmo
  *  real — noção de tempo sentida, não anotada. */
 function PianoPrompt({ brk }: { brk: BreakState }) {
-  const { noteDoneN, melody, previewIdx } = brk;
+  const { noteDoneN, melody, previewIdx, melodyRevealed } = brk;
   const finished = noteDoneN >= melody.seq.length;
   // durante o preview a fita segue o ritmo; fora dele, o seu progresso
   const cur = previewIdx >= 0 ? previewIdx : Math.min(noteDoneN, melody.seq.length - 1);
@@ -1664,7 +1597,7 @@ function PianoPrompt({ brk }: { brk: BreakState }) {
           textShadow: '0 1px 10px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.9)',
         }}
       >
-        {finished ? 'melodia tocada ✓' : 'toque a melodia'}
+        {melodyRevealed ? `♫ ${melody.title} ✓` : finished ? 'melodia tocada ✓' : 'toque a melodia'}
       </span>
     </div>
   );
