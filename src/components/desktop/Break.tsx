@@ -80,15 +80,18 @@ const MELODY_HINTS: { seq: MelodyNote[]; title: string }[] = [
     title: 'Super Mario Bros — o tema',
   },
   {
-    // refrão: o "oh-oh-oh-oh-oooh" + "caught in a bad romance" (Am;
-    // RASCUNHO de ouvido — sem fonte de notas disponível, afinar tocando)
+    // refrão: o "OOOH" ondulado (C-D-E-C-F-E-F-E-D, ouvido do Isaac) +
+    // "caught in a bad romance"
     seq: [
-      { k: 'k', d: 1 },
-      { k: 'k', d: 1 },
-      { k: 'k', d: 1 },
-      { k: 'k', d: 2 },
-      { k: 'j', d: 1 },
-      { k: 'h', d: 3 },
+      { k: 'a', d: 1 },
+      { k: 's', d: 1 },
+      { k: 'd', d: 1 },
+      { k: 'a', d: 1 },
+      { k: 'f', d: 1 },
+      { k: 'd', d: 1 },
+      { k: 'f', d: 1 },
+      { k: 'd', d: 1 },
+      { k: 's', d: 2 },
       { k: 'h', d: 1 },
       { k: 'h', d: 1 },
       { k: 'j', d: 1 },
