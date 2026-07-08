@@ -94,13 +94,19 @@ const MELODY_HINTS: { seq: MelodyNote[]; title: string }[] = [
   },
   // anos 80
   {
-    // 1º verso (ouvido do Isaac sobre a partitura em Mi): D-G-A-A-A-B
+    // 2 versos (ouvido do Isaac sobre a partitura em Mi):
+    // D-G-A-A-A-B · D-G-A-^C-B
     seq: [
       { k: 's', d: 1 },
       { k: 'g', d: 2 },
       { k: 'h', d: 1 },
       { k: 'h', d: 1 },
       { k: 'h', d: 2 },
+      { k: 'j', d: 4 },
+      { k: 's', d: 1 },
+      { k: 'g', d: 2 },
+      { k: 'h', d: 1 },
+      { k: 'k', d: 2 },
       { k: 'j', d: 4 },
     ],
     title: 'I Want to Break Free — Queen',
@@ -1542,30 +1548,78 @@ function PianoCloseup({ brk }: { brk: BreakState }) {
   );
 }
 
-/** Prompt do TOCAR — o molde do NeckCluster, no CENTRO DA TELA: as 8 teclas
- *  da escala; a tocada acende na hora; 8 notas (quaisquer) fecham. */
+/** Prompt do TOCAR — LANE estilo guitar hero, horizontal: o marcador do
+ *  AGORA é fixo; a fita de notas (largura = duração) desliza a cada acerto
+ *  (e REBOBINA ao errar). O preview (espaço) faz a fita correr no ritmo
+ *  real — noção de tempo sentida, não anotada. */
 function PianoPrompt({ brk }: { brk: BreakState }) {
-  const { noteDoneN, lit, melody } = brk;
+  const { noteDoneN, melody, previewIdx } = brk;
   const finished = noteDoneN >= melody.seq.length;
-  // a gramática da casa: a PRÓXIMA nota da cola pulsa; a tocada acende
-  const next = melody.seq[noteDoneN]?.k;
+  // durante o preview a fita segue o ritmo; fora dele, o seu progresso
+  const cur = previewIdx >= 0 ? previewIdx : Math.min(noteDoneN, melody.seq.length - 1);
+  // GLIDE: avançar 1 nota desliza LINEAR pela duração dela (você "preenche"
+  // o tempo da nota segurando); erro/navegação rebobinam com snap rápido
+  const UNIT = 170;
+  const [prevCur, setPrevCur] = useState(cur);
+  const [glide, setGlide] = useState(240);
+  if (prevCur !== cur) {
+    setPrevCur(cur);
+    setGlide(cur === prevCur + 1 ? melody.seq[prevCur].d * UNIT : 240);
+  }
+  const W = (d: number) => 22 + (d - 1) * 14;
+  const GAP = 6;
+  const widths = melody.seq.map((n) => W(n.d));
+  const offsets = widths.map((_, i) => widths.slice(0, i).reduce((a, w) => a + w + GAP, 0));
+  const LANE_W = 380;
+  const MARKER = 110; // o "agora" (px da borda esquerda da lane)
+  const curNote = melody.seq[cur];
+  const shift = MARKER - (offsets[cur] + W(curNote.d) / 2);
   return (
     <div className="hud-night flex flex-col items-center gap-2.5" aria-hidden>
-      <div className="flex items-center gap-1.5">
-        {PIANO.map((pk, i) => (
-          <kbd
-            key={pk.k}
-            className={`keycap ${
-              finished || lit[i] !== undefined
-                ? 'keycap--done'
-                : pk.k === next
-                  ? 'keycap--current animate-edgepulse'
-                  : ''
-            }`}
-          >
-            {pk.k.toUpperCase()}
-          </kbd>
-        ))}
+      <div
+        className="relative"
+        style={{
+          width: LANE_W,
+          height: 46,
+          overflow: 'hidden',
+          maskImage: 'linear-gradient(90deg, transparent, black 12%, black 88%, transparent)',
+        }}
+      >
+        {/* o marcador do AGORA */}
+        <div
+          className="absolute inset-y-0 w-px"
+          style={{
+            left: MARKER,
+            background: 'var(--amber)',
+            boxShadow: '0 0 8px 1px color-mix(in srgb, var(--amber) 60%, transparent)',
+          }}
+        />
+        {/* a fita: desliza a cada acerto; rebobina ao errar */}
+        <div
+          className="absolute inset-y-0 flex items-center"
+          style={{
+            transform: `translateX(${shift.toFixed(0)}px)`,
+            transition: `transform ${glide}ms ${glide > 300 ? 'linear' : 'cubic-bezier(0.3, 0.7, 0.3, 1)'}`,
+          }}
+        >
+          {melody.seq.map((n, i) => (
+            <kbd
+              key={i}
+              className={`keycap !h-7 !text-xs ${
+                previewIdx === i
+                  ? 'keycap--current'
+                  : previewIdx < 0 && (finished || i < noteDoneN)
+                    ? 'keycap--done'
+                    : previewIdx < 0 && i === noteDoneN
+                      ? 'keycap--current animate-edgepulse'
+                      : ''
+              }`}
+              style={{ minWidth: W(n.d), marginRight: GAP }}
+            >
+              {n.k.toUpperCase()}
+            </kbd>
+          ))}
+        </div>
       </div>
       <Pips total={melody.seq.length} done={noteDoneN} />
       <span
