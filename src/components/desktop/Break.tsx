@@ -28,7 +28,13 @@ const PIANO: { k: string; f: number }[] = [
 ];
 const PIANO_IDX: Record<string, number> = Object.fromEntries(PIANO.map((p, i) => [p.k, i]));
 
-/** Colas de melodia (2000s+80s) AUDITADAS (partituras/tabs + ouvido do
+/** ⚠ COPYRIGHT — TROCAR ANTES DE QUALQUER RELEASE PÚBLICO: melodias
+ *  reconhecíveis são o núcleo protegido das composições (sem regra de
+ *  "poucas notas é livre"; Mario = Nintendo, a mais litigiosa). Pool atual
+ *  é DE TESTE. Substituir por domínio público (Ode à Alegria, Für Elise,
+ *  cirandas/cantigas BR) ou originais — a mecânica fica, os DADOS trocam.
+ *
+ *  Colas de melodia (2000s+80s) AUDITADAS (partituras/tabs + ouvido do
  *  Isaac no próprio jogo) e transpostas pra 1 oitava branca (A=dó4..K=dó5).
  *  `d` = duração RELATIVA da nota (1=rápida, 2=média, 3-4=segura) — vira
  *  largura do keycap (piano-roll) e o ritmo do preview mudo (espaço).
