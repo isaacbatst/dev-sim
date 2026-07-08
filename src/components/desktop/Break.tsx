@@ -34,6 +34,8 @@ const PIANO_IDX: Record<string, number> = Object.fromEntries(PIANO.map((p, i) =>
  *  largura do keycap (piano-roll) e o ritmo do preview mudo (espaço).
  *  O ritmo NUNCA é julgado (latência web) — é dica pra soar certo. */
 type MelodyNote = { k: string; d: number };
+/** Velocidade da fita: ms por unidade de duração (d=1 → 200ms no cursor). */
+const RUN_UNIT = 200;
 const MELODY_HINTS: { seq: MelodyNote[]; title: string }[] = [
   {
     // riff em Am, inteiro: A-A-C-A-G-F-E
@@ -200,8 +202,12 @@ export interface BreakState {
   noteDoneN: number;
   /** A cola atual do tecladinho (a música É o alvo do ritual). */
   melody: { seq: MelodyNote[]; title: string };
-  /** Índice aceso pelo preview de RITMO (espaço; -1 = parado). */
-  previewIdx: number;
+  /** A fita está CORRENDO (guitar hero — espaço dá o play). */
+  melodyRunning: boolean;
+  /** Tempo decorrido da fita (ms desde o play). */
+  melodyRunT: number;
+  /** Índices das notas ACERTADAS no cursor nesta rodada. */
+  melodyHits: number[];
   /** Notas da cola já casadas em sequência (afundam na cola). */
   melodyMatchN: number;
   /** Tocou a cola inteira — o título se revela. */
@@ -566,31 +572,55 @@ export function useBreak(
     [spinning, setTilt, completeRitual, markDone],
   );
 
-  /** Preview de RITMO (espaço): a cola acende nota a nota na duração certa,
-   *  SEM som — mostra o tempo sem entregar a melodia de ouvido. */
-  const [previewIdx, setPreviewIdx] = useState(-1);
-  const previewTs = useRef<ReturnType<typeof setTimeout>[]>([]);
-  const stopPreview = useCallback(() => {
-    previewTs.current.forEach(clearTimeout);
-    previewTs.current = [];
-    setPreviewIdx(-1);
+  /** A FITA (guitar hero): espaço dá o play; ela corre em velocidade
+   *  constante e você acerta cada nota ENQUANTO cruza o cursor. Julgamento
+   *  é contra a posição VISUAL (não áudio — latência não entra) e a janela
+   *  é a duração inteira da nota + tolerância. Perder nota não pune: a
+   *  fita segue; sem completar tudo, volta ao repouso pra tentar de novo. */
+  const [melodyRunning, setMelodyRunning] = useState(false);
+  const [melodyRunT, setMelodyRunT] = useState(0);
+  const [melodyHits, setMelodyHits] = useState<number[]>([]);
+  const runningRef = useRef(false);
+  const runStart = useRef(0);
+  const hitsRef = useRef<number[]>([]);
+  const rafRef = useRef(0);
+
+  const stopRun = useCallback((keepHits = false) => {
+    cancelAnimationFrame(rafRef.current);
+    runningRef.current = false;
+    setMelodyRunning(false);
+    setMelodyRunT(0);
+    if (!keepHits) {
+      hitsRef.current = [];
+      setMelodyHits([]);
+      setMelodyMatchN(0);
+      setNoteDoneN(0);
+    }
   }, []);
-  const startPreview = useCallback(() => {
-    if (previewTs.current.length) return; // já rodando
+
+  const startRun = useCallback(() => {
+    if (runningRef.current) return;
     const seq = MELODY_HINTS[hintIdx].seq;
-    const UNIT = 170; // ms por unidade de duração
-    let t = 0;
-    seq.forEach((n, i) => {
-      previewTs.current.push(setTimeout(() => setPreviewIdx(i), t));
-      t += n.d * UNIT;
-    });
-    previewTs.current.push(
-      setTimeout(() => {
-        previewTs.current = [];
-        setPreviewIdx(-1);
-      }, t + 120),
-    );
-  }, [hintIdx]);
+    hitsRef.current = [];
+    setMelodyHits([]);
+    setMelodyMatchN(0);
+    setNoteDoneN(0);
+    runningRef.current = true;
+    setMelodyRunning(true);
+    runStart.current = performance.now();
+    const total = seq.reduce((a, n) => a + n.d, 0) * RUN_UNIT;
+    const loop = () => {
+      if (!runningRef.current) return;
+      const t = performance.now() - runStart.current;
+      setMelodyRunT(t);
+      if (t >= total + 400) {
+        stopRun(); // fita acabou sem completar — repouso, tenta de novo
+        return;
+      }
+      rafRef.current = requestAnimationFrame(loop);
+    };
+    rafRef.current = requestAnimationFrame(loop);
+  }, [hintIdx, stopRun]);
 
   /** Folheia o caderninho de colas: troca a música-alvo e zera o progresso
    *  (a quantidade de notas do ritual segue a cola). */
@@ -602,9 +632,9 @@ export function useBreak(
       revealedRef.current = false;
       setMelodyRevealed(false);
       setNoteDoneN(0);
-      stopPreview();
+      stopRun();
     },
-    [stopPreview],
+    [stopRun],
   );
 
   const playNote = useCallback(
@@ -621,29 +651,45 @@ export function useBreak(
           return c;
         });
       }, 180);
-      // o ritual É a melodia da cola: as notas CERTAS em sequência avançam;
-      // errada recomeça (como errar a direção no círculo — sem punir)
+      // GUITAR HERO: com a fita correndo, a tecla certa ENQUANTO a nota
+      // cruza o cursor marca o acerto (janela = duração + tolerância).
+      // Nota perdida não pune — a fita segue; sem todas, roda de novo.
+      if (!runningRef.current) return;
       const seq = MELODY_HINTS[hintIdx].seq;
-      const want = PIANO_IDX[seq[matchRef.current].k];
-      matchRef.current = idx === want ? matchRef.current + 1 : idx === PIANO_IDX[seq[0].k] ? 1 : 0;
-      setMelodyMatchN(matchRef.current);
-      setNoteDoneN(matchRef.current); // pips = progresso NA melodia
-      if (matchRef.current >= seq.length) {
-        matchRef.current = 0;
-        revealedRef.current = true;
-        setMelodyRevealed(true); // o título se revela
-        setTimeout(() => {
-          setNoteDoneN(0);
-          setMelodyMatchN(0);
-          S.success(); // o MESMO toque de conquista de todos os rituais
-          completeRitual(false);
-          setRelief((r) => r + 1);
-          setMode('mesa'); // melodia tocada — de volta à mesa
-          markDone('teclado');
-        }, 350); // depois da última nota soar
+      const t = performance.now() - runStart.current;
+      let u = 0;
+      for (let i = 0; i < seq.length; i++) {
+        const s0 = u * RUN_UNIT;
+        const s1 = (u + seq[i].d) * RUN_UNIT;
+        u += seq[i].d;
+        if (t < s0 - 160) break; // notas do futuro: fora da janela
+        if (hitsRef.current.includes(i)) continue;
+        if (PIANO_IDX[seq[i].k] === idx && t >= s0 - 160 && t <= s1 + 90) {
+          hitsRef.current = [...hitsRef.current, i];
+          setMelodyHits(hitsRef.current);
+          setMelodyMatchN(hitsRef.current.length);
+          setNoteDoneN(hitsRef.current.length);
+          if (hitsRef.current.length >= seq.length) {
+            stopRun(true); // congela os acertos pro fecho
+            revealedRef.current = true;
+            setMelodyRevealed(true); // o título se revela
+            setTimeout(() => {
+              setNoteDoneN(0);
+              setMelodyMatchN(0);
+              hitsRef.current = [];
+              setMelodyHits([]);
+              S.success(); // o MESMO toque de conquista de todos os rituais
+              completeRitual(false);
+              setRelief((r) => r + 1);
+              setMode('mesa'); // melodia tocada — de volta à mesa
+              markDone('teclado');
+            }, 400);
+          }
+          break;
+        }
       }
     },
-    [completeRitual, markDone, hintIdx],
+    [completeRitual, markDone, hintIdx, stopRun],
   );
 
   const water = useCallback(
@@ -714,7 +760,7 @@ export function useBreak(
         }
         if (e.key === ' ') {
           e.preventDefault();
-          return startPreview(); // ver o ritmo (mudo)
+          return startRun(); // play na fita — acerte as notas no cursor
         }
         if (PIANO_IDX[k] !== undefined) {
           e.preventDefault();
@@ -792,7 +838,7 @@ export function useBreak(
     stretchStart,
     stretchCancel,
     navHint,
-    startPreview,
+    startRun,
   ]);
 
   return {
@@ -818,7 +864,9 @@ export function useBreak(
     melodyMatchN,
     melodyRevealed,
     navHint,
-    previewIdx,
+    melodyRunning,
+    melodyRunT,
+    melodyHits,
     relief,
     notes,
     setNotes,
@@ -1426,10 +1474,9 @@ function PianoCloseup({ brk }: { brk: BreakState }) {
     setNotes,
     lit,
     melody: hint,
-    melodyMatchN: matchN,
+    melodyHits: hits,
     melodyRevealed: revealed,
     navHint: nav,
-    previewIdx,
   } = brk;
   return (
     <div className="absolute inset-0 flex items-end justify-center">
@@ -1501,11 +1548,7 @@ function PianoCloseup({ brk }: { brk: BreakState }) {
               <kbd
                 key={i}
                 className={`keycap !h-5 !text-[10px] ${
-                  previewIdx === i
-                    ? 'keycap--current'
-                    : revealed || i < matchN
-                      ? 'keycap--done'
-                      : 'opacity-75'
+                  revealed || hits.includes(i) ? 'keycap--done' : 'opacity-75'
                 }`}
                 style={{ minWidth: 20 + (n.d - 1) * 13 }}
               >
@@ -1530,7 +1573,7 @@ function PianoCloseup({ brk }: { brk: BreakState }) {
           {!revealed && (
             <div className="mt-1.5 flex items-center justify-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.18em] text-white/35">
               <kbd className="keycap !h-4 !min-w-8 !text-[9px] opacity-60">␣</kbd>
-              ritmo
+              rodar a fita
             </div>
           )}
           {/* a REVELAÇÃO: o nome da música em linha própria, abaixo da cola */}
@@ -1548,32 +1591,33 @@ function PianoCloseup({ brk }: { brk: BreakState }) {
   );
 }
 
-/** Prompt do TOCAR — LANE estilo guitar hero, horizontal: o marcador do
- *  AGORA é fixo; a fita de notas (largura = duração) desliza a cada acerto
- *  (e REBOBINA ao errar). O preview (espaço) faz a fita correr no ritmo
- *  real — noção de tempo sentida, não anotada. */
+/** Prompt do TOCAR — GUITAR HERO: espaço dá o play e a fita corre em
+ *  velocidade constante sob o cursor fixo; acerte cada nota ENQUANTO ela
+ *  cruza o cursor. Largura da nota = duração (28px por unidade); acertada
+ *  afunda em verde, perdida esmaece — a fita segue, sem punir. */
 function PianoPrompt({ brk }: { brk: BreakState }) {
-  const { noteDoneN, melody, previewIdx } = brk;
-  const finished = noteDoneN >= melody.seq.length;
-  // durante o preview a fita segue o ritmo; fora dele, o seu progresso
-  const cur = previewIdx >= 0 ? previewIdx : Math.min(noteDoneN, melody.seq.length - 1);
-  // GLIDE: avançar 1 nota desliza LINEAR pela duração dela (você "preenche"
-  // o tempo da nota segurando); erro/navegação rebobinam com snap rápido
-  const UNIT = 170;
-  const [prevCur, setPrevCur] = useState(cur);
-  const [glide, setGlide] = useState(240);
-  if (prevCur !== cur) {
-    setPrevCur(cur);
-    setGlide(cur === prevCur + 1 ? melody.seq[prevCur].d * UNIT : 240);
-  }
-  const W = (d: number) => 22 + (d - 1) * 14;
-  const GAP = 6;
-  const widths = melody.seq.map((n) => W(n.d));
-  const offsets = widths.map((_, i) => widths.slice(0, i).reduce((a, w) => a + w + GAP, 0));
+  const { melody, melodyRunning: running, melodyRunT: runT, melodyHits: hits } = brk;
+  const finished = hits.length >= melody.seq.length;
+  const PXU = 28; // px por unidade de duração (largura E velocidade)
+  const GAP = 2;
+  const W = (d: number) => d * PXU - GAP;
+  const offsets = melody.seq.map((_, i) =>
+    melody.seq.slice(0, i).reduce((a, n) => a + n.d * PXU, 0),
+  );
   const LANE_W = 380;
   const MARKER = 110; // o "agora" (px da borda esquerda da lane)
-  // o cursor toca o INÍCIO da nota atual — o glide a atravessa inteira
-  const shift = MARKER - offsets[cur];
+  // a fita corre no TEMPO: px = (t / RUN_UNIT) × PXU; parada = início
+  const shift = MARKER - (running || finished ? (runT / RUN_UNIT) * PXU : 0);
+  // nota sob o cursor agora (pro highlight)
+  const curU = runT / RUN_UNIT;
+  let acc = 0;
+  const curIdx = running
+    ? melody.seq.findIndex((n) => {
+        const inside = curU >= acc && curU < acc + n.d;
+        acc += n.d;
+        return inside;
+      })
+    : -1;
   return (
     <div className="hud-night flex flex-col items-center gap-2.5" aria-hidden>
       <div
@@ -1585,7 +1629,7 @@ function PianoPrompt({ brk }: { brk: BreakState }) {
           maskImage: 'linear-gradient(90deg, transparent, black 12%, black 88%, transparent)',
         }}
       >
-        {/* o marcador do AGORA */}
+        {/* o cursor do AGORA */}
         <div
           className="absolute inset-y-0 w-px"
           style={{
@@ -1594,34 +1638,36 @@ function PianoPrompt({ brk }: { brk: BreakState }) {
             boxShadow: '0 0 8px 1px color-mix(in srgb, var(--amber) 60%, transparent)',
           }}
         />
-        {/* a fita: desliza a cada acerto; rebobina ao errar */}
+        {/* a fita: corre no tempo (rAF), sem transition */}
         <div
           className="absolute inset-y-0 flex items-center"
           style={{
-            transform: `translateX(${shift.toFixed(0)}px)`,
-            transition: `transform ${glide}ms ${glide > 300 ? 'linear' : 'cubic-bezier(0.3, 0.7, 0.3, 1)'}`,
+            transform: `translateX(${shift.toFixed(1)}px)`,
+            transition: running ? 'none' : 'transform 300ms cubic-bezier(0.3, 0.7, 0.3, 1)',
           }}
         >
-          {melody.seq.map((n, i) => (
-            <kbd
-              key={i}
-              className={`keycap !h-7 !text-xs ${
-                previewIdx === i
-                  ? 'keycap--current'
-                  : previewIdx < 0 && (finished || i < noteDoneN)
-                    ? 'keycap--done'
-                    : previewIdx < 0 && i === noteDoneN
-                      ? 'keycap--current animate-edgepulse'
-                      : ''
-              }`}
-              style={{ minWidth: W(n.d), marginRight: GAP }}
-            >
-              {n.k.toUpperCase()}
-            </kbd>
-          ))}
+          {melody.seq.map((n, i) => {
+            const missed = running && curIdx > i && !hits.includes(i);
+            const passed = running && offsets[i] + n.d * PXU < curU * PXU;
+            return (
+              <kbd
+                key={i}
+                className={`keycap !h-7 !text-xs ${
+                  hits.includes(i) ? 'keycap--done' : curIdx === i ? 'keycap--current' : ''
+                }`}
+                style={{
+                  minWidth: W(n.d),
+                  marginRight: GAP,
+                  opacity: (missed || passed) && !hits.includes(i) ? 0.35 : undefined,
+                }}
+              >
+                {n.k.toUpperCase()}
+              </kbd>
+            );
+          })}
         </div>
       </div>
-      <Pips total={melody.seq.length} done={noteDoneN} />
+      <Pips total={melody.seq.length} done={hits.length} />
       <span
         className="font-mono text-[10px] uppercase tracking-[0.2em]"
         style={{
@@ -1629,7 +1675,7 @@ function PianoPrompt({ brk }: { brk: BreakState }) {
           textShadow: '0 1px 10px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.9)',
         }}
       >
-        {finished ? 'melodia tocada ✓' : 'toque a melodia da cola'}
+        {finished ? 'melodia tocada ✓' : running ? 'acerte no cursor!' : '␣ roda a fita'}
       </span>
     </div>
   );
