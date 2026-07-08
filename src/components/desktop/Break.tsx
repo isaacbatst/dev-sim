@@ -28,27 +28,112 @@ const PIANO: { k: string; f: number }[] = [
 ];
 const PIANO_IDX: Record<string, number> = Object.fromEntries(PIANO.map((p, i) => [p.k, i]));
 
-/** Colas de melodia (2000s+80s) VERIFICADAS em fontes de partitura/tab e
- *  transpostas pra 1 oitava branca (dó maior, A=dó4..K=dó5). "≈" = uma nota
- *  comprometida por limite da oitava (contorno/ritmo preservados):
- *  - 7 Nation Army: riff em Am (A-A-C-A-G-F-E) — cabe INTEIRO, com a nota
- *    final; intervalos exatos.
- *  - Clocks: arpejos reais do 1º e 3º acordes (Eb e Fm → C e Dm, exatos).
- *  - In the End: riff no arranjo Dm dentro da oitava (D-A-A-F-E-E-E-E-F-D,
- *    afinado de ouvido pelo Isaac).
- *  - Queen: 1º verso (D-G-A-A-A-B — afinado de ouvido sobre a partitura).
- *  - Billie Jean: baixo F#m→Am exato. Final Countdown: F#m→Em exato.
- *  - Mario: transposto pra caber inteiro (A-A-A-F-A-^C + C grave no fim —
- *    todos os intervalos exatos, incluindo a queda de oitava final). */
-const MELODY_HINTS: { seq: string[]; title: string }[] = [
-  { seq: ['h', 'h', 'k', 'h', 'g', 'f', 'd'], title: 'Seven Nation Army — The White Stripes' },
-  { seq: ['k', 'g', 'd', 'k', 'g', 'd', 'h', 'f', 's'], title: 'Clocks — Coldplay' },
-  { seq: ['s', 'h', 'h', 'f', 'd', 'd', 'd', 'd', 'f', 's'], title: 'In the End — Linkin Park' },
-  { seq: ['h', 'h', 'h', 'f', 'h', 'k', 'a'], title: 'Super Mario Bros — o tema' },
+/** Colas de melodia (2000s+80s) AUDITADAS (partituras/tabs + ouvido do
+ *  Isaac no próprio jogo) e transpostas pra 1 oitava branca (A=dó4..K=dó5).
+ *  `d` = duração RELATIVA da nota (1=rápida, 2=média, 3-4=segura) — vira
+ *  largura do keycap (piano-roll) e o ritmo do preview mudo (espaço).
+ *  O ritmo NUNCA é julgado (latência web) — é dica pra soar certo. */
+type MelodyNote = { k: string; d: number };
+const MELODY_HINTS: { seq: MelodyNote[]; title: string }[] = [
+  {
+    // riff em Am, inteiro: A-A-C-A-G-F-E
+    seq: [
+      { k: 'h', d: 3 },
+      { k: 'h', d: 1 },
+      { k: 'k', d: 1 },
+      { k: 'h', d: 2 },
+      { k: 'g', d: 2 },
+      { k: 'f', d: 3 },
+      { k: 'd', d: 4 },
+    ],
+    title: 'Seven Nation Army — The White Stripes',
+  },
+  {
+    // arpejos reais do 1º/3º acordes — colcheias CONSTANTES (a assinatura)
+    seq: [
+      { k: 'k', d: 1 },
+      { k: 'g', d: 1 },
+      { k: 'd', d: 1 },
+      { k: 'k', d: 1 },
+      { k: 'g', d: 1 },
+      { k: 'd', d: 1 },
+      { k: 'h', d: 1 },
+      { k: 'f', d: 1 },
+      { k: 's', d: 1 },
+    ],
+    title: 'Clocks — Coldplay',
+  },
+  {
+    // riff em Dm dentro da oitava (ouvido do Isaac): D-A-A-F-E-E-E-E-F-D
+    seq: [
+      { k: 's', d: 3 },
+      { k: 'h', d: 1 },
+      { k: 'h', d: 1 },
+      { k: 'f', d: 2 },
+      { k: 'd', d: 1 },
+      { k: 'd', d: 1 },
+      { k: 'd', d: 1 },
+      { k: 'd', d: 1 },
+      { k: 'f', d: 2 },
+      { k: 's', d: 3 },
+    ],
+    title: 'In the End — Linkin Park',
+  },
+  {
+    // transposto pra caber inteiro, intervalos exatos + dó grave final
+    seq: [
+      { k: 'h', d: 1 },
+      { k: 'h', d: 1 },
+      { k: 'h', d: 2 },
+      { k: 'f', d: 1 },
+      { k: 'h', d: 2 },
+      { k: 'k', d: 3 },
+      { k: 'a', d: 3 },
+    ],
+    title: 'Super Mario Bros — o tema',
+  },
   // anos 80
-  { seq: ['s', 'g', 'h', 'h', 'h', 'j'], title: 'I Want to Break Free — Queen' },
-  { seq: ['h', 'd', 'g', 'h', 'g', 'd', 's', 'd'], title: 'Billie Jean — Michael Jackson' },
-  { seq: ['j', 'h', 'j', 'd', 'k', 'j', 'k', 'j', 'h'], title: 'The Final Countdown — Europe' },
+  {
+    // 1º verso (ouvido do Isaac sobre a partitura em Mi): D-G-A-A-A-B
+    seq: [
+      { k: 's', d: 1 },
+      { k: 'g', d: 2 },
+      { k: 'h', d: 1 },
+      { k: 'h', d: 1 },
+      { k: 'h', d: 2 },
+      { k: 'j', d: 4 },
+    ],
+    title: 'I Want to Break Free — Queen',
+  },
+  {
+    // baixo F#m→Am exato — colcheias constantes (a assinatura)
+    seq: [
+      { k: 'h', d: 1 },
+      { k: 'd', d: 1 },
+      { k: 'g', d: 1 },
+      { k: 'h', d: 1 },
+      { k: 'g', d: 1 },
+      { k: 'd', d: 1 },
+      { k: 's', d: 1 },
+      { k: 'd', d: 1 },
+    ],
+    title: 'Billie Jean — Michael Jackson',
+  },
+  {
+    // F#m→Em exato: o "da-da DAAA DAAA · da-da-da-da DAAA"
+    seq: [
+      { k: 'j', d: 1 },
+      { k: 'h', d: 1 },
+      { k: 'j', d: 2 },
+      { k: 'd', d: 4 },
+      { k: 'k', d: 1 },
+      { k: 'j', d: 1 },
+      { k: 'k', d: 2 },
+      { k: 'j', d: 2 },
+      { k: 'h', d: 4 },
+    ],
+    title: 'The Final Countdown — Europe',
+  },
 ];
 
 const SOIL: string[][] = [
@@ -108,7 +193,9 @@ export interface BreakState {
   sipDoneN: number;
   noteDoneN: number;
   /** A cola atual do tecladinho (a música É o alvo do ritual). */
-  melody: { seq: string[]; title: string };
+  melody: { seq: MelodyNote[]; title: string };
+  /** Índice aceso pelo preview de RITMO (espaço; -1 = parado). */
+  previewIdx: number;
   /** Notas da cola já casadas em sequência (afundam na cola). */
   melodyMatchN: number;
   /** Tocou a cola inteira — o título se revela. */
@@ -473,16 +560,46 @@ export function useBreak(
     [spinning, setTilt, completeRitual, markDone],
   );
 
+  /** Preview de RITMO (espaço): a cola acende nota a nota na duração certa,
+   *  SEM som — mostra o tempo sem entregar a melodia de ouvido. */
+  const [previewIdx, setPreviewIdx] = useState(-1);
+  const previewTs = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const stopPreview = useCallback(() => {
+    previewTs.current.forEach(clearTimeout);
+    previewTs.current = [];
+    setPreviewIdx(-1);
+  }, []);
+  const startPreview = useCallback(() => {
+    if (previewTs.current.length) return; // já rodando
+    const seq = MELODY_HINTS[hintIdx].seq;
+    const UNIT = 170; // ms por unidade de duração
+    let t = 0;
+    seq.forEach((n, i) => {
+      previewTs.current.push(setTimeout(() => setPreviewIdx(i), t));
+      t += n.d * UNIT;
+    });
+    previewTs.current.push(
+      setTimeout(() => {
+        previewTs.current = [];
+        setPreviewIdx(-1);
+      }, t + 120),
+    );
+  }, [hintIdx]);
+
   /** Folheia o caderninho de colas: troca a música-alvo e zera o progresso
    *  (a quantidade de notas do ritual segue a cola). */
-  const navHint = useCallback((dir: number) => {
-    setHintIdx((i) => (i + dir + MELODY_HINTS.length) % MELODY_HINTS.length);
-    matchRef.current = 0;
-    setMelodyMatchN(0);
-    revealedRef.current = false;
-    setMelodyRevealed(false);
-    setNoteDoneN(0);
-  }, []);
+  const navHint = useCallback(
+    (dir: number) => {
+      setHintIdx((i) => (i + dir + MELODY_HINTS.length) % MELODY_HINTS.length);
+      matchRef.current = 0;
+      setMelodyMatchN(0);
+      revealedRef.current = false;
+      setMelodyRevealed(false);
+      setNoteDoneN(0);
+      stopPreview();
+    },
+    [stopPreview],
+  );
 
   const playNote = useCallback(
     (idx: number) => {
@@ -501,8 +618,8 @@ export function useBreak(
       // o ritual É a melodia da cola: as notas CERTAS em sequência avançam;
       // errada recomeça (como errar a direção no círculo — sem punir)
       const seq = MELODY_HINTS[hintIdx].seq;
-      const want = PIANO_IDX[seq[matchRef.current]];
-      matchRef.current = idx === want ? matchRef.current + 1 : idx === PIANO_IDX[seq[0]] ? 1 : 0;
+      const want = PIANO_IDX[seq[matchRef.current].k];
+      matchRef.current = idx === want ? matchRef.current + 1 : idx === PIANO_IDX[seq[0].k] ? 1 : 0;
       setMelodyMatchN(matchRef.current);
       setNoteDoneN(matchRef.current); // pips = progresso NA melodia
       if (matchRef.current >= seq.length) {
@@ -589,6 +706,10 @@ export function useBreak(
           e.preventDefault();
           return navHint(e.key === 'ArrowRight' ? 1 : -1);
         }
+        if (e.key === ' ') {
+          e.preventDefault();
+          return startPreview(); // ver o ritmo (mudo)
+        }
         if (PIANO_IDX[k] !== undefined) {
           e.preventDefault();
           return playNote(PIANO_IDX[k]);
@@ -665,6 +786,7 @@ export function useBreak(
     stretchStart,
     stretchCancel,
     navHint,
+    startPreview,
   ]);
 
   return {
@@ -690,6 +812,7 @@ export function useBreak(
     melodyMatchN,
     melodyRevealed,
     navHint,
+    previewIdx,
     relief,
     notes,
     setNotes,
@@ -1300,6 +1423,7 @@ function PianoCloseup({ brk }: { brk: BreakState }) {
     melodyMatchN: matchN,
     melodyRevealed: revealed,
     navHint: nav,
+    previewIdx,
   } = brk;
   return (
     <div className="absolute inset-0 flex items-end justify-center">
@@ -1367,14 +1491,19 @@ function PianoCloseup({ brk }: { brk: BreakState }) {
             <span className="mx-1 font-mono text-sm text-white/45" aria-hidden>
               ♪
             </span>
-            {hint.seq.map((k, i) => (
+            {hint.seq.map((n, i) => (
               <kbd
                 key={i}
-                className={`keycap !h-5 !min-w-5 !text-[10px] ${
-                  revealed || i < matchN ? 'keycap--done' : 'opacity-75'
+                className={`keycap !h-5 !text-[10px] ${
+                  previewIdx === i
+                    ? 'keycap--current'
+                    : revealed || i < matchN
+                      ? 'keycap--done'
+                      : 'opacity-75'
                 }`}
+                style={{ minWidth: 20 + (n.d - 1) * 13 }}
               >
-                {k.toUpperCase()}
+                {n.k.toUpperCase()}
               </kbd>
             ))}
             <span
@@ -1391,6 +1520,13 @@ function PianoCloseup({ brk }: { brk: BreakState }) {
               →
             </button>
           </div>
+          {/* dica do preview: espaço acende a cola no RITMO (mudo) */}
+          {!revealed && (
+            <div className="mt-1.5 flex items-center justify-center gap-1.5 font-mono text-[9px] uppercase tracking-[0.18em] text-white/35">
+              <kbd className="keycap !h-4 !min-w-8 !text-[9px] opacity-60">␣</kbd>
+              ritmo
+            </div>
+          )}
           {/* a REVELAÇÃO: o nome da música em linha própria, abaixo da cola */}
           {revealed && (
             <div
@@ -1412,7 +1548,7 @@ function PianoPrompt({ brk }: { brk: BreakState }) {
   const { noteDoneN, lit, melody } = brk;
   const finished = noteDoneN >= melody.seq.length;
   // a gramática da casa: a PRÓXIMA nota da cola pulsa; a tocada acende
-  const next = melody.seq[noteDoneN];
+  const next = melody.seq[noteDoneN]?.k;
   return (
     <div className="hud-night flex flex-col items-center gap-2.5" aria-hidden>
       <div className="flex items-center gap-1.5">
