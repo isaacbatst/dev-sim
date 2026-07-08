@@ -31,7 +31,8 @@ const PIANO_IDX: Record<string, number> = Object.fromEntries(PIANO.map((p, i) =>
 /** Colas de melodia (2000s+80s) VERIFICADAS em fontes de partitura/tab e
  *  transpostas pra 1 oitava branca (dó maior, A=dó4..K=dó5). "≈" = uma nota
  *  comprometida por limite da oitava (contorno/ritmo preservados):
- *  - 7 Nation Army: riff E-E-G-E-D-C(-B3): o B final cai fora da oitava.
+ *  - 7 Nation Army: riff em Am (A-A-C-A-G-F-E) — cabe INTEIRO, com a nota
+ *    final; intervalos exatos.
  *  - Clocks: arpejos reais do 1º e 3º acordes (Eb e Fm → C e Dm, exatos).
  *  - In the End: riff no arranjo Dm dentro da oitava (D-A-A-F-E-E-E-E-F-D,
  *    afinado de ouvido pelo Isaac).
@@ -40,7 +41,7 @@ const PIANO_IDX: Record<string, number> = Object.fromEntries(PIANO.map((p, i) =>
  *  - Mario: transposto pra caber inteiro (A-A-A-F-A-^C + C grave no fim —
  *    todos os intervalos exatos, incluindo a queda de oitava final). */
 const MELODY_HINTS: { seq: string[]; title: string }[] = [
-  { seq: ['d', 'd', 'g', 'd', 's', 'a'], title: 'Seven Nation Army — The White Stripes' },
+  { seq: ['h', 'h', 'k', 'h', 'g', 'f', 'd'], title: 'Seven Nation Army — The White Stripes' },
   { seq: ['k', 'g', 'd', 'k', 'g', 'd', 'h', 'f', 's'], title: 'Clocks — Coldplay' },
   { seq: ['s', 'h', 'h', 'f', 'd', 'd', 'd', 'd', 'f', 's'], title: 'In the End — Linkin Park' },
   { seq: ['h', 'h', 'h', 'f', 'h', 'k', 'a'], title: 'Super Mario Bros — o tema' },
