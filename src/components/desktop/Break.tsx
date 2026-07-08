@@ -40,9 +40,10 @@ const PIANO_IDX: Record<string, number> = Object.fromEntries(PIANO.map((p, i) =>
  *  largura do keycap (piano-roll) e o ritmo do preview mudo (espaço).
  *  O ritmo NUNCA é julgado (latência web) — é dica pra soar certo. */
 type MelodyNote = { k: string; d: number };
-const MELODY_HINTS: { seq: MelodyNote[]; title: string }[] = [
+const MELODY_HINTS: { seq: MelodyNote[] }[] = [
   {
-    // o verso-VARIAÇÃO do riff, com a descida dobrada (A-A-C-A-G-F-G-F-E)
+    // Seven Nation Army (White Stripes) — o verso-VARIAÇÃO do riff, com a
+    // descida dobrada (A-A-C-A-G-F-G-F-E)
     seq: [
       { k: 'h', d: 3 },
       { k: 'h', d: 1 },
@@ -54,10 +55,10 @@ const MELODY_HINTS: { seq: MelodyNote[]; title: string }[] = [
       { k: 'f', d: 1 },
       { k: 'd', d: 4 },
     ],
-    title: 'Seven Nation Army — The White Stripes',
   },
   {
-    // riff em Dm dentro da oitava (ouvido do Isaac): D-A-A-F-E-E-E-E-F-D
+    // In the End (Linkin Park) — riff em Dm dentro da oitava (ouvido do
+    // Isaac): D-A-A-F-E-E-E-E-F-D
     seq: [
       { k: 's', d: 3 },
       { k: 'h', d: 1 },
@@ -70,10 +71,10 @@ const MELODY_HINTS: { seq: MelodyNote[]; title: string }[] = [
       { k: 'f', d: 2 },
       { k: 's', d: 3 },
     ],
-    title: 'In the End — Linkin Park',
   },
   {
-    // transposto pra caber inteiro, intervalos exatos + dó grave final
+    // Super Mario Bros (o tema) — transposto pra caber inteiro, intervalos
+    // exatos + dó grave final
     seq: [
       { k: 'h', d: 1 },
       { k: 'h', d: 1 },
@@ -83,10 +84,10 @@ const MELODY_HINTS: { seq: MelodyNote[]; title: string }[] = [
       { k: 'k', d: 3 },
       { k: 'a', d: 3 },
     ],
-    title: 'Super Mario Bros — o tema',
   },
   {
-    // refrão: o "OOOH" ondulado (C-D-E-C-F-E-F-E-D, ouvido do Isaac)
+    // Bad Romance (Lady Gaga) — refrão: o "OOOH" ondulado (C-D-E-C-F-E-F-E-D,
+    // ouvido do Isaac)
     seq: [
       { k: 'a', d: 1 },
       { k: 's', d: 1 },
@@ -98,12 +99,11 @@ const MELODY_HINTS: { seq: MelodyNote[]; title: string }[] = [
       { k: 'd', d: 1 },
       { k: 's', d: 3 },
     ],
-    title: 'Bad Romance — Lady Gaga',
   },
   // anos 80
   {
-    // 2 versos (ouvido do Isaac sobre a partitura em Mi):
-    // D-G-A-A-A-B · D-G-A-^C-B
+    // I Want to Break Free (Queen) — 2 versos (ouvido do Isaac sobre a
+    // partitura em Mi): D-G-A-A-A-B · D-G-A-^C-B
     seq: [
       { k: 's', d: 1 },
       { k: 'g', d: 2 },
@@ -117,10 +117,10 @@ const MELODY_HINTS: { seq: MelodyNote[]; title: string }[] = [
       { k: 'k', d: 2 },
       { k: 'j', d: 4 },
     ],
-    title: 'I Want to Break Free — Queen',
   },
   {
-    // F#m→Em exato: o "da-da DAAA DAAA · da-da-da-da DAAA"
+    // The Final Countdown (Europe) — F#m→Em exato: o "da-da DAAA DAAA ·
+    // da-da-da-da DAAA"
     seq: [
       { k: 'j', d: 1 },
       { k: 'h', d: 1 },
@@ -132,7 +132,6 @@ const MELODY_HINTS: { seq: MelodyNote[]; title: string }[] = [
       { k: 'j', d: 2 },
       { k: 'h', d: 4 },
     ],
-    title: 'The Final Countdown — Europe',
   },
 ];
 
@@ -193,13 +192,13 @@ export interface BreakState {
   sipDoneN: number;
   noteDoneN: number;
   /** A cola atual do tecladinho (a música É o alvo do ritual). */
-  melody: { seq: MelodyNote[]; title: string };
+  melody: { seq: MelodyNote[] };
   /** Índice aceso pelo preview de RITMO (espaço; -1 = parado). */
   previewIdx: number;
   /** Notas da cola já casadas em sequência (afundam na cola). */
   melodyMatchN: number;
-  /** Tocou a cola inteira — o título se revela. */
-  melodyRevealed: boolean;
+  /** Tocou a cola inteira (o ✓ persiste até trocar de cola). */
+  melodyDone: boolean;
   /** Folheia o caderninho de colas (±1). */
   navHint: (dir: number) => void;
   relief: number;
@@ -245,9 +244,8 @@ export function useBreak(
   const [noteDoneN, setNoteDoneN] = useState(0);
   const [hintIdx, setHintIdx] = useState(() => Math.floor(Math.random() * MELODY_HINTS.length));
   const [melodyMatchN, setMelodyMatchN] = useState(0);
-  const [melodyRevealed, setMelodyRevealed] = useState(false);
+  const [melodyDone, setMelodyDone] = useState(false);
   const matchRef = useRef(0);
-  const revealedRef = useRef(false);
   /** Última nota tocada e ainda pressionada — o fecho espera o keyup. */
   const pendingFinish = useRef<number | null>(null);
   const [relief, setRelief] = useState(0);
@@ -290,14 +288,13 @@ export function useBreak(
       setSipDoneN(0);
       setNoteDoneN(0);
       setMelodyMatchN(0);
-      setMelodyRevealed(false);
+      setMelodyDone(false);
     }
   }
   useEffect(() => {
     if (!active) {
       sipCount.current = 0;
       matchRef.current = 0;
-      revealedRef.current = false;
       stirSeq.current = [];
       pendingFinish.current = null;
       stretchRef.current = 0;
@@ -606,8 +603,7 @@ export function useBreak(
       setHintIdx((i) => (i + dir + MELODY_HINTS.length) % MELODY_HINTS.length);
       matchRef.current = 0;
       setMelodyMatchN(0);
-      revealedRef.current = false;
-      setMelodyRevealed(false);
+      setMelodyDone(false);
       setNoteDoneN(0);
       stopPreview();
     },
@@ -630,8 +626,7 @@ export function useBreak(
       setNoteDoneN(matchRef.current); // pips = progresso NA melodia
       if (matchRef.current >= seq.length) {
         matchRef.current = 0;
-        revealedRef.current = true;
-        setMelodyRevealed(true); // o título se revela
+        setMelodyDone(true); // o ✓ fica até trocar de cola
         // o fecho ESPERA o release da última nota (senão corta o sustain)
         pendingFinish.current = idx;
       }
@@ -858,7 +853,7 @@ export function useBreak(
     noteDoneN,
     melody: MELODY_HINTS[hintIdx],
     melodyMatchN,
-    melodyRevealed,
+    melodyDone,
     navHint,
     previewIdx,
     relief,
@@ -1530,8 +1525,9 @@ function PianoCloseup({ brk }: { brk: BreakState }) {
  *  (e REBOBINA ao errar). O preview (espaço) faz a fita correr no ritmo
  *  real — noção de tempo sentida, não anotada. */
 function PianoPrompt({ brk }: { brk: BreakState }) {
-  const { noteDoneN, melody, previewIdx, melodyRevealed } = brk;
+  const { noteDoneN, melody, previewIdx, melodyDone } = brk;
   const finished = noteDoneN >= melody.seq.length;
+  const done = finished || melodyDone;
   // durante o preview a fita segue o ritmo; fora dele, o seu progresso
   const cur = previewIdx >= 0 ? previewIdx : Math.min(noteDoneN, melody.seq.length - 1);
   // GLIDE: avançar 1 nota desliza LINEAR pela duração dela (você "preenche"
@@ -1593,11 +1589,11 @@ function PianoPrompt({ brk }: { brk: BreakState }) {
       <span
         className="font-mono text-[10px] uppercase tracking-[0.2em]"
         style={{
-          color: finished ? 'var(--pass)' : 'rgba(255,255,255,0.75)',
+          color: done ? 'var(--pass)' : 'rgba(255,255,255,0.75)',
           textShadow: '0 1px 10px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.9)',
         }}
       >
-        {melodyRevealed ? `♫ ${melody.title} ✓` : finished ? 'melodia tocada ✓' : 'toque a melodia'}
+        {done ? 'melodia tocada ✓' : 'toque a melodia'}
       </span>
     </div>
   );
