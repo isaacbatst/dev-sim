@@ -88,13 +88,15 @@ mesmo efeito:
 | **Pescoço** | nada (todos têm) | ABERTURA com peso: SEGURAR ← e → ~1s cada (câmera inclina fundo e FICA; medidor enche no keycap; soltar antes recomeça; crack grave por lado) → depois o **giro**: DUAS voltas (8 setas; 1ª âmbar, 2ª verde) fecham com contra-giro automático + mix + alívio; volta à mesa |
 | **Regar** | planta (💰) | MODO (R → close-up da SUA planta): 9 células (QWE/ASD/ZXC) × 2 regas — 1ª INFILTRA, 2ª fica molhada; regador desliza/verte; PROMPT CENTRAL no molde do pescoço (2/2 afunda, 1/2 pulsa); 18/18 → volta à mesa |
 | **Café** | café (💰) | MODO (C pega a xícara → close-up): mexer em CÍRCULO — DUAS voltas (8 setas, a gramática do pescoço; a colher ORBITA, samples stir-1/2) + 2 goles (C C); PROMPT CENTRAL no molde do pescoço; volta à mesa |
-| **Tocar** | teclado (💰) | ~8 notas |
+| **Tocar** | teclado (💰) | MODO (T → close-up do tecladinho mecânico): 8 notas em A–K (teclas afundam, ♪ sobe da tecla); PROMPT CENTRAL no molde do pescoço; volta à mesa |
 
 - Feedback de restaurado: o MESMO toque de sucesso (arpejo C5-E5-G5) fecha os
   4 rituais — a pontuação comum — sobre o sabor próprio de cada um (mix do
   pescoço, "ahh" do café, melodia do teclado); anel de alívio + visão limpa na
   hora (blur some, sons crocantes) — sentido, não anunciado.
 - Refazer ritual sem estar cansado = só o prazer (nenhum stack/bônus).
+- **Descansou TUDO** (fechou todos os rituais que possui na MESMA pausa) →
+  volta pro foco do trabalho sozinho (~1s de respiro após o último fecho).
 - O relógio segue correndo na pausa: o custo da pausa continua sendo tempo (§9);
   o ritual dá o quê fazer nesse tempo.
 

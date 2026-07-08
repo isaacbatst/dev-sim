@@ -50,7 +50,7 @@ const DIRS: Record<string, { dx: number; dy: number }> = {
   ArrowRight: { dx: 1, dy: 0 },
 };
 
-export type BreakMode = 'mesa' | 'planta' | 'pescoco' | 'cafe';
+export type BreakMode = 'mesa' | 'planta' | 'pescoco' | 'cafe' | 'teclado';
 
 export interface BreakState {
   /** Pausa aberta? (prompts da cena só aparecem na pausa) */
@@ -99,7 +99,12 @@ export interface BreakState {
  *  o jogo na captura) e só com a pausa aberta. `onRitual` = completou um gesto
  *  de restauração (FOCO_FADIGA.md §5): pescoço = combo circular; regar = todas
  *  as células; café = 3 goles; tocar = 8 notas. Efeito idêntico pra todos. */
-export function useBreak(active: boolean, owned: string[], onRitual?: () => void): BreakState {
+export function useBreak(
+  active: boolean,
+  owned: string[],
+  onRitual?: () => void,
+  onAllDone?: () => void,
+): BreakState {
   const [mode, setMode] = useState<BreakMode>('mesa');
   const [tilt, setTiltState] = useState({ dx: 0, dy: 0 });
   const [flowing, setFlowing] = useState(false);
@@ -137,6 +142,9 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
   // Progresso dos RITUAIS de restauração (por pausa).
   const sipCount = useRef(0);
   const noteCount = useRef(0);
+  // Quais rituais já fecharam NESTA pausa — completou todos os que possui?
+  // Já descansou: volta pro foco do trabalho sozinho.
+  const doneSet = useRef<Set<string>>(new Set());
 
   // Ao voltar pro trabalho: próxima pausa reabre na mesa e o progresso de
   // ritual zera (cada pausa recomeça os gestos). Estados ajustam na render
@@ -166,6 +174,7 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
       stirSeq.current = [];
       stretchRef.current = 0;
       seq.current = [];
+      doneSet.current.clear();
       if (holdT.current) clearInterval(holdT.current);
     }
   }, [active]);
@@ -227,6 +236,17 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
     [onRitual],
   );
 
+  /** Marca um ritual fechado nesta pausa; com TODOS os que o jogador possui
+   *  fechados, volta pro trabalho sozinho (já descansou — 1s de respiro). */
+  const markDone = useCallback(
+    (kind: string) => {
+      doneSet.current.add(kind);
+      const need = ['pescoco', ...['planta', 'cafe', 'teclado'].filter((x) => owned.includes(x))];
+      if (need.every((k) => doneSet.current.has(k))) setTimeout(() => onAllDone?.(), 1000);
+    },
+    [owned, onAllDone],
+  );
+
   /** Um gole no MODO café: 3 goles completam o ritual e a xícara volta pra
    *  mesa (sai do close-up). */
   const sip = useCallback(() => {
@@ -251,6 +271,7 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
         completeRitual(false);
         setRelief((r) => r + 1); // anel de alívio (o "ahh" veio do sample)
         setMode('mesa'); // devolve a xícara à mesa
+        markDone('cafe');
       }, 650);
     }
   }, [completeRitual]);
@@ -398,6 +419,7 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
             stretchRef.current = 0;
             setStretchN(0);
             setMode('mesa'); // ritual fechado — de volta à mesa (como os outros)
+            markDone('pescoco');
           },
           420 + 4 * 240,
         );
@@ -410,7 +432,7 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
         crackTs.current.push(t);
       }
     },
-    [spinning, setTilt, completeRitual],
+    [spinning, setTilt, completeRitual, markDone],
   );
 
   const playNote = useCallback(
@@ -437,10 +459,12 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
           S.success(); // o MESMO toque de conquista de todos os rituais
           completeRitual(false);
           setRelief((r) => r + 1);
+          setMode('mesa'); // melodia tocada — de volta à mesa
+          markDone('teclado');
         }, 350); // depois da última nota soar
       }
     },
-    [completeRitual],
+    [completeRitual, markDone],
   );
 
   const water = useCallback(
@@ -464,12 +488,13 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
             completeRitual(false);
             setRelief((r) => r + 1);
             setMode('mesa'); // terra regada — de volta à mesa
+            markDone('planta');
           }, 650);
         }
         return next;
       });
     },
-    [completeRitual],
+    [completeRitual, markDone],
   );
 
   const ownedKey = owned.join(',');
@@ -496,6 +521,17 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
             return;
           }
           return roll(e.key);
+        }
+        return;
+      }
+      if (mode === 'teclado') {
+        if (e.key === 'Backspace') {
+          e.preventDefault();
+          return setMode('mesa');
+        }
+        if (PIANO_IDX[k] !== undefined) {
+          e.preventDefault();
+          return playNote(PIANO_IDX[k]);
         }
         return;
       }
@@ -540,9 +576,9 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
         e.preventDefault();
         return setMode('cafe'); // pega a xícara (o gole acontece no close-up)
       }
-      if (PIANO_IDX[k] !== undefined && has('teclado')) {
+      if (k === 't' && has('teclado')) {
         e.preventDefault();
-        return playNote(PIANO_IDX[k]);
+        return setMode('teclado'); // senta no tecladinho (toca no close-up)
       }
     };
     const onUp = (e: KeyboardEvent) => {
@@ -650,17 +686,18 @@ export function DeskItems({ owned, brk }: { owned: string[]; brk: BreakState }) 
                   ))}
                 </div>
               )}
-              {notes.map((n) => (
-                <span
-                  key={n.id}
-                  className="animate-notefloat pointer-events-none absolute bottom-full font-mono text-xl text-white/70"
-                  style={{ left: `${((n.idx + 0.5) / PIANO.length) * 100}%` }}
-                  onAnimationEnd={() => setNotes((ns) => ns.filter((x) => x.id !== n.id))}
-                  aria-hidden
-                >
-                  ♪
-                </span>
-              ))}
+              {mode !== 'teclado' &&
+                notes.map((n) => (
+                  <span
+                    key={n.id}
+                    className="animate-notefloat pointer-events-none absolute bottom-full font-mono text-xl text-white/70"
+                    style={{ left: `${((n.idx + 0.5) / PIANO.length) * 100}%` }}
+                    onAnimationEnd={() => setNotes((ns) => ns.filter((x) => x.id !== n.id))}
+                    aria-hidden
+                  >
+                    ♪
+                  </span>
+                ))}
             </div>
 
             {/* mouse */}
@@ -740,6 +777,14 @@ export function BreakHud({
           <CoffeePrompt brk={brk} />
         </div>
       )}
+      {/* TOCAR em primeira pessoa: o tecladinho perto, teclas afundando,
+          notas subindo — 8 notas fecham. */}
+      {mode === 'teclado' && <PianoCloseup brk={brk} />}
+      {mode === 'teclado' && (
+        <div className="beat-in absolute inset-0 flex items-center justify-center">
+          <PianoPrompt brk={brk} />
+        </div>
+      )}
       {/* REGAR em primeira pessoa: a planta perto, regador na mão, terra que
           escurece de verdade — célula a célula, até cobrir tudo. */}
       {mode === 'planta' && <PlantCloseup brk={brk} />}
@@ -759,7 +804,7 @@ export function BreakHud({
               <RitualOption k="C" label="café" total={STIR_TOTAL + 2} done={stirN + sipDoneN} />
             )}
             {owned.includes('teclado') && (
-              <RitualOption k="A–K" label="tocar" total={8} done={noteDoneN} wide />
+              <RitualOption k="T" label="tocar" total={8} done={noteDoneN} />
             )}
           </div>
         </div>
@@ -1175,6 +1220,100 @@ function CoffeeCloseup({ brk }: { brk: BreakState }) {
           <MugCloseup variant={art.mug} sips={sips} stirring={stirring} theta={stirTheta} />
         </div>
       </div>
+    </div>
+  );
+}
+
+/** TOCAR em primeira pessoa: o tecladinho mecânico perto da câmera — 8
+ *  teclas largas (A–K impressas), afundam ao tocar, ♪ sobe da tecla. */
+function PianoCloseup({ brk }: { brk: BreakState }) {
+  const { notes, setNotes, lit } = brk;
+  return (
+    <div className="absolute inset-0 flex items-end justify-center">
+      <div className="animate-mugrise relative" style={{ width: 'min(640px, 82vw)' }}>
+        {/* corpo do tecladinho (o mecânico RGB da mesa, de perto) */}
+        <div
+          className="relative rounded-t-[26px] px-5 pb-10 pt-5"
+          style={{
+            background: 'linear-gradient(180deg, #232632, #0c0e14)',
+            boxShadow:
+              '0 -18px 60px -18px rgba(120,160,255,0.35), 0 1px 0 rgba(255,255,255,0.08) inset',
+          }}
+        >
+          <div className="flex gap-2">
+            {PIANO.map((pk, i) => {
+              const pressed = lit[i] !== undefined;
+              return (
+                <div
+                  key={pk.k}
+                  className="relative h-28 flex-1 rounded-md"
+                  style={{
+                    background: pressed
+                      ? 'linear-gradient(180deg, #f5a623, #b97c1a)'
+                      : 'linear-gradient(180deg, #3a3f50, #23273a)',
+                    boxShadow: pressed
+                      ? 'inset 0 3px 8px rgba(0,0,0,0.5)'
+                      : '0 4px 0 #14161f, 0 1px 0 rgba(255,255,255,0.12) inset',
+                    transform: pressed ? 'translateY(4px)' : 'none',
+                    transition: 'transform 90ms ease, background 120ms ease, box-shadow 90ms ease',
+                  }}
+                >
+                  <span
+                    className="absolute bottom-1.5 left-1/2 -translate-x-1/2 font-mono text-xs uppercase"
+                    style={{ color: pressed ? 'rgba(0,0,0,0.65)' : 'rgba(255,255,255,0.4)' }}
+                  >
+                    {pk.k}
+                  </span>
+                  {/* notas sobem DA TECLA tocada */}
+                  {notes
+                    .filter((n) => n.idx === i)
+                    .map((n) => (
+                      <span
+                        key={n.id}
+                        className="animate-notefloat pointer-events-none absolute -top-2 left-1/2 font-mono text-2xl text-white/80"
+                        onAnimationEnd={() => setNotes((ns) => ns.filter((x) => x.id !== n.id))}
+                        aria-hidden
+                      >
+                        ♪
+                      </span>
+                    ))}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Prompt do TOCAR — o molde do NeckCluster, no CENTRO DA TELA: as 8 teclas
+ *  da escala; a tocada acende na hora; 8 notas (quaisquer) fecham. */
+function PianoPrompt({ brk }: { brk: BreakState }) {
+  const { noteDoneN, lit } = brk;
+  const finished = noteDoneN >= 8;
+  return (
+    <div className="hud-night flex flex-col items-center gap-2.5" aria-hidden>
+      <div className="flex items-center gap-1.5">
+        {PIANO.map((pk, i) => (
+          <kbd
+            key={pk.k}
+            className={`keycap ${finished ? 'keycap--done' : lit[i] !== undefined ? 'keycap--current' : ''}`}
+          >
+            {pk.k.toUpperCase()}
+          </kbd>
+        ))}
+      </div>
+      <Pips total={8} done={noteDoneN} />
+      <span
+        className="font-mono text-[10px] uppercase tracking-[0.2em]"
+        style={{
+          color: finished ? 'var(--pass)' : 'rgba(255,255,255,0.75)',
+          textShadow: '0 1px 10px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.9)',
+        }}
+      >
+        {finished ? 'melodia tocada ✓' : 'toque uma melodia'}
+      </span>
     </div>
   );
 }

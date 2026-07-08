@@ -51,7 +51,8 @@ export function GameScreen() {
     setOnBreak(v);
     setResting(v); // fadiga não acumula na pausa
   };
-  const brk = useBreak(onBreak, career.owned, restoreFatigue);
+  // descansou TUDO (todos os rituais que possui) → volta pro trabalho sozinho
+  const brk = useBreak(onBreak, career.owned, restoreFatigue, () => setBreak(false));
 
   // Piscada pesada (fadiga): a UI diffa o contador do core e fecha as pálpebras.
   // SEM cleanup do timer: o efeito roda a cada snapshot (60fps) e o cleanup
