@@ -354,29 +354,37 @@ export function useBreak(
     );
   }, []);
 
+  // LATEST-REF: os callbacks do chamador ficam em refs — se o caller passar
+  // arrow inline (recriada a cada render de 60fps), a cadeia de useCallbacks
+  // daqui NÃO pode reanexar o efeito do teclado a cada frame (o keyup real
+  // se perdia no thrash de attach/detach).
+  const onRitualRef = useRef(onRitual);
+  onRitualRef.current = onRitual;
+  const onAllDoneRef = useRef(onAllDone);
+  onAllDoneRef.current = onAllDone;
+
   /** Ritual completado: restaura a fadiga + feedback de alívio (o pescoço já
    *  tem o próprio — contra-giro + mix). */
-  const completeRitual = useCallback(
-    (withSigh: boolean) => {
-      onRitual?.();
-      if (withSigh) {
-        S.sigh();
-        setRelief((r) => r + 1);
-      }
-    },
-    [onRitual],
-  );
+  const completeRitual = useCallback((withSigh: boolean) => {
+    onRitualRef.current?.();
+    if (withSigh) {
+      S.sigh();
+      setRelief((r) => r + 1);
+    }
+  }, []);
 
   /** Marca um ritual fechado nesta pausa; com TODOS os que o jogador possui
    *  fechados, volta pro trabalho sozinho (já descansou — 1s de respiro). */
-  const markDone = useCallback(
-    (kind: string) => {
-      doneSet.current.add(kind);
-      const need = ['pescoco', ...['planta', 'cafe', 'teclado'].filter((x) => owned.includes(x))];
-      if (need.every((k) => doneSet.current.has(k))) setTimeout(() => onAllDone?.(), 1000);
-    },
-    [owned, onAllDone],
-  );
+  const ownedRef = useRef(owned);
+  ownedRef.current = owned;
+  const markDone = useCallback((kind: string) => {
+    doneSet.current.add(kind);
+    const need = [
+      'pescoco',
+      ...['planta', 'cafe', 'teclado'].filter((x) => ownedRef.current.includes(x)),
+    ];
+    if (need.every((k) => doneSet.current.has(k))) setTimeout(() => onAllDoneRef.current?.(), 1000);
+  }, []);
 
   /** Um gole no MODO café: 3 goles completam o ritual e a xícara volta pra
    *  mesa (sai do close-up). */
