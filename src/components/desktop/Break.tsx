@@ -1380,7 +1380,7 @@ function PianoCloseup({ brk }: { brk: BreakState }) {
               className="ml-1 font-mono text-[10px] uppercase tracking-[0.18em]"
               style={{ color: revealed ? 'var(--pass)' : 'rgba(255,255,255,0.35)' }}
             >
-              {revealed ? `${hint.title} ✓` : '?'}
+              {revealed ? '✓' : '?'}
             </span>
             <button
               onClick={() => nav(1)}
@@ -1390,6 +1390,15 @@ function PianoCloseup({ brk }: { brk: BreakState }) {
               →
             </button>
           </div>
+          {/* a REVELAÇÃO: o nome da música em linha própria, abaixo da cola */}
+          {revealed && (
+            <div
+              className="beat-in mt-2 text-center font-mono text-xs tracking-[0.14em]"
+              style={{ color: 'var(--pass)', textShadow: '0 1px 10px rgba(0,0,0,0.8)' }}
+            >
+              ♫ {hint.title}
+            </div>
+          )}
         </div>
       </div>
     </div>
