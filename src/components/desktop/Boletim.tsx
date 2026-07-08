@@ -59,6 +59,8 @@ export function Boletim({
   const [tree, setTree] = useState(false);
 
   // Avanço automático das batidas (com tick sonoro); pular = revelar tudo.
+  // Cadência LENTA de fim de expediente — cada batida respira antes da
+  // próxima (a 1ª segura mais: a manchete assenta primeiro).
   useEffect(() => {
     if (beat >= MAX) return;
     const t = setTimeout(
@@ -66,7 +68,7 @@ export function Boletim({
         setBeat((b) => b + 1);
         playSound(beat + 1 === 1 ? 'ready' : promoted && beat + 1 === 2 ? 'deliver' : 'step');
       },
-      beat === 0 ? 650 : 750,
+      beat === 0 ? 1100 : 1350,
     );
     return () => clearTimeout(t);
   }, [beat, promoted]);
