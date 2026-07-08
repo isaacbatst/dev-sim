@@ -290,26 +290,11 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
           setStretchHold(0);
           stretchRef.current += 1;
           setStretchN(stretchRef.current);
-          if (stretchRef.current >= 2) {
-            // fecho do ritual: mix + alívio, e a mesa
-            setSpinning(true); // trava inputs do giro durante o fecho
-            setTimeout(() => {
-              S.neckCombo();
-              setRelief((r) => r + 1);
-              completeRitual(false);
-            }, 320);
-            setTimeout(() => {
-              setSpinning(false);
-              setNeckProgress(0);
-              stretchRef.current = 0;
-              setStretchN(0);
-              setMode('mesa');
-            }, 1100);
-          }
+          // 2 lados alongados → libera o GIRO (as voltas fecham o ritual)
         }
       }, 40);
     },
-    [completeRitual, setTilt],
+    [setTilt],
   );
 
   const stretchCancel = useCallback(() => {
@@ -379,12 +364,41 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
       }
       if (rot !== 0) {
         if (seqT.current) clearTimeout(seqT.current);
-        // voltas completas → fase do ALONGAMENTO (segurar ← e →). O fecho
-        // agora é ATIVO e com peso, não um contra-giro automático.
         setNeckProgress(NECK_TOTAL);
         setNeckNexts([]);
         setNeckHits([]);
+        // FECHO do ritual: contra-giro automático no sentido INVERSO + mix
+        // (que já contém o estalo → cancela os individuais pendentes).
         seq.current.length = 0;
+        crackTs.current.forEach(clearTimeout);
+        crackTs.current = [];
+        if (tiltT.current) clearTimeout(tiltT.current);
+        setSpinning(true);
+        const ANGLES = [
+          { dx: 0, dy: -1 },
+          { dx: 1, dy: 0 },
+          { dx: 0, dy: 1 },
+          { dx: -1, dy: 0 },
+        ];
+        setTimeout(() => {
+          S.neckCombo();
+          setRelief((r) => r + 1);
+          completeRitual(false); // feedback próprio (contra-giro + mix)
+        }, 420);
+        for (let i = 1; i <= 4; i++) {
+          setTimeout(() => setTilt(ANGLES[(a - rot * i + 8) % 4]), 420 + (i - 1) * 240);
+        }
+        setTimeout(
+          () => {
+            setTilt({ dx: 0, dy: 0 });
+            setSpinning(false);
+            setNeckProgress(0);
+            stretchRef.current = 0;
+            setStretchN(0);
+            setMode('mesa'); // ritual fechado — de volta à mesa (como os outros)
+          },
+          420 + 4 * 240,
+        );
       } else {
         // um estalo POR aperto (não cancela os anteriores — série ao encadear)
         const t = setTimeout(() => {
@@ -394,7 +408,7 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
         crackTs.current.push(t);
       }
     },
-    [spinning, setTilt],
+    [spinning, setTilt, completeRitual],
   );
 
   const playNote = useCallback(
@@ -469,8 +483,9 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
         }
         if (DIRS[e.key]) {
           e.preventDefault();
-          // voltas fechadas → fase do alongamento (segurar; e.repeat ignorado)
-          if (neckProgress >= NECK_TOTAL) {
+          // ABERTURA: alongar fundo (segurar ← e →; e.repeat ignorado);
+          // só depois o giro fecha o ritual
+          if (stretchN < 2) {
             if (!e.repeat) stretchStart(e.key);
             return;
           }
@@ -544,7 +559,7 @@ export function useBreak(active: boolean, owned: string[], onRitual?: () => void
     sip,
     stirN,
     stirPress,
-    neckProgress,
+    stretchN,
     stretchStart,
     stretchCancel,
   ]);
@@ -782,8 +797,8 @@ function NeckCluster({
   stretchHold: number;
 }) {
   const done = spinning || progress >= NECK_TOTAL;
-  // fase do FECHO: voltas completas → segurar ← e → (alongamento com peso)
-  const stretching = progress >= NECK_TOTAL && !spinning;
+  // ABERTURA: alongar fundo (segurar ← e →); o giro fecha o ritual
+  const stretching = stretchN < 2 && !spinning;
   // hud-night: o cluster flutua sobre o QUARTO/monitor — keycaps sempre
   // escuros. Como na rega: 1ª passada = ÂMBAR (meio), 2ª = VERDE (feito);
   // a que continua o giro PULSA.
@@ -835,7 +850,7 @@ function NeckCluster({
   return (
     <div className="hud-night flex flex-col items-center gap-2.5" aria-hidden>
       {stretching ? (
-        // FECHO: segurar ← fundo (~1s), depois → — solta com crack grave
+        // ABERTURA: segurar ← fundo (~1s), depois → — solta com crack grave
         <div className="flex items-center gap-14">
           {holdCap('←', 0)}
           {holdCap('→', 1)}
@@ -850,7 +865,7 @@ function NeckCluster({
           {cap(2, '↓')}
         </div>
       )}
-      <Pips total={NECK_TOTAL + 2} done={(done ? NECK_TOTAL : progress) + stretchN} />
+      <Pips total={NECK_TOTAL + 2} done={stretchN + (done ? NECK_TOTAL : progress)} />
       <span
         className="font-mono text-[10px] uppercase tracking-[0.2em]"
         style={{
@@ -858,7 +873,7 @@ function NeckCluster({
           textShadow: '0 1px 10px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.9)',
         }}
       >
-        {spinning ? 'pescoço solto ✓' : stretching ? 'segure — alongue fundo' : 'gire o pescoço'}
+        {spinning ? 'pescoço solto ✓' : stretching ? 'segure — alongue fundo' : 'agora gire solto'}
       </span>
     </div>
   );
