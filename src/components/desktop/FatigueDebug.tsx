@@ -1,6 +1,7 @@
 'use client';
 
 import type { Snapshot } from '@/core/snapshot';
+import { MELODIES } from '@/data/melodies';
 import { useGameStore } from '@/store/gameStore';
 import { muffleCutoffHz } from '@/store/sound';
 import { screenFx, blurMaxPx } from './fatigueFx';
@@ -28,7 +29,18 @@ const STAGE_COLOR: Record<string, string> = {
   exhausted: '#ff5c57',
 };
 
-export function FatigueDebug({ snapshot, resting }: { snapshot: Snapshot; resting: boolean }) {
+export function FatigueDebug({
+  snapshot,
+  resting,
+  melodyIdx,
+  pickMelody,
+}: {
+  snapshot: Snapshot;
+  resting: boolean;
+  /** Cola atual do tecladinho + salto direto — auditar o set sem folhear. */
+  melodyIdx: number;
+  pickMelody: (i: number) => void;
+}) {
   const debugFatigue = useGameStore((s) => s.debugFatigue);
   const debugLapse = useGameStore((s) => s.debugLapse);
   const restoreFatigue = useGameStore((s) => s.restoreFatigue);
@@ -151,6 +163,26 @@ export function FatigueDebug({ snapshot, resting }: { snapshot: Snapshot; restin
         >
           desfocar
         </button>
+      </div>
+      {/* picker da cola do tecladinho (sem título de propósito — só nº e teclas) */}
+      <div className="mt-1.5 border-t border-white/10 pt-1.5">
+        <div className="flex items-center gap-1.5">
+          <span className="text-white/50">cola do tecladinho</span>
+          {MELODIES.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => pickMelody(i)}
+              className={`rounded px-1.5 py-0.5 ${
+                i === melodyIdx ? 'bg-white/30 text-white' : 'bg-white/10 hover:bg-white/20'
+              }`}
+            >
+              {i + 1}
+            </button>
+          ))}
+        </div>
+        <div className="mt-1 tracking-wider text-white/40">
+          {MELODIES[melodyIdx].seq.map((n) => n.k.toUpperCase()).join(' ')}
+        </div>
       </div>
       <ArtToggle />
     </div>

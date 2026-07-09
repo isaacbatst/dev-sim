@@ -95,6 +95,9 @@ export interface BreakState {
   melodyDone: boolean;
   /** Folheia o caderninho de colas (±1). */
   navHint: (dir: number) => void;
+  /** Índice da cola atual + salto direto (picker do painel de debug). */
+  hintIdx: number;
+  setHint: (i: number) => void;
   relief: number;
   notes: { id: number; idx: number }[];
   setNotes: React.Dispatch<React.SetStateAction<{ id: number; idx: number }[]>>;
@@ -490,18 +493,32 @@ export function useBreak(
     );
   }, [hintIdx]);
 
-  /** Folheia o caderninho de colas: troca a música-alvo e zera o progresso
-   *  (a quantidade de notas do ritual segue a cola). */
+  /** Trocar a música-alvo zera o progresso (a quantidade de notas do
+   *  ritual segue a cola). */
+  const resetHint = useCallback(() => {
+    matchRef.current = 0;
+    setMelodyMatchN(0);
+    setMelodyDone(false);
+    setNoteDoneN(0);
+    stopPreview();
+  }, [stopPreview]);
+
+  /** Folheia o caderninho de colas (±1). */
   const navHint = useCallback(
     (dir: number) => {
       setHintIdx((i) => (i + dir + MELODIES.length) % MELODIES.length);
-      matchRef.current = 0;
-      setMelodyMatchN(0);
-      setMelodyDone(false);
-      setNoteDoneN(0);
-      stopPreview();
+      resetHint();
     },
-    [stopPreview],
+    [resetHint],
+  );
+
+  /** Salto direto pra uma cola (picker do painel de debug). */
+  const setHint = useCallback(
+    (i: number) => {
+      setHintIdx(((i % MELODIES.length) + MELODIES.length) % MELODIES.length);
+      resetHint();
+    },
+    [resetHint],
   );
 
   const playNote = useCallback(
@@ -749,6 +766,8 @@ export function useBreak(
     melodyMatchN,
     melodyDone,
     navHint,
+    hintIdx,
+    setHint,
     previewIdx,
     relief,
     notes,

@@ -328,7 +328,14 @@ export function GameScreen() {
         <Daily day={day} career={career} onPick={pickTask} onBegin={beginDay} />
       )}
       {/* overlay de debug da fadiga (?debug=1) */}
-      {debug && <FatigueDebug snapshot={snapshot} resting={onBreak} />}
+      {debug && (
+        <FatigueDebug
+          snapshot={snapshot}
+          resting={onBreak}
+          melodyIdx={brk.hintIdx}
+          pickMelody={brk.setHint}
+        />
+      )}
       {/* HUD da pausa: parado, sem zoom e sem inclinação */}
       {onBreak && (
         <BreakHud
