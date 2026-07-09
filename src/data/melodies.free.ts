@@ -125,4 +125,26 @@ export const MELODIES_FREE: Melody[] = [
       { k: 'g', d: 4 },
     ],
   },
+  {
+    // Rainha da Noite (Mozart, Flauta Mágica) — a coloratura staccato
+    // ("ah ah ah ah"), comprimida na oitava branca: escada de arpejos
+    // subindo C-D-E-F e coroando no dó agudo. Tudo curto = o staccato.
+    seq: [
+      { k: 'a', d: 1 },
+      { k: 'd', d: 1 },
+      { k: 'g', d: 1 },
+      { k: 'd', d: 1 },
+      { k: 's', d: 1 },
+      { k: 'f', d: 1 },
+      { k: 'h', d: 1 },
+      { k: 'f', d: 1 },
+      { k: 'd', d: 1 },
+      { k: 'g', d: 1 },
+      { k: 'j', d: 1 },
+      { k: 'g', d: 1 },
+      { k: 'f', d: 1 },
+      { k: 'h', d: 1 },
+      { k: 'k', d: 4 },
+    ],
+  },
 ];
