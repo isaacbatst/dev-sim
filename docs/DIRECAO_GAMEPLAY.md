@@ -196,6 +196,74 @@ Modos diferentes de jogar **sem overpower**. Não são builds — **perk único 
 **Por que está adiado:** dependem de **interstitials** (§8) maduros e do sistema de
 **deadline/nota** (§9) afinado — constroem sobre essas peças, não validam nada sozinhos.
 
+### 7.1 Árvore de perks por arquétipo (a "camada posterior consciente") **[IDEAÇÃO — nada decidido]**
+
+> Exercício de ideação (2026-07). Se um dia os mutators virarem árvore/classes, esta é a
+> forma que mantém tudo horizontal. **Nenhum item abaixo está decidido nem balanceado.**
+
+**O pino:** descer na árvore = ficar mais **extremo**, nunca mais forte. Cada nó é uma
+**troca** (nunca só soma); empilhar nós de um braço sobe o pico E afunda o vale **juntos**.
+Geometria: **constelação radial** — centro = Generalista (flexível, brilha em nada, pick
+legítimo); cada braço = um arquétipo; ir pra fora = compromisso com um matchup de dia (§4).
+
+**Travas de horizontalidade:**
+
+1. Profundidade = extremidade (zero nós que só somam).
+2. **Um braço por run** (reconcilia com o "perk único" do §7 → vira "um caminho por run").
+3. Downsides de um braço compõem **na mesma direção** (o vale só aprofunda — não existe
+   combo sem downside).
+4. Comparação **por categoria** (placar próprio por arquétipo, §7).
+5. Capstone = compromisso máximo (o nó mais lopsided), não prêmio de grind.
+
+**Método:** a árvore se **descobre bottom-up** — shipar mutators avulsos primeiro (§7) e
+agrupar os que dividem o mesmo matchup de dia. O átomo é o mutator; a árvore é o mapa.
+
+**Cardápio de papel (8 arquétipos × 4 perks; último = capstone):**
+
+| Arquétipo | Perk | Dá | Tira |
+|---|---|---|---|
+| 🔥 **Bombeiro** | On-call | urgentes valem mais na nota | urgentes pipocam o tempo todo |
+| | Modo herói | incidentes resolvem num gesto | tasks normais rendem menos |
+| | Adrenalina | quanto mais urgente a fila, mais rápido você fica | fila calma = você desacelera |
+| | *"Eu vivo pra isso"* | pico de urgência = nota enorme | dia inteiro calmo = teto baixo garantido |
+| 🏛️ **Arquiteto** | Fone de ouvido | mergulha no ticket ativo | perde alerta de urgente chegando |
+| | Rubber duck | plano destacado → menos rejeição de CR | beat obrigatório de "explicar" (mais lento) |
+| | Trabalho de madrugada | silêncio total: zero reunião/ping | cansaço: janela de timing dos inputs encurta |
+| | *"Zona"* | task longa rende nota crescente | qualquer troca de contexto zera o bônus |
+| 🗣️ **Comunicador** | Calendário lotado | reuniões se auto-resolvem | blocos de trabalho fragmentados |
+| | O Inconveniente | pinga o reviewer → CR mais rápido | te interrompe + queima goodwill (CRs futuros rígidos) |
+| | Networking | reunião/slack dão nota extra | código rende menos |
+| | *"Pessoa de pessoas"* | meeting/slack viram motor de nota | dia sem reunião = teto baixo |
+| 🤠 **Cowboy** | Stack Overflow aberto | copy-paste resolve passos num gesto | chance de colar errado → CR rejeita |
+| | Funciona na minha máquina | pula o CR (push→merge) | erro vai pra prod: cascata de hotfix |
+| | Café duplo | pula interstitials, fluxo comprimido | sem respiro, tropeço vira bola de neve |
+| | *"Deploy sexta 17h59"* | velocidade multiplica a nota | um erro grave despenca tudo |
+| 📋 **Burocrata** | Pair programming | CR quase nunca rejeita | tudo mais devagar (narra cada passo) |
+| | Síndrome do impostor | confere 2x: CR não rejeita | todo confirm pede dupla-confirmação |
+| | Checklist | passos do plano sempre visíveis/ordenados | custo de ação por ticket novo (organizar) |
+| | *"Conforme o rito"* | precisão quase perfeita | velocidade glacial: morre em time-attack |
+| ⏰ **Procrastinador** | Tenho médico às 17h | dia mais curto → mais nota por densidade | mesma carga em menos tempo |
+| | 10 abas abertas | mais waits/tickets em paralelo | trocar de contexto custa mais (erro ao alternar) |
+| | Surto final | rende muito com ticket quase expirando | ticket folgado = você enrola |
+| | *"Adrenalina do deadline"* | fila no vermelho = surto sobre-humano | começo de dia calmo é desperdiçado |
+| 🧓 **Senior Cansado** | Já vi isso antes | tipo de task repetido fica mais rápido a cada vez | tipo de task novo te atrasa |
+| | Atalho decorado | combos (Ctrl+C/V, Ctrl+P) saem mais rápido | erra mais se o layout do dia muda |
+| | Menos zelo | pula etapas "óbvias" → velocidade | mais chance de rejeição em task delicada |
+| | *"Piloto automático"* | dia rotineiro flui sozinho | novidade (arquétipo de dia novo) pune forte |
+| 🎲 **Estagiário** | Sorte de principiante | buffs aleatórios por ticket | debuffs aleatórios por ticket |
+| | Quebra a main | velocidade alta, energia caótica | erro ocasional vira cascata |
+| | Pergunta no canal | um "socorro" por dia resolve um passo travado | gasta tempo + interrompe |
+| | *"Aprende apanhando"* | cada erro hoje vira bônus no próximo igual | precisa errar antes de ficar bom |
+
+**Teste anti-vertical (aplicar a cada perk):** upside e downside têm que cair em **eixos
+diferentes que o DIA arbitra** — se um perk vence em todo dia com downside que nunca morde,
+virou poder vertical e quebra a comparação por categoria.
+
+**Costuras (híbridos, ideia solta):** raso em dois braços vizinhos = sub-arquétipo com nome
+("Hotfix Hero" = Bombeiro×Cowboy, "Tech Lead" = Arquiteto×Comunicador). Identidade sem
+mecânica nova. Respec grátis por run (lê o standup, escolhe o braço); o que persiste é
+histórico por arquétipo + braços destravados (§6).
+
 ---
 
 ## 8. Interstitials — ritmo do dia **[parcial no MVP; resto ADIADO]**
