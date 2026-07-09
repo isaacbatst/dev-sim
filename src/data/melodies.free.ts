@@ -89,42 +89,40 @@ export const MELODIES_FREE: Melody[] = [
     ],
   },
   {
-    // When the Saints (tradicional) — as 3 chamadas e a resposta:
-    // C-E-F-G ×3 · E-C-E-D
+    // 5ª Sinfonia (Beethoven) — o motivo do destino, da-da-da-DUM ×2,
+    // transposto pra caber na oitava branca: A-A-A-F · G-G-G-E
     seq: [
-      { k: 'a', d: 1 },
-      { k: 'd', d: 1 },
-      { k: 'f', d: 1 },
-      { k: 'g', d: 4 },
-      { k: 'a', d: 1 },
-      { k: 'd', d: 1 },
-      { k: 'f', d: 1 },
-      { k: 'g', d: 4 },
-      { k: 'a', d: 1 },
-      { k: 'd', d: 1 },
-      { k: 'f', d: 1 },
-      { k: 'g', d: 2 },
-      { k: 'd', d: 2 },
-      { k: 'a', d: 2 },
-      { k: 'd', d: 1 },
-      { k: 's', d: 4 },
+      { k: 'h', d: 1 },
+      { k: 'h', d: 1 },
+      { k: 'h', d: 1 },
+      { k: 'f', d: 4 },
+      { k: 'g', d: 1 },
+      { k: 'g', d: 1 },
+      { k: 'g', d: 1 },
+      { k: 'd', d: 4 },
     ],
   },
   {
-    // Jingle Bells (Pierpont, 1857) — o refrão:
-    // E-E-E · E-E-E · E-G-C-D-E
+    // Jingle Bells (Pierpont, 1857) — do "jingle all the way" em diante
+    // (ajuste de ouvido do Isaac): E-G-C-D-E · F-F-F · E-E-E · D-E-D-E-D · G
     seq: [
-      { k: 'd', d: 1 },
-      { k: 'd', d: 1 },
-      { k: 'd', d: 2 },
-      { k: 'd', d: 1 },
-      { k: 'd', d: 1 },
-      { k: 'd', d: 2 },
       { k: 'd', d: 1 },
       { k: 'g', d: 1 },
       { k: 'a', d: 1 },
       { k: 's', d: 1 },
-      { k: 'd', d: 4 },
+      { k: 'd', d: 3 },
+      { k: 'f', d: 1 },
+      { k: 'f', d: 1 },
+      { k: 'f', d: 1 },
+      { k: 'd', d: 1 },
+      { k: 'd', d: 1 },
+      { k: 'd', d: 1 },
+      { k: 's', d: 1 },
+      { k: 'd', d: 1 },
+      { k: 's', d: 1 },
+      { k: 'd', d: 1 },
+      { k: 's', d: 2 },
+      { k: 'g', d: 4 },
     ],
   },
 ];
