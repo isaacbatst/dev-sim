@@ -103,48 +103,44 @@ export const MELODIES_FREE: Melody[] = [
     ],
   },
   {
-    // Jingle Bells (Pierpont, 1857) — do "jingle all the way" em diante
-    // (ajuste de ouvido do Isaac): E-G-C-D-E · F-F-F · E-E-E · D-E-D-E-D · G
+    // Jingle Bells (Pierpont, 1857) — o refrão:
+    // E-E-E · E-E-E · E-G-C-D-E
     seq: [
+      { k: 'd', d: 1 },
+      { k: 'd', d: 1 },
+      { k: 'd', d: 2 },
+      { k: 'd', d: 1 },
+      { k: 'd', d: 1 },
+      { k: 'd', d: 2 },
       { k: 'd', d: 1 },
       { k: 'g', d: 1 },
       { k: 'a', d: 1 },
       { k: 's', d: 1 },
-      { k: 'd', d: 3 },
-      { k: 'f', d: 1 },
-      { k: 'f', d: 1 },
-      { k: 'f', d: 1 },
-      { k: 'd', d: 1 },
-      { k: 'd', d: 1 },
-      { k: 'd', d: 1 },
-      { k: 's', d: 1 },
-      { k: 'd', d: 1 },
-      { k: 's', d: 1 },
-      { k: 'd', d: 1 },
-      { k: 's', d: 2 },
-      { k: 'g', d: 4 },
+      { k: 'd', d: 4 },
     ],
   },
   {
-    // Rainha da Noite (Mozart, Flauta Mágica) — a coloratura staccato
-    // ("ah ah ah ah"), comprimida na oitava branca: escada de arpejos
-    // subindo C-D-E-F e coroando no dó agudo. Tudo curto = o staccato.
+    // Rainha da Noite (Mozart, Flauta Mágica) — a parte BEM alta (ouvido do
+    // Isaac): o dó agudo martelado staccato caindo no fá, depois o lá
+    // martelado caindo no ré. C⁵×7-F · A×8-D
     seq: [
-      { k: 'a', d: 1 },
-      { k: 'd', d: 1 },
-      { k: 'g', d: 1 },
-      { k: 'd', d: 1 },
-      { k: 's', d: 1 },
-      { k: 'f', d: 1 },
+      { k: 'k', d: 1 },
+      { k: 'k', d: 1 },
+      { k: 'k', d: 1 },
+      { k: 'k', d: 1 },
+      { k: 'k', d: 1 },
+      { k: 'k', d: 1 },
+      { k: 'k', d: 1 },
+      { k: 'f', d: 2 },
       { k: 'h', d: 1 },
-      { k: 'f', d: 1 },
-      { k: 'd', d: 1 },
-      { k: 'g', d: 1 },
-      { k: 'j', d: 1 },
-      { k: 'g', d: 1 },
-      { k: 'f', d: 1 },
       { k: 'h', d: 1 },
-      { k: 'k', d: 4 },
+      { k: 'h', d: 1 },
+      { k: 'h', d: 1 },
+      { k: 'h', d: 1 },
+      { k: 'h', d: 1 },
+      { k: 'h', d: 1 },
+      { k: 'h', d: 1 },
+      { k: 's', d: 4 },
     ],
   },
 ];
