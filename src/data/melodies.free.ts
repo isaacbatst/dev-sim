@@ -122,8 +122,9 @@ export const MELODIES_FREE: Melody[] = [
   {
     // Rainha da Noite (Mozart, Flauta Mágica) — a parte BEM alta (ouvido do
     // Isaac): o dó agudo martelado staccato caindo no fá, depois o lá
-    // martelado caindo no ré. C⁵×7-F · A×8-D
+    // martelado caindo no ré. C⁵×8-F · A×8-D
     seq: [
+      { k: 'k', d: 1 },
       { k: 'k', d: 1 },
       { k: 'k', d: 1 },
       { k: 'k', d: 1 },
