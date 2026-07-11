@@ -31,6 +31,9 @@
 
 ## Decisões-chave já cravadas (o crivo)
 
+- **O chefe NÃO existe** — nem mecânica (satisfação/mood) nem personagem. A daily/standup é
+  **narração impessoal** (`PERSONALIDADE_DO_DIA.md`). Idem foco e drain: mortos (a tensão é
+  a **fadiga**, `FOCO_FADIGA.md`).
 - **Progressão = identidade / variedade / história — NUNCA poder vertical** (`DIRECAO §6`).
 - **Stakes = a nota do dia** (velocidade + precisão + expiração; sem game-over) (`DIRECAO §9`).
 - **Campanha-primeiro**; daily-calendário/seed/share = endgame (`DIRECAO §2/§10`).

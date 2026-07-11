@@ -11,9 +11,14 @@
 Duas hipóteses de retenção:
 
 - **H-A (novidade):** as pessoas voltam porque **cada dia é diferente** → o **baralho de
-  dias** (`PERSONALIDADE_DO_DIA.md`). **Reserva** — puxar só se H-B não segurar.
+  dias** (`PERSONALIDADE_DO_DIA.md`).
 - **H-B (progressão):** as pessoas voltam porque **a carreira / o setup / o histórico
   crescem**. É o que este doc desenha e o que vamos testar primeiro.
+
+> **Reposicionado 2026-07-11 (ver `EXPEDIENTE.md` §5):** H-A **não é reserva** ("puxar só se
+> H-B não segurar"). As duas se **compõem**: a novidade de carreira (H-B) é finita (esgota
+> ~1,5 semana — o abismo do CSD); a **carreira ABASTECE o daily** (enche o pool que o baralho
+> recombina). H-B carrega o começo, o **limite-por-dia** estica, e H-A é o **motor do dia 40**.
 
 Hoje a progressão é **rasa** (rank por *day-count* = só aparecer; nota **efêmera**, morre no
 fim do dia). Isso não segura ninguém. Este doc a torna real.
@@ -104,10 +109,10 @@ fechadura; **evolução** vem por feito (você ganha a planta; ela CRESCE porque
 
 ## 3. A árvore de tasks — a escolha acontece na DAILY (decisão 2026-07-06)
 
-**A DAILY (standup) abre o expediente**: antes de o relógio andar, o chefe apresenta os
+**A DAILY (standup) abre o expediente**: antes de o relógio andar, a daily apresenta os
 nós elegíveis da árvore em cards (nome + uma linha + o gesto, com a lombada do ramo) e o
 jogador **libera 1 TIPO de task por dia** — não uma unidade, o tipo entra no pool a
-partir daquele dia. Escolha obrigatória ("o chefe não aceita silêncio na daily"); o dia
+partir daquele dia. Escolha obrigatória (a daily não fecha sem um pick); o dia
 só começa depois dela. Aprofundar = escolher o mesmo ramo em dailies seguintes; abrir
 horizonte = escolher outra raiz.
 
@@ -124,7 +129,7 @@ sem medidor, sem RNG bloqueando progresso.
 2. **Ritual de retorno** — "amanhã na daily tem oferta nova"; o dia 1 ABRE com "que tipo
    de dev você é?" (as 4 raízes), não fecha com isso.
 3. **Diegese** — pegar demanda na daily é literalmente como funciona; "me coloca em mais
-   coisas de infra" é pedir pro chefe.
+   coisas de infra" é como você puxa trabalho no board.
 4. **Profundidade × largura** — identidade ("sou o cara de Ops") vs variedade (mais
    tipos no pool) puxam de verdade; irmãos no ramo dão decisão até dentro da identidade.
 5. **§6 intacto** — liberar tipo = conteúdo/identidade, NUNCA poder. (Camada futura
@@ -145,8 +150,8 @@ primeira ESCOLHA (não promoção).
 **Fatiamento da implementação** (slices verticais):
 - **F1 — mecânica**: overlay da daily na abertura (cards + "ver a árvore"; relógio só
   anda depois da escolha); bloco de escolha sai do boletim; copy especial no dia 1.
-- **F2 — tempero**: a daily com cara de standup (falas do chefe, humor dev), som/entrada,
-  juice dos cards.
+- **F2 — tempero**: a daily com cara de standup (narração impessoal, humor dev — SEM chefe
+  como personagem, no molde dos standups do `PERSONALIDADE_DO_DIA`), som/entrada, juice dos cards.
 
 Persistência: `unlockedTasks` + `lastPickDay` no localStorage (inalterados).
 

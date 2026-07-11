@@ -9,12 +9,17 @@ PoC em Godot; ver `DESIGN_CONSULTORIA.md` §10.)
 **Tema:** Dia a dia caótico de um desenvolvedor de software
 **Tom:** Humor ácido sobre a vida corporativa de dev
 
-> **Nota de direção (mudança em andamento).** A implementação web migrou o eixo de
-> _"sobreviver ao dreno sob pressão"_ para _"fazer o trabalho corretamente"_. Foram
-> **removidos** a barra de satisfação, o chefe e o medidor de foco; foi **adicionado**
-> o ciclo de Code Review com retrabalho. Em consequência, **a fonte de stakes está em
-> aberto** (ver §1 Win/Lose e §3.3). As seções abaixo já refletem o estado atual; o
-> que segue como decisão pendente está marcado como tal.
+> **Nota de direção (guarda-chuva — ler antes do resto).** A implementação web migrou o eixo
+> de _"sobreviver ao dreno sob pressão"_ para _"fazer o trabalho corretamente"_. Foram
+> **removidos** a barra de satisfação, o **medidor de foco** e o **drain**; foi **adicionado**
+> o ciclo de Code Review com retrabalho.
+> **O CHEFE NÃO EXISTE — nem como mecânica, nem como personagem** (decisão 2026-07-11): a
+> daily/standup é **narração impessoal** (molde dos standups do `PERSONALIDADE_DO_DIA.md`).
+> Qualquer menção abaixo a "chefe", "satisfação", "foco" ou "drain" (incl. §0.1, §7 Humor, e
+> os Milestones) é **do modelo antigo** — vale o vigente: fadiga (`FOCO_FADIGA.md`) no lugar
+> do foco, e **nota do dia** (`DIRECAO §9`) como stakes.
+> **Fonte de stakes/derrota: RESOLVIDA** (não mais "em aberto") → nota do dia, sem game-over
+> (ver `DIRECAO_GAMEPLAY.md` §9, `EXPEDIENTE.md`). Hierarquia dos docs em `docs/README.md`.
 
 ### Pitch
 
