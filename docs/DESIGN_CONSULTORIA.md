@@ -50,6 +50,16 @@ Em CSD/Typing of the Dead o input **é** a expressão de habilidade — rápido,
 
 ## 3. A sacada estratégica: modelo "daily game"
 
+> **⚠ ESTRATÉGIA INVERTIDA (2026-06, ver `DIRECAO_GAMEPLAY.md` §2 e `EXPEDIENTE.md` §5).**
+> Este doc é a consultoria inicial e prega **daily-calendário PRIMEIRO** com o Milestone 3
+> (campanha/múltiplos dias) "morto ou opcional". A direção **convergiu no oposto**:
+> **campanha-primeiro** (os "múltiplos dias" são a espinha, não o M3 descartado), e o
+> **daily-calendário + seed + share virou ENDGAME**. Além disso, "daily" no sentido que
+> importa agora = o **limite-por-dia** (racionar consumo via fadiga, `EXPEDIENTE §4`), não o
+> daily-calendário-social. E o próprio insight "carreira não retém sozinha" (CSD) é honrado
+> em `EXPEDIENTE §5` — mas a solução é *a carreira ABASTECER o daily*, não substituí-lo por
+> ele. Bloco mantido como registro histórico da decisão de migrar.
+
 O modelo daily resolve a retenção de forma **mais barata e melhor encaixada** que meta-progressão. Daily games não prendem com grind/upgrades, mas com três coisas baratas:
 
 1. **Um desafio fresco por dia, igual pra todos (mesmo seed)** → variedade sem precisar de centenas de tickets.

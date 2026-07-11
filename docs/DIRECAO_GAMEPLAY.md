@@ -196,8 +196,18 @@ Modos diferentes de jogar **sem overpower**. Não são builds — **perk único 
 **Por que está adiado:** dependem de **interstitials** (§8) maduros e do sistema de
 **deadline/nota** (§9) afinado — constroem sobre essas peças, não validam nada sozinhos.
 
-### 7.1 Árvore de perks por arquétipo (a "camada posterior consciente") **[IDEAÇÃO — nada decidido]**
+### 7.1 Árvore de perks por arquétipo (a "camada posterior consciente") **[IDEAÇÃO SUPERADA — ver `PROGRESSAO.md` + `EXPEDIENTE.md`]**
 
+> **⚠ SUPERADO (2026-07-11).** Este bloco (commit 3dec1da) foi escrito sobre o
+> `DIRECAO_GAMEPLAY` congelado e **contradiz decisões posteriores**: (1) a "árvore" oficial
+> é a **de tasks** (`PROGRESSAO §3`), não de perks; (2) `PROGRESSAO §6` reafirma **perks NÃO
+> empilham** (um por run), o que mata a premissa de "um caminho/braço por run"; (3) o árbitro
+> proposto (matchup perk×dia) dependia do baralho de dias, reposicionado em `EXPEDIENTE §5`.
+> A conversa seguiu por **fadiga-carry + limite-por-dia** (`EXPEDIENTE.md`), não por classes
+> de perk. Mantido só como registro histórico da ideação — **não é direção vigente.**
+>
+> _(texto original de ideação a seguir, preservado)_
+>
 > Exercício de ideação (2026-07). Se um dia os mutators virarem árvore/classes, esta é a
 > forma que mantém tudo horizontal. **Nenhum item abaixo está decidido nem balanceado.**
 
@@ -298,6 +308,12 @@ game-over. Ele faz a **prioridade significar algo** (urgente = timer curto) e tr
 **Anti-"parece trabalho":** timers generosos no começo + nota-não-morte. A grade, não o
 game-over, mantém a pressão sem virar overtime.
 
+> **Adendo 2026-07-11 (ver `EXPEDIENTE.md`):** a nota **fecha às 17h** (junto com o bônus de
+> mesa limpa). Depois disso vem a **hora extra** — que NÃO paga nota, só **evita perda**
+> (quitar a dívida dos pendentes). "Overtime" deixa de ser risco porque ficar nunca dá
+> crédito; o melhor resultado de um serão é **empatar**. Sair no horário com a mesa limpa é a
+> jogada vencedora.
+
 ---
 
 ## 10. Sequência / prioridade
@@ -323,12 +339,19 @@ game-over, mantém a pressão sem virar overtime.
 
 ## 11. Decisões em aberto
 
-- **Foco:** reintroduzir numa forma compatível ou aposentar e ajustar o pitch.
+- ~~**Foco:**~~ **RESOLVIDO** — não voltou o "foco" do PoC; a tensão virou **fadiga**
+  (`FOCO_FADIGA.md`, diegética, sem medidor) + o **custo de troca de contexto** já vive no
+  foco-de-app (`design-direction`). O pitch se ajusta a isso.
 - **Rank:** Elo × piso suave × temporadas — com dados.
 - **Perk:** escolhido por run vs. equipado fixo (muda se o matchup é decisão diária).
 - **Balanceamento dos perks** (esp. #3/#5) e dos **timers de deadline** — só com playtest.
-- **Código:** `MeetScene`/`MailScene` órfãs (navegador como hub) — limpar ou virar
-  sub-sites.
+- ~~**Código:** `MeetScene`/`MailScene` órfãs~~ **têm propósito agora** — são a "ação" de
+  fechaduras da mesa=biografia (`PROGRESSAO §2.1`): Call = teclado, Mail = café. Não deletar.
 
-> **Resolvido nesta rodada:** a forma dos stakes/derrota → **nota do dia como moeda
+> **Resolvido nesta rodada (2026-06):** a forma dos stakes/derrota → **nota do dia como moeda
 > única** (velocidade + precisão + expiração, sem game-over). Ver §9.
+>
+> **Resolvido em 2026-07-11 (ver `EXPEDIENTE.md`):** fim de dia / hora extra (nota fecha 17h,
+> serão evita-perda), fadiga-carry subtrativa, **limite-por-dia** (mata o "gate diário"), e a
+> **carreira abastece o daily** (a novidade de carreira é finita — CSD; o limite estica, a
+> recombinação pega o dia 40). E a **mesa=biografia** substitui a loja (`PROGRESSAO §2/§2.1`).

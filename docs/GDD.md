@@ -34,9 +34,9 @@ Tickets chegam → Selecionar ticket → Executar passos (press/hold/nav/select/
 ### Win/Lose
 
 - **Vitória:** Chegar às 17:00 (3 minutos em tempo real). _Hoje é o único desfecho._
-- **Derrota:** **Decisão pendente.** A satisfação do chefe (condição de derrota do PoC)
-  foi removida. A fonte de stakes pretendida é **deadline por ticket** (§0.2), ainda
-  não implementada — enquanto isso, não há condição de derrota.
+- **Derrota:** **RESOLVIDO (2026 — ver `DIRECAO_GAMEPLAY.md` §9 e `EXPEDIENTE.md`):** não há
+  game-over. Os stakes viram a **nota do dia** (velocidade + precisão + expiração); o deadline
+  pune a nota, não mata. Você sempre **termina** o dia. Fim de dia / hora extra em `EXPEDIENTE.md`.
 
 ---
 
@@ -388,6 +388,11 @@ Quando o jogador perde, precisa ver _por que_ perdeu e _quanto faltou_. Isso tra
 
 ### Milestone 2: Interrupções e Caos (v0.4)
 
+> **⚠ PARCIALMENTE SUPERADO.** O **chefe** e o **foco** foram removidos (ver §3.3/§3.4); tudo
+> que abaixo depende de "foco cai −30%" ou "interrupção do chefe" está morto. A tensão de
+> interrupção hoje é a **fadiga** (`FOCO_FADIGA.md`) e os stakes são a **nota** (`DIRECAO §9`).
+> Eventos aleatórios ("deploy quebrou", "CI travou") seguem válidos como camada de stakes.
+
 **Objetivo:** Simular a realidade caótica que todo dev conhece.
 
 - [ ] **Interrupções do chefe:**
@@ -405,6 +410,15 @@ Quando o jogador perde, precisa ver _por que_ perdeu e _quanto faltou_. Isso tra
 ---
 
 ### Milestone 3: Progressão e Meta-game (v0.5)
+
+> **⚠ SUPERADO — ver `DIRECAO_GAMEPLAY.md` §6, `PROGRESSAO.md`, `EXPEDIENTE.md`.** Este
+> milestone é do modelo antigo e **inverte a direção atual** em dois pontos:
+> **(1) "Múltiplos dias" NÃO é meta-game opcional — é a espinha (campanha-primeiro, `DIRECAO §2`).**
+> **(2) Os "upgrades entre dias" (café premium: drena menos · +1 slot · hold 20% mais rápido ·
+> drain menor) são PODER VERTICAL, explicitamente BANIDO** (`DIRECAO §6`, `PROGRESSAO §6`).
+> Progressão = identidade/variedade/história, nunca poder. A progressão real vive em
+> `PROGRESSAO.md` (carreira/nota, árvore de tasks, mesa=biografia) + `EXPEDIENTE.md` (limite-
+> por-dia). Leaderboard/modos ficam pro endgame (`DIRECAO §10`). Bloco mantido como histórico.
 
 **Objetivo:** Razão para jogar mais de uma vez. Só faz sentido depois que um dia é divertido sozinho.
 
@@ -424,6 +438,10 @@ Quando o jogador perde, precisa ver _por que_ perdeu e _quanto faltou_. Isso tra
 ---
 
 ### Milestone 4: Identidade e Polish Final (v0.6)
+
+> **⚠ PARCIALMENTE SUPERADO.** "Arte do chefe / expressões" está morto (chefe removido).
+> "Estatísticas de satisfação" idem. A identidade hoje é a **mesa=biografia** (`PROGRESSAO §2.1`)
+> e a **personalidade do dia** (`PERSONALIDADE_DO_DIA.md`). Achievements/temas seguem válidos.
 
 **Objetivo:** O jogo tem personalidade e acabamento.
 

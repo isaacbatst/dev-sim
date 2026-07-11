@@ -44,36 +44,56 @@ identidade). **Dois paces diferentes = dois trilhos.**
 
 | Canal | O que dá | Como se obtém | Pace |
 |---|---|---|---|
-| **Comprar (`$`)** | cosmético / identidade — mesa/setup (planta, teclado, café…) | gasta `$` (da nota) no que **quer** | livre |
+| **Mesa (biografia)** | cosmético / identidade — a mesa CONTA como você jogou | **evidência de atos** (fechaduras de duas chaves, §2.1); NÃO se compra | emerge do jogo |
 | **Árvore de tasks** | novos TIPOS de demanda (mecânicas) | **escolhe 1 por dia na DAILY** (abertura do dia), entre os nós elegíveis da árvore (§3) | RÁPIDO — sandbox completo em ~1,5 semana |
 | **Promoção (cargo)** | **perks** (§7) + prestígio/título | nota acumulada, limiares LONGOS | LENTO — o arco da campanha |
 
 - **Perks** (§7 — *mutators* double-edged): unlock = **entra no arsenal**; ativa **um por
   turno**. Podem ser raros/lentos sem frustrar, porque a variedade vem da árvore.
 
-### 2.1 A mesa EVOLUI (decisão 2026-07-06) — vertical na ficção, horizontal na mecânica
+> **Mudança 2026-07-11 (supera a "loja" e a §2.1 anterior "a mesa evolui com `$`"):** o
+> canal "comprar com `$`" MORREU. A loja tinha 3 itens (~400 no total, esgota num dia) e —
+> pior — vendia os **requisitos dos rituais** (planta/café/teclado): vendia GAMEPLAY, não
+> cosmético (fere `DIRECAO §6`). No lugar, **a mesa é biografia** (§2.1). `$` deixa de ter
+> função, ou sobrevive só pro ARRANJO puro (cor de keycap, wallpaper, onde as coisas ficam).
+> **Feito dá o QUE você tem; dinheiro, no máximo, o arranjo.**
 
-Os rituais da pausa são evoluíveis com `$` — o sumidouro de dinheiro de longo
-prazo (hoje a loja esgota em 3 compras) e o coração do "meu setup cresce" (H-B).
+### 2.1 A mesa = BIOGRAFIA (decisão 2026-07-11) — cosmético é evidência, não compra
 
-**A regra que não se quebra: evolução muda o GESTO e a IDENTIDADE, nunca o
-efeito.** Restauração é plana e idêntica pra todo ritual, pra sempre — "café
-melhor restaura mais" é pay-to-win contra a fadiga. VACINA CONTRA EFFECT CREEP:
-se alguém propuser efeito no upgrade, a resposta é este parágrafo.
+A mesa é o **espelho**, não o carrinho. Conta *como você jogou* — é o motor PRENDER
+(`DIRECAO §1`, share de identidade estilo Strava) e o artefato de share (`POSICIONAMENTO §3`).
 
-O truque: a escada de status pode PARECER vertical (caneca → prensa → V60 →
-espresso, como os cargos) desde que mecanicamente seja só OUTRO gesto:
+**Quatro regras do cosmético:**
+1. **Evidência, não recompensa.** O objeto é a marca natural do ato. Se precisa de legenda, errado.
+2. **Legível por terceiros**, sem manual (requisito do share).
+3. **Sem lista visível → sem farm.** Nada de quest log; a mesa preenche sozinha e surpreende.
+4. **Pra cada cicatriz, um contrapeso.** Varar a noite deixa a **caneca manchada**; sair no
+   horário deixa o **gato dormindo no monitor**. As duas vidas precisam de objetos desejáveis.
 
-| Ritual | Evolução (gesto novo, efeito igual) |
-|---|---|
-| Café | caneca: 3 goles → prensa: mergulhar + goles → V60: despejar em círculos (setas) + gole → espresso: moer (mash) + extrair (hold curto) + gole |
-| Planta | espécies novas = grades/gestos próprios (suculenta borrifa 6; samambaia 16); a planta CRESCE com o cuidado — história visível na mesa |
-| Pescoço | alongamentos novos = combos novos (ombros, punhos) — variedade do ritual grátis |
-| Teclado | escalas/sons novos (synth → lofi → piano) — o mesmo gesto soa diferente |
+**Fechaduras de duas chaves** (o unlock dos rituais e afins): *o jogo entrega a chave (o
+GATILHO, nasce de como você joga); você gira (a AÇÃO, mora num app).* Aquisição vem por
+fechadura; **evolução** vem por feito (você ganha a planta; ela CRESCE porque você rega).
 
-- O sistema de prompts+pips da pausa escala de graça (gesto novo = prompt novo).
-- Perk ≠ setup: perk é mutator de GAMEPLAY (promoção, §7); setup é
-  sensorial/identidade (comprado). Trilhos separados.
+| Objeto | Gatilho (como você joga) | Ação (num app) | App |
+|---|---|---|---|
+| ⌨️ Teclado mecânico | a tecla emperrou N vezes | "reclamar do teclado" → sugerem um mecânico | Call (daily/meet) |
+| 🌱 Planta | N dias fechados COM sol na janela | responder o post do `#random` | Slack |
+| 🎹 Tecladinho | N tamborilados no `wait` do CR (+ som ligado) | abrir a aba sugerida e assistir | Navegador |
+| ☕ Café | N pausas estando exausto | assinar o "1º mês grátis" | Mail |
+
+- **Regras da fechadura:** a possibilidade ACENDE (âmbar) ao abrir; NUNCA expira; a ação
+  custa relógio (o preço do cosmético é a distração — auto-limita farm); nenhum contador visível.
+- **Chegada universal:** tudo chega no DIA SEGUINTE (a campainha toca no meio do expediente).
+- **Anti-circular:** nunca destrave um ritual com o ato que aquele ritual permite (a planta
+  não vem de regar — regar exige a planta). O **pescoço não requer nada** (é o tronco).
+- **A piada que sustenta o §6:** você culpa o teclado, compra outro, e os emperros CONTINUAM
+  (nunca foi o teclado, era você cansado) — progressão dá estilo, jamais poder.
+- **Dá propósito às cenas órfãs** `MeetScene`/`MailScene` (`DIRECAO §11`).
+- **Rituais NÃO se compram** (supera `FOCO_FADIGA §5`): destravam pela fechadura. A
+  restauração segue **plana** entre rituais (a vacina contra effect-creep permanece: café não
+  restaura mais que pescoço). Muda COMO se ganha o ritual, não o efeito.
+- **Evolução da mesa** (gesto novo/efeito igual — a planta que cresce, café caneca→V60) segue
+  válida como conteúdo de pausa, mas gateada por **feito/uso**, não por `$`.
 - **Sequência: construir só DEPOIS do P5** (validar que jogadores pausam e
   curtem pausar antes de aprofundar conteúdo de pausa).
 - **Limiares de cargo esticados** (placeholder, afinar jogando): Júnior 400 (dia 1–2, o
@@ -228,20 +248,25 @@ compartilháveis — desejo/identidade, não poder).
 
 ## 8. O que persiste (localStorage — esboço)
 
-`campaignDay`, `posição`, `carreiraTotal` (nota acumulada → promoção), `$` (carteira p/
-cosméticos), `streak` + `lastPlayedDate`, `nós comprados`, `perks no arsenal`, `tasks
-destravadas`.
+`campaignDay`, `posição`, `carreiraTotal` (nota acumulada → promoção), `streak` +
+`lastPlayedDate`, `perks no arsenal`, `tasks destravadas`, **objetos-de-mesa destravados**
+(por feito, §2.1), **fadiga herdada** (o carry subtrativo, `EXPEDIENTE.md` §3). `$` só
+persiste se sobreviver como moeda de arranjo (§2).
 
 ---
 
 ## 9. Em aberto
 
 - **A escada completa** (nomes/quantos degraus) + **quanto de nota por promoção**.
-- **`$` vs nota (§9):** a nota é moeda única. Ela alimenta a promoção **e** vira `$` de gastar?
-  (ex.: a nota do dia soma na `carreiraTotal` — que nunca cai — **e** credita `$` numa
-  carteira que você deplete comprando). Definir para não ferir "moeda única".
+- ~~**`$` vs nota**~~ **RESOLVIDO no código** (`gameStore.ts`: `careerTotal += gained` **e**
+  `wallet += gained`) — a nota do dia soma na carreira (nunca cai) e credita `$`. Com a mesa
+  virando biografia (§2), `$` perde função; sobrevive só se virar moeda de **arranjo**.
 - **Como o task-unlock casa com o spawn/pool** (a personalidade do dia usa pesos de mix — o
   pool disponível passa a ser função do rank).
-- **Gate diário** (1 turno por dia real + hora extra/fadiga) — sistema à parte, decidir depois.
+- ~~**Gate diário**~~ **RESOLVIDO** — não é sistema à parte: emerge da **fadiga-carry**
+  (`EXPEDIENTE.md` §4). ~1 dia-de-jogo/dia-real natural, sem lock. Entra em steady-state, não
+  na 1ª slice (não suprimir o sinal de maratona na validação — `EXPEDIENTE §6`).
 - **Perks (§7)** dependem de interstitials (§8) + nota (§9) maduros — quando entram de fato.
-- **H-A (baralho de dias)** fica de reserva; se H-B não segurar, é o próximo lever.
+- **H-A (baralho de dias)** era reserva; reposicionado (`EXPEDIENTE §5`): não é "se H-B não
+  segurar", é o **motor do dia 40** (mantém a instância diária desejável depois que a árvore
+  de tasks esgota). A carreira ABASTECE o daily; não competem.

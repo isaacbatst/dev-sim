@@ -27,6 +27,11 @@ mecânica (CR mais rígido, tudo pra um horário). Não bloqueia testar a hipót
 > A dificuldade de um dia é **relativa ao steady-state**, não um valor global. Os
 > valores base atuais (spawn 24s, deadlines 50/70/100/135, dia 220s) são o regime; o
 > **dia 1 (onboarding) entra abaixo dele e a campanha rampa**. Ver `onboarding-difficulty-ramp`.
+>
+> **Proposta (2026-07-11, ver `EXPEDIENTE.md` §4):** o dia 1 é **meio-período** (relógio mais
+> curto) — rampa de intensidade **diegética** (menos horas = menos tickets, não um nerf de
+> spawn escondido) e, por ser curto, deixa a **1ª sessão caber 2 dias de jogo** sem detonar a
+> fadiga (o ensino do "mais um dia" antes de a pessoa fechar o navegador).
 
 ---
 

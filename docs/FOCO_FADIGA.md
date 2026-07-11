@@ -31,6 +31,13 @@
 - Fadiga = **minutos de jogo trabalhados desde a última restauração** (a pausa
   não acumula). Só tempo na v1 — erros NÃO aceleram (previsível de balancear;
   reavaliar depois).
+- **Atravessa o dia (adendo 2026-07-11, ver `EXPEDIENTE.md` §3/§4):** a fadiga
+  passa a **persistir** entre dias. O sono recupera uma **cota FIXA** (subtrativa,
+  não %), dimensionada pra cobrir um dia saudável → **dia limpo acorda zerado; hora
+  extra vaza só o excesso**. Herança capada em "cansado" (nunca "exausto"); **não
+  decai na ausência** (volta como saiu). Isso é o que faz emergir o **limite de ~1
+  dia-de-jogo por dia-real** (`EXPEDIENTE §4`) — só entra em steady-state, não na
+  1ª slice.
 
 ## 3. A curva (horas de expediente) — ESCALADA CONTÍNUA, SEM TETO
 
@@ -80,8 +87,19 @@ dessaturação progressivos, Slack fantasma (pings de distração), "o PC tá le
 
 ## 5. Restauração (rituais)
 
-Completar **um** ritual → fresco de novo (reset total). Todos ~4–8s de gesto,
-mesmo efeito:
+> **Superado em 2026-07-11 (ver `PROGRESSAO.md` §2.1 e `EXPEDIENTE.md` §3):**
+> **(a) Rituais NÃO se compram.** A coluna "Requer 💰" abaixo está morta — planta/
+> café/teclado destravam por **fechadura de duas chaves** (gatilho de como você joga
+> + ação num app), não com `$`. O que muda é COMO se ganha o ritual, não o efeito.
+> **(b) "Reset total" → leva ao PISO, não a zero.** O piso sobe (i) por pausa dentro
+> do dia (a 2ª/3ª restauração rende menos — a unidade é a PAUSA, não o ritual, senão
+> "descansou tudo" queimaria 4 usos) e (ii) pela **fadiga herdada** do dia anterior.
+> **A restauração segue PLANA entre rituais** (café = pescoço = tocar) — a vacina
+> contra effect-creep permanece; o decréscimo é por USO/HERANÇA, não por qual ritual.
+
+Completar **um** ritual → restaura (ao piso, ver nota acima). Todos ~4–8s de gesto,
+mesmo efeito (a coluna "Requer" indica só o que o ritual exige pra existir na mesa —
+hoje via fechadura, `PROGRESSAO §2.1`):
 
 | Ritual | Requer | Gesto |
 | --- | --- | --- |
