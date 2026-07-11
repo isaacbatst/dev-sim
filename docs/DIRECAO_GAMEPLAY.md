@@ -308,11 +308,12 @@ game-over. Ele faz a **prioridade significar algo** (urgente = timer curto) e tr
 **Anti-"parece trabalho":** timers generosos no começo + nota-não-morte. A grade, não o
 game-over, mantém a pressão sem virar overtime.
 
-> **Adendo 2026-07-11 (ver `EXPEDIENTE.md`):** a nota **fecha às 17h** (junto com o bônus de
-> mesa limpa). Depois disso vem a **hora extra** — que NÃO paga nota, só **evita perda**
-> (quitar a dívida dos pendentes). "Overtime" deixa de ser risco porque ficar nunca dá
-> crédito; o melhor resultado de um serão é **empatar**. Sair no horário com a mesa limpa é a
-> jogada vencedora.
+> **Adendo 2026-07-11 (ver `EXPEDIENTE.md`):** a nota **NÃO fecha às 17h** — segue
+> acumulando na **hora extra** (spawn parou ~16h, você entrega o rabo de tickets). O "upa
+> mais rápido" que isso gera é **benigno** (fadiga rende ~20–40% + o prêmio é posição =
+> cosmético pelo §6 + o carry devolve amanhã). O que acontece às 17h é o **snapshot do bônus
+> de mesa limpa** — o contrapeso que faz **sair no horário com a mesa limpa ser a jogada
+> vencedora** (quem fica pra entregar mais abre mão do bônus).
 
 ---
 
@@ -351,7 +352,8 @@ game-over, mantém a pressão sem virar overtime.
 > **Resolvido nesta rodada (2026-06):** a forma dos stakes/derrota → **nota do dia como moeda
 > única** (velocidade + precisão + expiração, sem game-over). Ver §9.
 >
-> **Resolvido em 2026-07-11 (ver `EXPEDIENTE.md`):** fim de dia / hora extra (nota fecha 17h,
-> serão evita-perda), fadiga-carry subtrativa, **limite-por-dia** (mata o "gate diário"), e a
+> **Resolvido em 2026-07-11 (ver `EXPEDIENTE.md`):** fim de dia / hora extra (a nota NÃO
+> fecha às 17h — segue acumulando; o serão paga mas o "upa mais rápido" é benigno; às 17h só
+> o bônus de mesa limpa), fadiga-carry subtrativa, **limite-por-dia** (mata o "gate diário"), e a
 > **carreira abastece o daily** (a novidade de carreira é finita — CSD; o limite estica, a
 > recombinação pega o dia 40). E a **mesa=biografia** substitui a loja (`PROGRESSAO §2/§2.1`).

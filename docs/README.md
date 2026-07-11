@@ -34,7 +34,10 @@
 - **Progressão = identidade / variedade / história — NUNCA poder vertical** (`DIRECAO §6`).
 - **Stakes = a nota do dia** (velocidade + precisão + expiração; sem game-over) (`DIRECAO §9`).
 - **Campanha-primeiro**; daily-calendário/seed/share = endgame (`DIRECAO §2/§10`).
-- **A nota fecha às 17h**; hora extra evita-perda, não paga (`EXPEDIENTE §2`).
+- **A nota NÃO fecha às 17h** — segue acumulando; às 17h só se checa o **bônus de mesa
+  limpa**. Hora extra PAGA (nota continua), mas o "upa mais rápido" é benigno (fadiga rende
+  pouco + prêmio é cosmético, §6). O bônus é o contrapeso que faz sair no horário valer
+  (`EXPEDIENTE §2`).
 - **Fadiga atravessa o dia** (sono subtrativo) → **limite ~1 dia-jogo/dia-real** emerge; mata
   o "gate diário" (`EXPEDIENTE §3/§4`). **Entra em steady-state, não na 1ª slice.**
 - **Mesa = biografia**: cosmético é evidência de ato (fechaduras), não compra; `$` morre ou
@@ -45,7 +48,8 @@
 ## Próximas linhas (sequência)
 
 1. **Rampa do dia 1 + analytics** (medir "as pessoas voltam?") — pré-condição de tudo.
-2. Expediente básico (spawn para 16h, nota fecha 17h, bônus de mesa limpa, botão encerrar).
+2. Expediente básico (spawn para 16h, **bônus de mesa limpa às 17h**, botão encerrar; a
+   nota NÃO fecha — segue acumulando na hora extra).
 3. Fadiga-carry + limite-por-dia — **steady-state, pós-validação**.
 4. Mesa=biografia (fechaduras) + desbloqueio de conteúdo.
 5. Recombinação profunda (modificadores do baralho) → seed/share/registro (endgame).

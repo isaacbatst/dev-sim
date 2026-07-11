@@ -20,10 +20,11 @@
   Isso faz a "mesa limpa às 17h" ser **mérito, não sorte** (senão um ticket nascido às
   16:58 tornaria o bônus impossível por azar) e entrega de graça o **Sprint Final** que o
   `GDD.md` §0.1 queria autorar.
-- **17:00 — a nota FECHA.** Dispara (ou não) o **bônus de mesa limpa**. O mundo sinaliza
-  sem modal: a luz cai (`ambientFor` já é função do relógio), os colegas somem. **Nada te
-  impede de continuar.** A ação **"encerrar expediente"** fica disponível daqui em diante,
-  a qualquer momento (menu automático, não um modo especial).
+- **17:00 — checa o bônus de mesa limpa.** **A nota NÃO fecha** — segue acumulando quem
+  continuar entregando (ver §2). O que acontece às 17h é só o **snapshot do bônus** (mesa
+  limpa = bônus) e o mundo sinalizando sem modal: a luz cai (`ambientFor` já é função do
+  relógio), os colegas somem. **Nada te impede de continuar.** A ação **"encerrar
+  expediente"** fica disponível daqui em diante (menu automático, não um modo especial).
 - **17:00–23:00 — hora extra.** Você continua trabalhando **normalmente** — mesma fila,
   mesmos tickets, só escuro e cansado. **Não há pool noturno, incidente especial nem
   "modo".** A hora extra é a mundanidade do serão: mesma coisa, sozinho, seguindo.
@@ -33,40 +34,41 @@
 
 ---
 
-## 2. A hora extra NÃO paga — ela evita perda
+## 2. A hora extra PAGA — mas o "upa mais rápido" é benigno
 
-A nota fecha às 17h, mas a mesa fica com uma **dívida**: cada ticket pendente às 17:00 é
-**−60 a vencer** (`FOCO_FADIGA` já expira ticket a −60). A noite é você **tentando quitar**
-antes que a dívida seja cobrada:
+> **Correção 2026-07-11:** um esboço anterior tinha "nota fecha às 17h + dívida + hora extra
+> evita-perda". Foi **superado** pelo modelo "simplesmente continuar trabalhando" — a nota
+> **NÃO fecha**, ela **segue acumulando**, e o *"upa mais rápido"* que isso gera é aceitável.
+> Sem dívida, sem pool noturno, sem "evita-perda".
 
-- **Entregar de noite** = quita aquela dívida. Você não *ganha* nota; **deixa de perder**.
-- **Encerrar** (a qualquer momento) = os pendentes apodrecem, a cobrança acontece.
-- **Ficar** = tentar quitar, pagando com fadiga → amanhã (§3).
+**A nota continua contando depois das 17h.** Com o spawn parado (~16h), o que resta é o
+rabo de tickets: você fica pra **entregá-los** (nota de verdade → "upa mais rápido") ou vai
+embora (o que ficar pendente expira a **−60**, o mecanismo normal de deadline). "Encerrar"
+está sempre disponível — a noite não tem fim duro; você para quando para, e a fadiga é o custo.
 
-O **melhor resultado possível de uma hora extra é empatar** — que é exatamente como serão
-funciona. Ninguém ganha crédito por consertar o que devia estar pronto às cinco.
+**"Upa mais rápido ficando?" Sim — e é benigno**, por três motivos:
+1. A hora marginal roda a ~20–40% da vazão fresca (fadiga emperra/esquece) → soma um
+   *sliver* decrescente, não uma hora inteira de nota.
+2. O prêmio é **posição**, que `DIRECAO §6` garante ser **prestígio sem poder** — assíncrono,
+   cosmético. Pior caso do grind: um título ligeiramente mais barato.
+3. A fadiga **pune o grind por dentro** (jogar cansado é ruim de sentir) — sem regra
+   desenhada pra isso. O mau jogo se pune sozinho. E o **carry** (§3) devolve parte do ganho
+   amanhã (você acorda cansado). O grind se autocorrige e o teto do dano é cosmético.
 
-**A recompensa por ficar é intrínseca:** o core tátil já está validado (é gostoso teclar).
-Você fica porque o jogo é bom, e paga com amanhã. É o desenho **menos explorável possível**
-— não há o que farmar porque não há o que ganhar. Quem otimiza vai embora às 17h.
-
-**"Upa mais rápido ficando?"** Sim, mas é benigno, por dois motivos:
-1. A hora marginal roda a ~20–40% da vazão fresca (fadiga emperra/esquece), então soma um
-   *sliver* decrescente, não uma hora de nota.
-2. O prêmio é **posição**, que `DIRECAO §6` garante ser **prestígio sem poder** —
-   assíncrono, cosmético. Pior caso: um título ligeiramente mais barato.
-   E a fadiga **pune o grind por dentro** (jogar cansado é ruim de sentir) — sem regra
-   desenhada pra isso. O mau jogo se pune sozinho.
+**A recompensa real por ficar é intrínseca:** o core tátil já é gostoso; você fica porque o
+jogo é bom, e paga com amanhã. É o desenho **menos explorável possível** — quem otimiza vai
+embora às 17h.
 
 > **Mortos nesta rodada:** pool noturno, dívida-como-sistema-novo, incidentes agendados,
-> "caminho do vencedor" especial. Eram espetáculo e conserto-de-balanço prematuro. A
-> decisão "seguir cansado ou parar" **emerge dos sistemas que já existem** (spawn + fadiga
-> + nota) mais um botão.
+> "caminho do vencedor" especial, e o enquadramento "evita-perda". Eram espetáculo e
+> conserto-de-balanço prematuro. A decisão "seguir cansado ou parar" **emerge dos sistemas
+> que já existem** (spawn + fadiga + nota + expiração) mais um botão.
 
-**A única peça que carrega o balanço:** o **bônus de mesa limpa às 17h**. Sem ele, ficar é
-sempre ≥ sair e todo mundo grinda. Com ele, quem fica **abre mão** do bônus (não dá pra ter
-a mesa limpa E continuar trabalhando). Calibra o bônus, calibra a tentação. É a balança
-toda, num número.
+**A única peça que carrega o balanço:** o **bônus de mesa limpa às 17h**. Sem ele, ficar pra
+entregar o rabo é sempre fracamente melhor (só ganha nota). Com ele, quem fica **abre mão** do
+bônus (não dá pra ter a mesa limpa E ainda ter tickets pra entregar). Sair no horário com a
+mesa limpa é a jogada vencedora. Calibra o bônus, calibra a tentação — é a balança toda, num
+número.
 
 ---
 
@@ -153,7 +155,8 @@ graça (ninguém maratona o que não gosta). Um gate suave ligado cedo demais **
 próprio sinal** que diz se o loop presta.
 
 1. **1ª slice (medir "as pessoas voltam?"):** rampa do dia 1 + **analytics** + o expediente
-   básico (spawn para 16h, nota fecha 17h, bônus de mesa limpa, botão encerrar). SEM carry.
+   básico (spawn para 16h, bônus de mesa limpa às 17h, botão encerrar; a nota NÃO fecha —
+   segue acumulando na hora extra). SEM carry.
    Medir *dias-por-sessão* e D1.
 2. **Steady-state (quando a analytics confirmar retorno):** liga a fadiga-carry (§3/§4) e o
    limite-por-dia. É feature de retenção, não de validação.
