@@ -5,6 +5,7 @@ import type { ProgramId, Snapshot } from '@/core/snapshot';
 import { levelFor } from '@/data/positions';
 import { eligibleNodes, poolForUnlocked } from '@/data/taskTree';
 import { playSound } from './sound';
+import { track } from './analytics';
 
 /**
  * Teste: força um ticket no 1º slot. Por env (`NEXT_PUBLIC_FORCE_TASK=fix_typo
@@ -134,7 +135,27 @@ interface GameState {
 
 let loop: GameLoop | null = null;
 
+/**
+ * Dias-de-jogo já iniciados NESTA sessão (carregamento). É o sinal de "maratona"
+ * — o mais barato que temos pra saber se o loop puxa "mais um dia" (EXPEDIENTE §6).
+ * Por isso a limitação-por-dia NÃO entra antes de medir: ela suprimiria justo isto.
+ */
+let daysThisSession = 0;
+/** O `day_abandon` sai no máximo uma vez por dia (pagehide pode disparar mais de uma). */
+let abandonSent = false;
+
 export const useGameStore = create<GameState>((set, get) => {
+  /** Props comuns a todo evento de dia — a base de corte das análises. */
+  const base = () => {
+    const { day, career } = get();
+    return {
+      day,
+      level: career.level,
+      streak: career.streak,
+      unlocked: career.unlockedTasks.length,
+    };
+  };
+
   /** Fecha o expediente: acumula nota→carreira/$, promove, resolve streak. Uma vez. */
   const closeDay = (snapshot: Snapshot) => {
     if (get().dayResult) return; // já fechado
@@ -155,6 +176,24 @@ export const useGameStore = create<GameState>((set, get) => {
       career: c,
       dayResult: { nota: snapshot.score, gained, promotedTo: c.level > before ? c.level : null },
     });
+
+    abandonSent = true; // terminou: não é abandono
+    track('day_complete', {
+      ...base(),
+      nota: snapshot.score,
+      gained,
+      delivered: snapshot.delivered,
+      expired: snapshot.expired,
+    });
+    if (c.level > before) track('promo', { ...base(), from: before, to: c.level });
+  };
+
+  /** O relógio começou a andar — o dia de fato começou (pós-daily, se houver). */
+  const emitDayStart = () => {
+    if (forcedTask()) return; // modo de teste não polui os dados
+    daysThisSession += 1;
+    abandonSent = false;
+    track('day_start', { ...base(), day_in_session: daysThisSession });
   };
 
   /** A daily acontece quando ainda não se escolheu hoje e há nós elegíveis.
@@ -176,7 +215,10 @@ export const useGameStore = create<GameState>((set, get) => {
     );
     // Na daily o mundo espera: publica o snapshot mas o relógio não anda.
     if (paused) loop.publish();
-    else loop.start();
+    else {
+      loop.start();
+      emitDayStart(); // sem daily → o dia já começa aqui
+    }
   };
 
   return {
@@ -198,8 +240,33 @@ export const useGameStore = create<GameState>((set, get) => {
       const day = loadDay();
       const daily = dailyNeeded(career, day);
       set({ day, career, dayResult: null, dailyOpen: daily });
+
+      daysThisSession = 0;
+      if (!forcedTask())
+        track('session_start', { day, level: career.level, streak: career.streak });
+
       spawn(daily);
+
+      // Abandono: onde a pessoa desistiu. O funil day_start→day_complete já dá a
+      // TAXA; este evento dá o PONTO (o relógio em que largou). `pagehide` cobre
+      // fechar a aba e navegar pra fora (o `beforeunload` é menos confiável).
+      const onLeave = () => {
+        const s = get().snapshot;
+        if (abandonSent || forcedTask() || !s || s.status !== 'playing') return;
+        abandonSent = true;
+        track('day_abandon', {
+          ...base(),
+          clock: s.clock,
+          delivered: s.delivered,
+          expired: s.expired,
+          nota: s.score,
+          na_daily: get().dailyOpen, // largou antes mesmo de começar?
+        });
+      };
+      if (typeof window !== 'undefined') window.addEventListener('pagehide', onLeave);
+
       return () => {
+        if (typeof window !== 'undefined') window.removeEventListener('pagehide', onLeave);
         loop?.stop();
         loop = null;
       };
@@ -222,6 +289,7 @@ export const useGameStore = create<GameState>((set, get) => {
       if (!get().dailyOpen) return;
       set({ dailyOpen: false });
       loop?.start();
+      emitDayStart(); // a daily fechou → o relógio anda, o dia começou
     },
     selectSlot: (index) => loop?.selectSlot(index),
     keyDown: (key) => loop?.keyDown(key),
@@ -232,7 +300,13 @@ export const useGameStore = create<GameState>((set, get) => {
     cycleFocus: (dir) => loop?.cycleFocus(dir),
     quickOpen: () => loop?.quickOpen(),
     setResting: (v) => loop?.setResting(v),
-    restoreFatigue: () => loop?.restoreFatigue(),
+    restoreFatigue: () => {
+      loop?.restoreFatigue();
+      if (!forcedTask()) {
+        const s = get().snapshot;
+        track('pausa_usada', { ...base(), clock: s?.clock });
+      }
+    },
     debugFatigue: (min) => loop?.debugFatigue(min),
     debugLapse: (kind) => loop?.debugLapse(kind),
     buyCosmetic: (id, preco) => {
@@ -250,6 +324,10 @@ export const useGameStore = create<GameState>((set, get) => {
       const c = { ...career, unlockedTasks: [...career.unlockedTasks, id], lastPickDay: day };
       saveCareer(c);
       set({ career: c });
+      // Concentra num ramo ou espalha? Responde de graça se a especialização
+      // (a premissa da árvore de perks) é um desejo real — ver PROGRESSAO §3.
+      if (!forcedTask())
+        track('pick_ramo', { ...base(), node: id, unlocked: c.unlockedTasks.length });
     },
   };
 });
