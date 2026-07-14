@@ -8,7 +8,13 @@
  * pra Amplitude. Sem isso, adblocker come parte do dado SILENCIOSAMENTE — num jogo web
  * viral isso é uma fatia grande do público (e o pior tipo de perda: invisível).
  *
- * Sem chave (`NEXT_PUBLIC_AMPLITUDE_KEY` ausente) = no-op. Dev roda sem poluir os dados.
+ * AMBIENTES: a Amplitude não tem flag de "env" dentro do projeto — o jeito oficial é um
+ * PROJETO por ambiente, cada um com sua chave. Logo **a chave É o ambiente**:
+ *   `.env.local` → projeto DEV  ·  painel do deploy (Vercel) → projeto PROD
+ * Por isso dev PODE enviar à vontade: cai no projeto dev e não encosta no D1 de produção.
+ *
+ * Sem chave = no-op (com aviso no console — analytics desligada em silêncio é o pior
+ * modo de falha: você só descobre semanas depois, sem dado nenhum).
  */
 import * as amplitude from '@amplitude/analytics-browser';
 
@@ -24,22 +30,21 @@ export type AnalyticsEvent =
 
 const KEY = process.env.NEXT_PUBLIC_AMPLITUDE_KEY;
 
-/**
- * Dev NÃO manda evento. Sem isto, a máquina de quem desenvolve vira um "usuário que
- * volta todo dia" e **contamina a própria métrica que queremos ler** (D1). Pra testar
- * a instrumentação de verdade, rode em modo produção (`npm run build && npm start`)
- * ou force com `NEXT_PUBLIC_ANALYTICS_DEBUG=1`.
- */
-const ENABLED =
-  Boolean(KEY) &&
-  (process.env.NODE_ENV === 'production' || process.env.NEXT_PUBLIC_ANALYTICS_DEBUG === '1');
-
 let ready = false;
+let warned = false;
 
 /** Init preguiçoso (Amplitude é singleton) — sem provider, sem wrapper no layout. */
 function init(): boolean {
   if (ready) return true;
-  if (typeof window === 'undefined' || !ENABLED || !KEY) return false;
+  if (typeof window === 'undefined') return false;
+  if (!KEY) {
+    if (!warned) {
+      warned = true;
+      // Grita: um deploy sem a env var mede ZERO e não avisa (ver doc do módulo).
+      console.warn('[analytics] NEXT_PUBLIC_AMPLITUDE_KEY ausente — nenhum evento será enviado.');
+    }
+    return false;
+  }
   amplitude.init(KEY, undefined, {
     serverUrl: '/ampl/2/httpapi', // eventos → proxy (rewrite no next.config)
     autocapture: false, // jogo de teclado: clique/DOM/pageview é ruído
