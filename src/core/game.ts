@@ -15,6 +15,7 @@ import {
   type TicketInstance,
 } from './domain/instance';
 import { TICKET_POOL, TICKETS } from '@/data/tickets';
+import { STEADY, type DayProfile } from '@/data/dayRamp';
 import { SLACK_CHANNELS } from '@/data/channels';
 import { APP_BY_LAUNCH_KEY, LAUNCH_KEY, appForTask, windowTitle } from './domain/apps';
 import type {
@@ -41,15 +42,13 @@ import type {
  */
 
 const SLOT_COUNT = 5;
-const DAY_START_MIN = 9 * 60;
-const DAY_END_MIN = 17 * 60;
-const DAY_REAL_SECONDS = 220;
+const DAY_START_MIN = 9 * 60; // 09:00 — início fixo do expediente
 
-// Backlog: intervalo ALEATÓRIO entre chegadas — demanda não chega em metrônomo.
-// Como o deadline corre em TODOS os slots em paralelo (e só dá pra trabalhar
-// um), a média não pode ser baixa demais. Calibrar por feel (§10/§11).
-const SPAWN_MIN = 10;
-const SPAWN_MAX = 25;
+// Fim do expediente, duração real e intervalo de spawn agora vêm do `DayProfile`
+// (src/data/dayRamp.ts) — a rampa da campanha os varia por dia. O regime pleno
+// (STEADY) espelha os valores históricos. Backlog: chegada ALEATÓRIA, não em
+// metrônomo; como o deadline corre em TODOS os slots em paralelo, a média do
+// spawn não pode ser baixa demais.
 const CLOSE_KEY = 'x'; // fecha um programa aberto por engano (subjogo de abrir)
 
 // ── Fadiga (FOCO_FADIGA.md) — tudo em MINUTOS DE JOGO ─────────────────────
@@ -108,9 +107,13 @@ export class Game {
   private slots: (TicketInstance | null)[] = new Array(SLOT_COUNT).fill(null);
   private activeSlot: number | null = null;
   private spawnTimer = 0;
-  /** Próxima chegada (s reais) — sorteada de novo a cada spawn. */
-  private nextSpawnIn = SPAWN_MIN + Math.random() * (SPAWN_MAX - SPAWN_MIN);
+  /** Próxima chegada (s reais) — sorteada de novo a cada spawn (via profile). */
+  private nextSpawnIn = 0;
   private pool: TicketTemplate[];
+  /** Perfil do dia (rampa da campanha): relógio, spawn, deadline, fadiga. */
+  private profile: DayProfile;
+  /** Fim do expediente em min-de-jogo (do profile — 17:00 pleno, 13:00 meio-período). */
+  private endMin: number;
   /** Minutos de jogo por segundo real (deriva da duração do dia). */
   private minPerSec: number;
   /** Fila de eventos sonoros desde o último `drainSounds()` (a UI sintetiza). */
@@ -134,10 +137,15 @@ export class Game {
   constructor(
     pool: TicketTemplate[] = TICKET_POOL,
     forceId?: string,
-    daySeconds: number = DAY_REAL_SECONDS,
+    profile: DayProfile = STEADY,
+    /** Override da duração real (dev flag `?day=`); ganha do profile.daySeconds. */
+    daySecondsOverride?: number,
   ) {
     this.pool = pool;
-    this.minPerSec = (DAY_END_MIN - DAY_START_MIN) / daySeconds;
+    this.profile = profile;
+    this.endMin = profile.endMin;
+    this.minPerSec = (this.endMin - DAY_START_MIN) / (daySecondsOverride ?? profile.daySeconds);
+    this.nextSpawnIn = this.rollSpawn();
     // Teste: força um ticket específico no 1º slot (id de single = id da task).
     // Busca no registro COMPLETO (inclui os gated pela árvore, fora do pool).
     if (forceId) {
@@ -145,6 +153,12 @@ export class Game {
       if (t) this.slots[0] = instantiateTicket(t);
     }
     while (this.slots.filter(Boolean).length < 2) this.spawnTicket();
+  }
+
+  /** Sorteia o próximo intervalo de chegada (s reais), na janela do profile. */
+  private rollSpawn(): number {
+    const { spawnMin, spawnMax } = this.profile;
+    return spawnMin + Math.random() * (spawnMax - spawnMin);
   }
 
   tick(dtMs: number): void {
@@ -155,7 +169,7 @@ export class Game {
     const gdt = Math.min(dt, 0.1);
     this.elapsed += dt;
 
-    if (this.gameMinutes() >= DAY_END_MIN) {
+    if (this.gameMinutes() >= this.endMin) {
       this.status = 'won';
       this.emit('win');
       return;
@@ -164,7 +178,7 @@ export class Game {
     this.spawnTimer += dt;
     if (this.spawnTimer >= this.nextSpawnIn) {
       this.spawnTimer = 0;
-      this.nextSpawnIn = SPAWN_MIN + Math.random() * (SPAWN_MAX - SPAWN_MIN);
+      this.nextSpawnIn = this.rollSpawn();
       this.spawnTicket();
     }
 
@@ -239,6 +253,9 @@ export class Game {
 
   /** Acumula fadiga (min de jogo) e rola os lapsos — curvas SEM teto. */
   private tickFatigue(dt: number): void {
+    // Rampa: no dia 1 a fadiga é desligada (o 1º turno ensina só o loop de ticket;
+    // a pausa/fadiga estreia no dia 2). fatigueMin fica 0 → fatigueStage = 'fresh'.
+    if (!this.profile.fatigue) return;
     if (this.resting) return;
     const dMin = dt * this.minPerSec;
     const before = this.fatigueMin;
@@ -956,7 +973,13 @@ export class Game {
   private spawnTicket(): void {
     const free = this.slots.findIndex((s) => s === null);
     if (free === -1) return;
-    this.slots[free] = instantiateTicket(this.pool[Math.floor(Math.random() * this.pool.length)]);
+    const inst = instantiateTicket(this.pool[Math.floor(Math.random() * this.pool.length)]);
+    // Rampa: dias iniciais dão deadline mais folgado (deadlineMult > 1).
+    if (this.profile.deadlineMult !== 1) {
+      inst.deadline *= this.profile.deadlineMult;
+      inst.remaining *= this.profile.deadlineMult;
+    }
+    this.slots[free] = inst;
   }
 
   private gameMinutes(): number {
@@ -964,7 +987,7 @@ export class Game {
   }
 
   private formatClock(): string {
-    const total = Math.min(DAY_END_MIN, Math.floor(this.gameMinutes()));
+    const total = Math.min(this.endMin, Math.floor(this.gameMinutes()));
     return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
   }
 

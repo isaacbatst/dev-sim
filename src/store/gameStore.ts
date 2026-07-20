@@ -4,6 +4,7 @@ import { Game } from '@/core/game';
 import type { ProgramId, Snapshot } from '@/core/snapshot';
 import { levelFor } from '@/data/positions';
 import { eligibleNodes, poolForUnlocked } from '@/data/taskTree';
+import { profileForDay, STEADY } from '@/data/dayRamp';
 import { playSound } from './sound';
 import { track } from './analytics';
 
@@ -205,13 +206,16 @@ export const useGameStore = create<GameState>((set, get) => {
     loop?.stop();
     // Pool do jogador = conjunto inicial + nós destravados na árvore (§3).
     const pool = poolForUnlocked(get().career.unlockedTasks);
+    // Rampa da campanha (EXPEDIENTE §1): dia 1 leve → sobe até o steady. Modo de
+    // teste (?force=) usa STEADY, pra fadiga/dia cheios ficarem previsíveis.
+    const profile = forcedTask() ? STEADY : profileForDay(get().day);
     loop = new GameLoop(
       (snapshot) => {
         set({ snapshot });
         if (snapshot.status === 'won') closeDay(snapshot);
       },
       playSound,
-      new Game(pool, forcedTask(), daySeconds()),
+      new Game(pool, forcedTask(), profile, daySeconds()),
     );
     // Na daily o mundo espera: publica o snapshot mas o relógio não anda.
     if (paused) loop.publish();

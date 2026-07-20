@@ -25,13 +25,25 @@
 mecânica (CR mais rígido, tudo pra um horário). Não bloqueia testar a hipótese.
 
 > A dificuldade de um dia é **relativa ao steady-state**, não um valor global. Os
-> valores base atuais (spawn 24s, deadlines 50/70/100/135, dia 220s) são o regime; o
-> **dia 1 (onboarding) entra abaixo dele e a campanha rampa**. Ver `onboarding-difficulty-ramp`.
+> **valores reais vivem em `src/data/dayRamp.ts`** (fonte da verdade — o número "base spawn
+> 24s / deadlines 50/70/100/135" que este doc citava estava DEFASADO vs código). Regime pleno
+> hoje: dia 220s, spawn 10–25s, deadlines 40/56/80/108. O **dia 1 entra abaixo e a campanha rampa**.
 >
-> **Proposta (2026-07-11, ver `EXPEDIENTE.md` §4):** o dia 1 é **meio-período** (relógio mais
-> curto) — rampa de intensidade **diegética** (menos horas = menos tickets, não um nerf de
-> spawn escondido) e, por ser curto, deixa a **1ª sessão caber 2 dias de jogo** sem detonar a
-> fadiga (o ensino do "mais um dia" antes de a pessoa fechar o navegador).
+> **Rampa implementada (2026-07-20, `dayRamp.ts` + `EXPEDIENTE §1`):** rampa de 2 dias, via
+> `DayProfile` por dia (semente mínima da "personalidade do dia").
+>
+> | | Dia 1 (Primeiro Commit) | Dia 2 | Dia 3+ (steady) |
+> |---|---|---|---|
+> | Relógio | 09→**13:00** (meio-período, ~110s) | 09→17 (220s) | 09→17 (220s) |
+> | Spawn | 20–45s | 13–31s | 10–25s |
+> | Deadline | ×1,5 | ×1,2 | ×1 |
+> | Fadiga | **off** | on | on |
+>
+> O **meio-período** é rampa **diegética** (menos horas = menos tickets, não nerf escondido) e
+> deixa a **1ª sessão caber 2 dias** sem detonar a fadiga. Prioridade não entra na rampa: os
+> urgentes já não aparecem no dia 1 (pool inicial gated). ⚠ Valores de PARTIDA — afinar com a
+> Amplitude (ponto de abandono do dia 1). Verificado no navegador: dia 1 fecha 13:00 e fica
+> FRESH; dia 3 vai a 17:00 e cansa.
 
 ---
 
