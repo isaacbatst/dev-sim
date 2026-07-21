@@ -22,6 +22,7 @@ export function GameScreen() {
   const keyDown = useGameStore((s) => s.keyDown);
   const keyUp = useGameStore((s) => s.keyUp);
   const confirm = useGameStore((s) => s.confirm);
+  const endShift = useGameStore((s) => s.endShift);
   const focusProgram = useGameStore((s) => s.focusProgram);
   const cycleFocus = useGameStore((s) => s.cycleFocus);
   const quickOpen = useGameStore((s) => s.quickOpen);
@@ -273,6 +274,7 @@ export function GameScreen() {
                   floatScore={floatScore}
                   onFocusProgram={focusProgram}
                   onSelect={selectSlot}
+                  onEndShift={endShift}
                 />
               </div>
             </div>

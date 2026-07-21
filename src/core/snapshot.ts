@@ -250,6 +250,8 @@ export type PlanStatus = 'done' | 'current' | 'pending';
 export interface Snapshot {
   status: GameStatus;
   clock: string;
+  /** Passou das 17h num dia com hora extra (EXPEDIENTE §2): a UI mostra "encerrar". */
+  overtime: boolean;
   delivered: number;
   /** Demandas expiradas (deadline estourou). */
   expired: number;

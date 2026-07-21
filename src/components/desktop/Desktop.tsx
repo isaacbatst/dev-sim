@@ -16,6 +16,7 @@ export function Desktop({
   floatScore,
   onFocusProgram,
   onSelect,
+  onEndShift,
 }: {
   snapshot: Snapshot;
   day: number;
@@ -24,6 +25,7 @@ export function Desktop({
   floatScore: string | null;
   onFocusProgram: (id: import('@/core/snapshot').ProgramId) => void;
   onSelect: (index: number) => void;
+  onEndShift: () => void;
 }) {
   const { clock, delivered, expired, score, slots, active } = snapshot;
   const openCount = slots.filter(Boolean).length;
@@ -46,6 +48,8 @@ export function Desktop({
         expired={expired}
         score={score}
         fatigue={snapshot.fatigue.stage}
+        overtime={snapshot.overtime}
+        onEndShift={onEndShift}
       />
 
       <main className="relative flex flex-1 gap-5 overflow-hidden p-5">

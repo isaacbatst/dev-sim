@@ -43,6 +43,12 @@ import type {
 
 const SLOT_COUNT = 5;
 const DAY_START_MIN = 9 * 60; // 09:00 — início fixo do expediente
+// Hora extra (EXPEDIENTE §2): depois das 17h o dia NÃO acaba — segue até 23:00,
+// quando você pega no sono (hard stop). Só em dias com fadiga (dia 1 fecha no
+// meio-período). O contrapeso do serão é a fadiga que vaza pra amanhã (o carry,
+// no gameStore). As tasks continuam chegando: o limite é o AFOGAMENTO (a fadiga
+// derruba teu rendimento até os tickets expirarem mais rápido do que você limpa).
+const SLEEP_MIN = 23 * 60;
 
 // Fim do expediente, duração real e intervalo de spawn agora vêm do `DayProfile`
 // (src/data/dayRamp.ts) — a rampa da campanha os varia por dia. O regime pleno
@@ -140,11 +146,15 @@ export class Game {
     profile: DayProfile = STEADY,
     /** Override da duração real (dev flag `?day=`); ganha do profile.daySeconds. */
     daySecondsOverride?: number,
+    /** Fadiga herdada do serão de ontem (o carry). Ignorada em dia sem fadiga. */
+    initialFatigue = 0,
   ) {
     this.pool = pool;
     this.profile = profile;
     this.endMin = profile.endMin;
     this.minPerSec = (this.endMin - DAY_START_MIN) / (daySecondsOverride ?? profile.daySeconds);
+    // Começa o dia já cansado se ontem varou (carry). Dia sem fadiga zera.
+    this.fatigueMin = profile.fatigue ? initialFatigue : 0;
     this.nextSpawnIn = this.rollSpawn();
     // Teste: força um ticket específico no 1º slot (id de single = id da task).
     // Busca no registro COMPLETO (inclui os gated pela árvore, fora do pool).
@@ -169,7 +179,11 @@ export class Game {
     const gdt = Math.min(dt, 0.1);
     this.elapsed += dt;
 
-    if (this.gameMinutes() >= this.endMin) {
+    // Dia com fadiga: segue na hora extra até pegar no sono (23:00). Sem fadiga
+    // (dia 1 meio-período): fecha no fim do expediente. `endDay()` (encerrar) e o
+    // afogamento cortam antes; isto é só o teto duro.
+    const hardEnd = this.profile.fatigue ? SLEEP_MIN : this.endMin;
+    if (this.gameMinutes() >= hardEnd) {
       this.status = 'won';
       this.emit('win');
       return;
@@ -349,6 +363,19 @@ export class Game {
   /** A UI avisa quando o jogador está em pausa (fadiga não acumula). */
   setResting(v: boolean): void {
     this.resting = v;
+  }
+
+  /** Encerrar expediente (EXPEDIENTE §2): a saída voluntária da hora extra. Só
+   *  faz sentido depois das 17h — antes disso o dia ainda está rolando. */
+  endDay(): void {
+    if (this.status !== 'playing' || !this.inOvertime()) return;
+    this.status = 'won';
+    this.emit('win');
+  }
+
+  /** Passou do fim do expediente num dia que tem hora extra? (dia 1 nunca tem.) */
+  private inOvertime(): boolean {
+    return this.profile.fatigue && this.gameMinutes() >= this.endMin;
   }
 
   /** Ritual completado na pausa → fresco de novo (limpa esquecimentos também). */
@@ -766,6 +793,8 @@ export class Game {
     return {
       status: this.status,
       clock: this.formatClock(),
+      /** Passou das 17h e o dia tem serão → a UI mostra "encerrar" e o clima de noite. */
+      overtime: this.inOvertime(),
       delivered: this.delivered,
       expired: this.expired,
       score: this.score,
@@ -987,7 +1016,10 @@ export class Game {
   }
 
   private formatClock(): string {
-    const total = Math.min(this.endMin, Math.floor(this.gameMinutes()));
+    // Trava no fim do expediente (17:00/13:00), MAS na hora extra deixa correr até
+    // o sono (23:00) — o relógio noturno é parte do custo sentido do serão.
+    const ceil = this.profile.fatigue ? SLEEP_MIN : this.endMin;
+    const total = Math.min(ceil, Math.floor(this.gameMinutes()));
     return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
   }
 

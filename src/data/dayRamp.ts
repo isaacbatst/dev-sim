@@ -61,3 +61,16 @@ export function profileForDay(day: number): DayProfile {
   if (day === 2) return DAY2;
   return STEADY;
 }
+
+// ── Carry: o contrapeso da hora extra (EXPEDIENTE §2/§3) — "ganho agora, pago
+// amanhã". A fadiga com que você TERMINA o dia vaza pro dia seguinte, menos uma
+// cota de recuperação (o sono), capada. Só o overtime (ou um dia brutal sem
+// pausa) passa da cota e vaza; um dia bem tocado dorme e recupera.
+// ⚠ Valores de PARTIDA — afinar com dado (min-de-jogo de fadiga).
+const CARRY_COTA = 150; // o sono cobre ~um dia normal (= limiar "cansado")
+const CARRY_CAP = 150; // teto: pior caso começa "cansado", NUNCA "exausto" (anti-espiral)
+
+/** Fadiga a herdar amanhã, dada a fadiga com que o dia fechou. */
+export function carryFromEndFatigue(endFatigueMin: number): number {
+  return Math.max(0, Math.min(CARRY_CAP, endFatigueMin - CARRY_COTA));
+}

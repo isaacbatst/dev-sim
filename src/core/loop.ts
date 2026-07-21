@@ -98,6 +98,12 @@ export class GameLoop {
     this.game.setResting(v);
   }
 
+  /** Encerrar expediente (hora extra): saída voluntária. Publica o fim na hora. */
+  endDay(): void {
+    this.game.endDay();
+    this.sync();
+  }
+
   /** Fadiga: ritual completado na pausa → restaura. */
   restoreFatigue(): void {
     this.game.restore();

@@ -4,7 +4,7 @@ import { Game } from '@/core/game';
 import type { ProgramId, Snapshot } from '@/core/snapshot';
 import { levelFor } from '@/data/positions';
 import { eligibleNodes, poolForUnlocked } from '@/data/taskTree';
-import { profileForDay, STEADY } from '@/data/dayRamp';
+import { profileForDay, STEADY, carryFromEndFatigue } from '@/data/dayRamp';
 import { playSound } from './sound';
 import { track } from './analytics';
 
@@ -46,6 +46,8 @@ export interface Career {
   unlockedTasks: string[];
   /** Dia da campanha em que a última escolha foi feita (1 escolha/dia). */
   lastPickDay: number;
+  /** Fadiga herdada do serão de ontem (o carry, EXPEDIENTE §3). Começa o dia cansado. */
+  carryFatigue: number;
 }
 
 /** Resultado de um dia (pro boletim): nota, ganho e se promoveu. */
@@ -67,6 +69,7 @@ const DEFAULT_CAREER: Career = {
   owned: ['planta', 'cafe', 'teclado'],
   unlockedTasks: [],
   lastPickDay: 0,
+  carryFatigue: 0,
 };
 
 function loadCareer(): Career {
@@ -119,6 +122,8 @@ interface GameState {
   keyUp: (key: string) => void;
   confirm: () => void;
   deliver: () => void;
+  /** Encerrar expediente (hora extra): a saída voluntária depois das 17h. */
+  endShift: () => void;
   focusProgram: (id: ProgramId) => void;
   cycleFocus: (dir?: 1 | -1) => void;
   quickOpen: () => void;
@@ -167,11 +172,15 @@ export const useGameStore = create<GameState>((set, get) => {
     }
     const c = { ...get().career };
     const before = c.level;
+    const beforeCarry = c.carryFatigue;
     const gained = Math.max(0, snapshot.score); // dia ruim não retrocede (§6)
     c.careerTotal += gained;
     c.wallet += gained;
     // Nunca rebaixa (posição não cai — §1); protege saves de limiares antigos.
     c.level = Math.max(c.level, levelFor(c.careerTotal));
+    // Carry (EXPEDIENTE §3): a fadiga com que o dia fechou vaza pra amanhã, menos
+    // a cota do sono, capada. Overtime/dia sem pausa → começa amanhã cansado.
+    c.carryFatigue = carryFromEndFatigue(snapshot.fatigue.min);
     saveCareer(c);
     set({
       career: c,
@@ -185,6 +194,13 @@ export const useGameStore = create<GameState>((set, get) => {
       gained,
       delivered: snapshot.delivered,
       expired: snapshot.expired,
+      // Serão: A QUE HORAS saiu (17:00 = foi embora no horário; 22:30 = varou) e
+      // quanto de carry gerou — o dado que dirá se a aposta "ganho agora, pago
+      // amanhã" está calibrada. (Num dia com fadiga o fim é sempre ≥17h, então o
+      // relógio de saída é o sinal, não um booleano.)
+      saiu_as: snapshot.clock,
+      carry_gerado: c.carryFatigue,
+      carry_herdado: beforeCarry,
     });
     if (c.level > before) track('promo', { ...base(), from: before, to: c.level });
   };
@@ -209,13 +225,15 @@ export const useGameStore = create<GameState>((set, get) => {
     // Rampa da campanha (EXPEDIENTE §1): dia 1 leve → sobe até o steady. Modo de
     // teste (?force=) usa STEADY, pra fadiga/dia cheios ficarem previsíveis.
     const profile = forcedTask() ? STEADY : profileForDay(get().day);
+    // Carry (EXPEDIENTE §3): começa o dia com a fadiga que sobrou do serão de ontem.
+    const carry = forcedTask() ? 0 : get().career.carryFatigue;
     loop = new GameLoop(
       (snapshot) => {
         set({ snapshot });
         if (snapshot.status === 'won') closeDay(snapshot);
       },
       playSound,
-      new Game(pool, forcedTask(), profile, daySeconds()),
+      new Game(pool, forcedTask(), profile, daySeconds(), carry),
     );
     // Na daily o mundo espera: publica o snapshot mas o relógio não anda.
     if (paused) loop.publish();
@@ -300,6 +318,7 @@ export const useGameStore = create<GameState>((set, get) => {
     keyUp: (key) => loop?.keyUp(key),
     confirm: () => loop?.confirm(),
     deliver: () => loop?.deliver(),
+    endShift: () => loop?.endDay(),
     focusProgram: (id) => loop?.focusProgram(id),
     cycleFocus: (dir) => loop?.cycleFocus(dir),
     quickOpen: () => loop?.quickOpen(),

@@ -11,6 +11,8 @@ export function MenuBar({
   expired,
   score,
   fatigue,
+  overtime,
+  onEndShift,
 }: {
   clock: string;
   day: number;
@@ -19,6 +21,9 @@ export function MenuBar({
   expired: number;
   score: number;
   fatigue: FatigueStage;
+  /** Passou das 17h (hora extra): o relógio vira alerta e aparece "encerrar". */
+  overtime: boolean;
+  onEndShift: () => void;
 }) {
   return (
     <header className="flex items-center gap-4 border-b border-edge bg-surface/80 px-4 py-2 text-sm backdrop-blur">
@@ -53,7 +58,21 @@ export function MenuBar({
         </span>
         <ThemeControl />
         <SoundToggle />
-        <span className="font-mono tabular-nums text-ink">{clock}</span>
+        {/* Hora extra (EXPEDIENTE §2): passou das 17h. O relógio vira alerta e a
+            saída fica à mão — sair é a jogada; ficar cobra a fadiga de amanhã. */}
+        {overtime && (
+          <button
+            type="button"
+            onClick={onEndShift}
+            className="animate-edgepulse rounded border border-amber/60 px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wide text-amber hover:bg-amber/10"
+            title="Sair. Ficar rende mais nota, mas você começa amanhã cansado."
+          >
+            encerrar
+          </button>
+        )}
+        <span className={`font-mono tabular-nums ${overtime ? 'text-amber' : 'text-ink'}`}>
+          {clock}
+        </span>
         {/* Nota do dia (moeda única) + entregues e perdidas. */}
         <span className="font-mono text-ink-dim">
           nota <span className="font-semibold text-amber tabular-nums">{score}</span>
