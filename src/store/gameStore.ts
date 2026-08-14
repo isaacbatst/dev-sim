@@ -109,6 +109,13 @@ interface GameState {
   career: Career;
   /** Resultado do dia atual (setado quando o expediente fecha). */
   dayResult: DayResult | null;
+  /** MENU (lock screen do devOS): a página carrega TRAVADA — o jogo não
+   *  começa sozinho. Só vira `false` no `start()` (carga); emendar dias na
+   *  mesma sessão (`nextDay`) não re-trava. */
+  locked: boolean;
+  /** Destrava o menu. Espelha o `beginDay()`: se a daily é devida ela assume
+   *  (e ela solta o relógio); se não, o expediente começa aqui. */
+  unlock: () => void;
   /** DAILY (PROGRESSAO §3): a standup abre o dia — o relógio só anda depois
    *  da escolha do tipo de task. */
   dailyOpen: boolean;
@@ -248,6 +255,7 @@ export const useGameStore = create<GameState>((set, get) => {
     day: 1,
     career: { ...DEFAULT_CAREER },
     dayResult: null,
+    locked: true,
     dailyOpen: false,
 
     start: () => {
@@ -261,13 +269,17 @@ export const useGameStore = create<GameState>((set, get) => {
       }
       const day = loadDay();
       const daily = dailyNeeded(career, day);
-      set({ day, career, dayResult: null, dailyOpen: daily });
+      set({ day, career, dayResult: null, locked: true, dailyOpen: daily });
 
       daysThisSession = 0;
+      // `session_start` é da CARGA, não do expediente: sai mesmo que a pessoa
+      // nunca destrave o menu (é a base de dias-por-sessão, EXPEDIENTE §6).
       if (!forcedTask())
         track('session_start', { day, level: career.level, streak: career.streak });
 
-      spawn(daily);
+      // SEMPRE pausado: o menu segura o mundo antes da daily. Quem solta o
+      // relógio é o `unlock()` (ou o `beginDay()`, quando há daily).
+      spawn(true);
 
       // Abandono: onde a pessoa desistiu. O funil day_start→day_complete já dá a
       // TAXA; este evento dá o PONTO (o relógio em que largou). `pagehide` cobre
@@ -282,7 +294,11 @@ export const useGameStore = create<GameState>((set, get) => {
           delivered: s.delivered,
           expired: s.expired,
           nota: s.score,
-          na_daily: get().dailyOpen, // largou antes mesmo de começar?
+          // Onde largou ANTES de começar. Sem o `no_menu`, quem abre a página e
+          // sai sem jogar entra no abandono como se tivesse desistido no meio —
+          // e é justo a métrica que o portão do roadmap lê.
+          no_menu: get().locked,
+          na_daily: get().dailyOpen,
         });
       };
       if (typeof window !== 'undefined') window.addEventListener('pagehide', onLeave);
@@ -306,6 +322,15 @@ export const useGameStore = create<GameState>((set, get) => {
       const daily = dailyNeeded(get().career, next);
       set({ day: next, dayResult: null, dailyOpen: daily });
       spawn(daily);
+    },
+    unlock: () => {
+      if (!get().locked) return;
+      set({ locked: false });
+      // Com daily devida, quem solta o relógio é o `beginDay()` — o menu só
+      // sai da frente. Sem daily, o expediente começa aqui mesmo.
+      if (get().dailyOpen) return;
+      loop?.start();
+      emitDayStart();
     },
     beginDay: () => {
       if (!get().dailyOpen) return;

@@ -9,6 +9,7 @@ import { useBreak, BreakHud } from './desktop/Break';
 import { FatigueDebug } from './desktop/FatigueDebug';
 import { Boletim } from './desktop/Boletim';
 import { Daily } from './desktop/Daily';
+import { LockScreen } from './desktop/LockScreen';
 import { screenFx, blurMaxPx } from './desktop/fatigueFx';
 
 export function GameScreen() {
@@ -30,6 +31,8 @@ export function GameScreen() {
   const pickTask = useGameStore((s) => s.pickTask);
   const dailyOpen = useGameStore((s) => s.dailyOpen);
   const beginDay = useGameStore((s) => s.beginDay);
+  const locked = useGameStore((s) => s.locked);
+  const unlock = useGameStore((s) => s.unlock);
   const setResting = useGameStore((s) => s.setResting);
   const restoreFatigue = useGameStore((s) => s.restoreFatigue);
 
@@ -38,6 +41,12 @@ export function GameScreen() {
   useEffect(() => {
     dailyRef.current = dailyOpen;
   }, [dailyOpen]);
+
+  // Menu (lock screen): idem — e ANTES do "-", pra pausa não abrir por trás.
+  const lockedRef = useRef(true);
+  useEffect(() => {
+    lockedRef.current = locked;
+  }, [locked]);
 
   const [shake, setShake] = useState(false);
   const [floatScore, setFloatScore] = useState<string | null>(null);
@@ -114,6 +123,9 @@ export function GameScreen() {
   // O gate por foco vive no core (ações de trabalho exigem o programa em foco).
   useEffect(() => {
     const onDown = (e: KeyboardEvent) => {
+      // No menu a máquina está travada: nem jogo, nem pausa. O Enter que
+      // destrava é do próprio LockScreen.
+      if (lockedRef.current) return;
       // Na daily (manhã) o expediente não começou: nada de teclas do jogo.
       if (dailyRef.current) return;
       // "-" alterna a pausa (levantar da mesa / voltar). Pode a qualquer momento.
@@ -191,6 +203,12 @@ export function GameScreen() {
     );
   }
 
+  // VOCÊ NÃO ESTÁ NA MESA. Uma regra para os quatro estados em que o corpo
+  // saiu da cadeira — menu, pausa, daily e fim de expediente: a câmera recua
+  // E o monitor dorme. Antes o dim conhecia só daily/fim, então a pausa ficava
+  // com a tela acesa competindo com o primeiro plano (planta, caneca, ritual).
+  const awayFromDesk = locked || onBreak || dailyOpen || snapshot.status !== 'playing';
+
   return (
     // MUNDO + CÂMERA: o Room é uma cena única pintada por inteiro (150dvh de
     // parede→mesa, 152vw de largura); a câmera é só um transform sobre ela.
@@ -202,10 +220,9 @@ export function GameScreen() {
       <div
         className="origin-top transition-transform duration-700 motion-reduce:transition-none"
         style={{
-          transform:
-            onBreak || dailyOpen || snapshot.status !== 'playing'
-              ? 'translateY(-7.1dvh) scale(0.71)'
-              : 'translateY(-25dvh) scale(1)',
+          transform: awayFromDesk
+            ? 'translateY(-7.1dvh) scale(0.71)'
+            : 'translateY(-25dvh) scale(1)',
           transitionTimingFunction: 'cubic-bezier(0.65, 0, 0.35, 1)',
         }}
       >
@@ -245,14 +262,12 @@ export function GameScreen() {
             <div
               className="h-full"
               style={{
-                filter:
-                  dailyOpen || snapshot.status !== 'playing'
-                    ? // Manhã (daily) e fim do expediente: o monitor "dorme" —
-                      // você ainda não sentou / já se afastou da mesa.
-                      'brightness(0.3) saturate(0.5)'
-                    : screenFx(snapshot.fatigue.rates.x).filter,
-                transition:
-                  dailyOpen || snapshot.status !== 'playing' ? 'filter 1.5s ease' : 'none',
+                filter: awayFromDesk
+                  ? // Fora da cadeira (menu, pausa, daily, fim): o monitor
+                    // "dorme" — você ainda não sentou / já se afastou da mesa.
+                    'brightness(0.3) saturate(0.5)'
+                  : screenFx(snapshot.fatigue.rates.x).filter,
+                transition: awayFromDesk ? 'filter 1.5s ease' : 'none',
               }}
             >
               {/* DESFOQUE (lapso): a vista sai de foco em 1s REAL e volta em 1s.
@@ -325,10 +340,15 @@ export function GameScreen() {
           onBuy={buyCosmetic}
         />
       )}
-      {/* DAILY (manhã): a standup abre o dia — HUD sobre a cena recuada. */}
-      {dailyOpen && snapshot.status === 'playing' && (
+      {/* DAILY (manhã): a standup abre o dia — HUD sobre a cena recuada.
+          Só DEPOIS do menu: a Daily escuta o teclado (1–9 escolhe, Enter
+          começa), então montá-la atrás do lock faria o Enter que destrava
+          vazar pra ela. */}
+      {dailyOpen && !locked && snapshot.status === 'playing' && (
         <Daily day={day} career={career} onPick={pickTask} onBegin={beginDay} />
       )}
+      {/* MENU: a lock screen do devOS. Por cima de tudo — o jogo espera. */}
+      {locked && <LockScreen day={day} career={career} clock={snapshot.clock} onUnlock={unlock} />}
       {/* overlay de debug da fadiga (?debug=1) */}
       {debug && (
         <FatigueDebug
